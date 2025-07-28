@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Link } from 'react-router-dom';
 import { Mail, Lock, Linkedin, Eye, EyeOff } from "lucide-react"
 import { FaApple, FaMicrosoft, FaGoogle } from "react-icons/fa"
 import LoginInput from "../../components/LoginInput"
@@ -195,12 +196,13 @@ export default function Login() {
 
           {/* Register link */}
           <div className="text-center mt-8">
-            <p className="text-gray-600">
-              No tienes una cuenta?{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
-                Regístrate
-              </a>
-            </p>
+            <span className="text-gray-600">¿No tienes una cuenta? </span>
+            <Link
+              to="/register"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Regístrate
+            </Link>
           </div>
         </div>
       </div>
