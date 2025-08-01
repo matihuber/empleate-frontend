@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react"
 import { User, Facebook, Instagram, Twitter } from "lucide-react"
 import CardHome from "../../components/CardHome"
+import { Link } from "react-router-dom"
 
 export default function Home() {
   const [currentSection, setCurrentSection] = useState(0)
@@ -86,9 +87,12 @@ export default function Home() {
             />
             <span className="text-xl font-semibold text-blue-600">Empleate</span>
           </div>
-          <div className="p-2 rounded-full hover:bg-gray-100 cursor-pointer">
+          <Link 
+            to="/login" 
+            className="p-2 rounded-full hover:bg-gray-100 cursor-pointer transition-colors duration-200"
+          >
             <User className="w-5 h-5 text-gray-600" />
-          </div>
+          </Link>
         </div>
       </header>
         

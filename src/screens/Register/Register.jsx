@@ -1,13 +1,20 @@
 import { useState } from "react"
 import { Link } from 'react-router-dom';
-import { User } from "lucide-react"
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react"
+import AuthLayout from "../../components/AuthLayout"
 import LoginInput from "../../components/LoginInput"
 import LoginButton from "../../components/LoginButton"
 
 export default function Register() {
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   })
   const [errors, setErrors] = useState({})
 
@@ -26,9 +33,8 @@ export default function Register() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleStep1Submit = (e) => {
     e.preventDefault()
-    // Validación básica
     const newErrors = {}
     if (!formData.firstName.trim()) {
       newErrors.firstName = "El nombre es requerido"
@@ -42,58 +48,60 @@ export default function Register() {
       return
     }
 
-    // Aquí iría la lógica para continuar al siguiente paso
-    console.log("Form submitted:", formData)
+    // Ir al paso 2
+    setCurrentStep(2)
+  }
+
+  const handleStep2Submit = (e) => {
+    e.preventDefault()
+    const newErrors = {}
+    if (!formData.email.trim()) {
+      newErrors.email = "El email es requerido"
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = "La contraseña es requerida"
+    }
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Las contraseñas no coinciden"
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    // Enviar datos completos
+    console.log("Registro completo:", formData)
+  }
+
+  const goBackToStep1 = () => {
+    setCurrentStep(1)
+    setErrors({}) // Limpiar errores
+    
+    // Limpiar los campos del step 2
+    setFormData((prev) => ({
+      ...prev,
+      email: "",
+      password: "",
+      confirmPassword: ""
+    }))
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Lado Izquierdo - Fondo Azul (igual que Login) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 relative overflow-hidden">
-        {/* Contenido principal */}
-        <div className="flex flex-col justify-center items-center w-full px-12 text-center relative z-10">
-          {/* Logo grande */}
-          <div className="mb-12">
-            <div className="flex items-center justify-center ">
-              <img
-                src="/images/logo-4x.png"
-                alt="Empleate Logo"
-                className="w-48 h-48 object-contain"
-                onError={(e) => {
-                  console.log("Error cargando logo grande:", e)
-                  // Fallback al logo estilizado si falla la carga
-                  e.target.style.display = "none"
-                  e.target.nextElementSibling.style.display = "flex"
-                }}
-              />
-              {/* Fallback logo estilizado (oculto por defecto) */}
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-300 to-blue-500 rounded-2xl items-center justify-center shadow-xl hidden">
-                <span className="text-4xl font-bold text-white italic">e</span>
-              </div>
-            </div>
+    <AuthLayout 
+      showBackButton={currentStep === 2} 
+      onBackClick={goBackToStep1}
+    >
+      {/* Solo el contenido del lado derecho */}
+      <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-20">
+        <div className="w-full max-w-md mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-800">Regístrate</h1>
           </div>
 
-          {/* Slogan */}
-          <div className="space-y-4">
-            <h1 className="text-4xl lg:text-5xl font-semibold text-slate-300 leading-tight">
-                Impulsá tu carrera<br />
-                con inteligencia artificial    
-            </h1>
-          </div>
-        </div>
-      </div>
-
-      {/* Lado Derecho - Formulario */}
-      <div className="w-full lg:w-1/2 flex flex-col bg-gray-50 relative">
-        {/* Contenido principal centrado */}
-        <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-20">
-          <div className="w-full max-w-md mx-auto">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-gray-800">Regístrate</h1>
-            </div>
-
-            {/* Formulario */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+          {/* PASO 1: Nombre y Apellido */}
+          {currentStep === 1 && (
+            <form onSubmit={handleStep1Submit} className="space-y-6">
               <LoginInput
                 type="text"
                 name="firstName"
@@ -114,16 +122,80 @@ export default function Register() {
                 error={errors.lastName}
               />
 
-              {/* Submit button */}
               <div className="pt-4">
-                <LoginButton type="submit" variant="primary">
+                <LoginButton type="submit" variant="primary" size="full">
                   Continuar
                 </LoginButton>
               </div>
             </form>
+          )}
 
-            {/* Login link */}
-            <div className="text-center mt-8">
+          {/* PASO 2: Email y Contraseña */}
+          {currentStep === 2 && (
+            <form onSubmit={handleStep2Submit} className="space-y-6">
+              <LoginInput
+                type="email"
+                name="email"
+                placeholder="Email"
+                icon={Mail}
+                value={formData.email}
+                onChange={handleInputChange}
+                error={errors.email}
+              />
+            
+              <div className="relative">
+                <LoginInput
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Contraseña"
+                icon={Lock}
+                value={formData.password}
+                onChange={handleInputChange}
+                error={errors.password}
+              />
+                <button
+                  type="button"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+
+              <div className="relative">
+                <LoginInput
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="Repetir contraseña"
+                icon={Lock}
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                error={errors.confirmPassword}
+              />
+                <button
+                  type="button"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+
+              {/* Términos y condiciones */}
+              <p className="text-xs text-gray-500 text-center">
+                Al registrarte, aceptas nuestros Términos y Condiciones y nuestra Política de Privacidad
+              </p>
+
+              <div className="pt-4">
+                <LoginButton type="submit" variant="primary" size="full">
+                  Crear cuenta
+                </LoginButton>
+              </div>
+            </form>
+          )}
+
+          {/* Login link */}
+          <div className="text-center mt-8">
             <span className="text-gray-600">¿Ya tienes una cuenta? </span>
             <Link
               to="/login"
@@ -132,9 +204,8 @@ export default function Register() {
               Inicia sesión
             </Link>
           </div>
-          </div>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   )
 }

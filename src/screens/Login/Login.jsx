@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Link } from 'react-router-dom';
 import { Mail, Lock, Linkedin, Eye, EyeOff } from "lucide-react"
 import { FaApple, FaMicrosoft, FaGoogle } from "react-icons/fa"
+import AuthLayout from "../../components/AuthLayout"
 import LoginInput from "../../components/LoginInput"
 import LoginButton from "../../components/LoginButton"
 
@@ -58,44 +59,9 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Lado Izquierdo - Fondo Azul */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 relative overflow-hidden">
-        {/* Contenido principal */}
-        <div className="flex flex-col justify-center items-center w-full px-12 text-center relative z-10">
-          {/* Logo grande */}
-          <div className="mb-12">
-            <div className="flex items-center justify-center ">
-              <img
-                src="/images/logo-4x.png"
-                alt="Empleate Logo"
-                className="w-48 h-48 object-contain"
-                onError={(e) => {
-                  console.log("Error cargando logo grande:", e)
-                  // Fallback al logo estilizado si falla la carga
-                  e.target.style.display = "none"
-                  e.target.nextElementSibling.style.display = "flex"
-                }}
-              />
-              {/* Fallback logo estilizado (oculto por defecto) */}
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-300 to-blue-500 rounded-2xl items-center justify-center shadow-xl hidden">
-                <span className="text-4xl font-bold text-white italic">e</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Slogan */}
-          <div className="space-y-4">
-            <h1 className="text-4xl lg:text-5xl font-semibold text-slate-300 leading-tight">
-                Impulsá tu carrera<br />
-                con inteligencia artificial    
-            </h1>
-          </div>
-        </div>
-      </div>
-
-      {/* Lado Derecho - Formulario */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-20 bg-gray-50">
+    <AuthLayout>
+      {/* Solo el contenido del lado derecho */}
+      <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-20">
         <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-800 mb-8">Bienvenido</h1>
@@ -183,9 +149,12 @@ export default function Login() {
 
             {/* Forgot password */}
             <div className="text-right">
-              <a href="#" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+              <Link 
+                to="/forgot-password" 
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
                 ¿Olvidaste tu contraseña?
-              </a>
+              </Link>
             </div>
 
             {/* Submit button */}
@@ -206,6 +175,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   )
 }
