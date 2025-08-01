@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './screens/Home';
 import Login from './screens/Login';
 import Register from './screens/Register';
+import PasswordRecovery from './screens/PasswordRecovery';
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <Route path="/" element={<Home /> } />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/password-recovery" element={<PasswordRecovery />} />
       </Routes>
     </Router>
   );

@@ -150,7 +150,7 @@ export default function Login() {
             {/* Forgot password */}
             <div className="text-right">
               <Link 
-                to="/forgot-password" 
+                to="/password-recovery" 
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
                 ¿Olvidaste tu contraseña?
