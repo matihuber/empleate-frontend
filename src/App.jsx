@@ -3,6 +3,7 @@ import Home from './screens/Home';
 import Login from './screens/Login';
 import Register from './screens/Register';
 import PasswordRecovery from './screens/PasswordRecovery';
+import UserHome from './screens/UserHome';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/password-recovery" element={<PasswordRecovery />} />
+        <Route path="/user-home" element={<UserHome />} />
       </Routes>
     </Router>
   );

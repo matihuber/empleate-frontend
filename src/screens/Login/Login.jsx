@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Linkedin, Eye, EyeOff } from "lucide-react"
 import { FaApple, FaMicrosoft, FaGoogle } from "react-icons/fa"
 import AuthLayout from "../../components/AuthLayout"
@@ -7,6 +7,7 @@ import LoginInput from "../../components/LoginInput"
 import LoginButton from "../../components/LoginButton"
 
 export default function Login() {
+  const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showMoreOptions, setShowMoreOptions] = useState(false)
   const [formData, setFormData] = useState({
@@ -34,6 +35,7 @@ export default function Login() {
     e.preventDefault()
     // Aquí iría la lógica de validación y envío
     console.log("Form submitted:", formData)
+    navigate('/user-home')
   }
 
   const handleLinkedInLogin = () => {
