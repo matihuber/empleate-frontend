@@ -8,41 +8,21 @@ import {
   BookOpen, 
   Settings,
   LogOut,
-  Bell,
-  Edit,
-  Linkedin
 } from "lucide-react"
+import Inicio from "./sections/Inicio"
+import MisDatos from "./sections/MisDatos"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
   
   // Datos del usuario (esto vendría de una API o estado global)
   const user = {
-    name: "Matías",
-    profileCompletion: 70
+    firstName: "Matias",
+    lastName: "Garcia",
+    profileCompletion: 70,
+    email: "matiasromero@gmail.com",
+    profileImage: null,
   }
-
-  // Datos de ejemplo para notificaciones
-  const notifications = [
-    {
-      date: "18/05/2025",
-      message: "Tu nuevo curriculum ha sido generado"
-    }
-  ]
-
-  // Datos de ejemplo para sugerencias
-  const suggestions = [
-    {
-      icon: Linkedin,
-      text: "Añadí tu perfil de LinkedIn",
-      type: "linkedin"
-    },
-    {
-      icon: Edit,
-      text: "Completá tu experiencia laboral",
-      type: "experience"
-    }
-  ]
 
   const menuItems = [
     { id: 'inicio', label: 'Inicio', icon: Home },
@@ -78,7 +58,7 @@ export default function UserHome() {
       <div className="w-full h-full bg-white rounded-2xl shadow-lg overflow-hidden flex">
         
         {/* Sidebar */}
-        <div className="w-64 bg-white flex flex-col border-r border-gray-200 h-full">
+        <div className="w-64 bg-stone-50 flex flex-col border-r border-gray-200 h-full">
           {/* Logo */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center space-x-2">
@@ -132,78 +112,15 @@ export default function UserHome() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col bg-gray-50 relative h-full">
+        <div className="flex-1 flex flex-col bg-stone-50 relative h-full">
           {/* Content */}
-          <main className="flex-1 p-4 md:p-6 lg:p-8 pt-16 md:pt-20 overflow-y-auto">
-            {activeSection === 'inicio' && (
-              <div className="h-full">
-                {/* Saludo */}
-                <div className="mb-6 lg:mb-8 flex items-center justify-between">
-                  <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">
-                    ¡Hola, {user.name}!
-                  </h1>
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-full flex items-center justify-center shadow-sm">
-                    <span className="text-gray-600 font-medium text-sm md:text-base">M</span>
-                  </div>
-                </div>
+          <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-scroll">
+            {/* Renderizar secciones */}
+            {activeSection === 'inicio' && <Inicio user={user} />}
+            {activeSection === 'mis-datos' && <MisDatos user={user} />}
 
-                {/* Perfil Completo */}
-                <div className="bg-white rounded-2xl shadow-sm p-4 lg:p-6 mb-6 lg:mb-8">
-                  <h2 className="text-lg lg:text-xl font-semibold text-gray-800 mb-3 lg:mb-4">
-                    Perfil completo al {user.profileCompletion}%
-                  </h2>
-                  <div className="w-full bg-gray-200 rounded-full h-2 lg:h-3">
-                    <div 
-                      className="bg-blue-600 h-2 lg:h-3 rounded-full transition-all duration-800"
-                      style={{ width: `${user.profileCompletion}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Reciente */}
-                <div className="bg-white rounded-2xl shadow-sm p-4 lg:p-6 mb-6 lg:mb-8">
-                  <h2 className="text-lg lg:text-xl font-semibold text-gray-800 mb-4 lg:mb-6">
-                    Reciente
-                  </h2>
-                  <div className="space-y-3 lg:space-y-4">
-                    {notifications.map((notification, index) => (
-                      <div key={index} className="flex items-start space-x-3 lg:space-x-4 p-3 lg:p-4 hover:bg-gray-100 rounded-lg">
-                        <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Bell className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs lg:text-sm text-gray-500 mb-1">{notification.date}</p>
-                          <p className="text-sm lg:text-base text-gray-800 font-medium">{notification.message}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sugerencias */}
-                <div className="bg-white rounded-2xl shadow-sm p-4 lg:p-6 mb-6 lg:mb-8">
-                  <h2 className="text-lg lg:text-xl font-semibold text-gray-800 mb-4 lg:mb-6">
-                    Sugerencias
-                  </h2>
-                  <div className="space-y-1">
-                    {suggestions.map((suggestion, index) => {
-                      const IconComponent = suggestion.icon
-                      return (
-                        <div key={index} className="flex items-center space-x-3 lg:space-x-4 p-3 lg:p-4 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
-                          <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <IconComponent className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
-                          </div>
-                          <p className="text-sm lg:text-base text-gray-800 font-medium">{suggestion.text}</p>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Otras secciones */}
-            {activeSection !== 'inicio' && (
+            {/* Otras secciones pendientes */}
+            {!['inicio', 'mis-datos'].includes(activeSection) && (
               <div className="text-center py-20">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   {menuItems.find(item => item.id === activeSection)?.label}
