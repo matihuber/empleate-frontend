@@ -26,7 +26,7 @@ export default function Inicio({ user }) {
   return (
     <div>
       {/* Saludo con Avatar - Solo en sección Inicio */}
-      <div className="mb-6 lg:mb-8 flex items-center justify-between">
+      <div className="mb-6 lg:mb-8 flex justify-between">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">
           ¡Hola, {user.firstName}!
         </h1>

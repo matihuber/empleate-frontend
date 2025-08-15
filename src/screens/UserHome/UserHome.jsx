@@ -20,7 +20,7 @@ export default function UserHome() {
     firstName: "Matias",
     lastName: "Garcia",
     profileCompletion: 70,
-    email: "matiasromero@gmail.com",
+    email: "matiasgarcia@gmail.com",
     profileImage: null,
   }
 
