@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import Inicio from "./sections/Inicio"
 import MisDatos from "./sections/MisDatos"
+import CVCreation from "./sections/CVCreation"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
@@ -118,9 +119,10 @@ export default function UserHome() {
             {/* Renderizar secciones */}
             {activeSection === 'inicio' && <Inicio user={user} />}
             {activeSection === 'mis-datos' && <MisDatos user={user} />}
+            {activeSection === 'crear-cv' && <CVCreation user={user} />}
 
             {/* Otras secciones pendientes */}
-            {!['inicio', 'mis-datos'].includes(activeSection) && (
+            {!['inicio', 'mis-datos', 'crear-cv'].includes(activeSection) && (
               <div className="text-center py-20">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   {menuItems.find(item => item.id === activeSection)?.label}
