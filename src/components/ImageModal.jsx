@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { X, Upload, RotateCcw, ZoomIn, ZoomOut, Check } from 'lucide-react'
 
-export default function ImageModal({ isOpen, onClose, onSave, currentAvatar }) {
+export default function AvatarCropModal({ isOpen, onClose, onSave, currentAvatar }) {
   const [image, setImage] = useState(null)
   const [imageUrl, setImageUrl] = useState(null)
   const [cropSettings, setCropSettings] = useState({
@@ -147,18 +147,18 @@ export default function ImageModal({ isOpen, onClose, onSave, currentAvatar }) {
                 <div className="bg-gray-100 rounded-2xl p-4 min-h-[300px] flex items-center justify-center">
                   {/* Vista previa con crop circular */}
                   <div className="relative">
-                    <div 
-                      className="w-64 h-64 rounded-full overflow-hidden border-4 border-white shadow-lg relative"
-                      style={{
-                        transform: `scale(${cropSettings.zoom}) rotate(${cropSettings.rotation}deg)`
-                      }}
-                    >
+                    <div className="w-64 h-64 rounded-full overflow-hidden border-4 border-white shadow-lg relative">
                       <img
                         src={imageUrl}
                         alt="Preview"
                         className="w-full h-full object-cover"
                         style={{
-                          transform: `translate(-${(cropSettings.x - 50)}%, -${(cropSettings.y - 50)}%)`
+                          transform: `
+                            scale(${cropSettings.zoom}) 
+                            rotate(${cropSettings.rotation}deg)
+                            translate(${(50 - cropSettings.x)}%, ${(50 - cropSettings.y)}%)
+                          `,
+                          transformOrigin: 'center center'
                         }}
                       />
                     </div>
@@ -229,7 +229,7 @@ export default function ImageModal({ isOpen, onClose, onSave, currentAvatar }) {
                         />
                       </div>
 
-                      {/* Posición (simulada con controles X/Y) */}
+                      {/* Posición horizontal */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Posición horizontal
@@ -244,6 +244,7 @@ export default function ImageModal({ isOpen, onClose, onSave, currentAvatar }) {
                         />
                       </div>
 
+                      {/* Posición vertical */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Posición vertical
