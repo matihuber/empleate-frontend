@@ -1,12 +1,11 @@
 import { Mail, Phone, MapPin, Linkedin, Globe, Star, Award, Calendar } from 'lucide-react'
 
-// Template CV Profesional - Estilo con Sidebar
 export default function CVTemplate1({ cvData }) {
   // Si no hay datos, mostrar template con datos de ejemplo
   const data = cvData || {
     personalInfo: {
       name: "ANA MARÍA FERNÁNDEZ",
-      title: "Java Programmer | Project Management | Business Tech",
+      rol: "Java Programmer | Project Management | Business Tech",
       email: "ana@fernandez.com",
       phone: "+34 123 456 678",
       location: "León, México",
