@@ -42,7 +42,7 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
     <div className="fixed inset-0 backdrop-brightness-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4">
+        <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-800">Importar perfil de LinkedIn</h2>
           <button
             onClick={handleClose}
@@ -95,39 +95,64 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Área de drag & drop */}
+          {/* Área de drag & drop o archivo cargado */}
           <div className="mb-6">
-            <div
-              onDrop={handleFileDrop}
-              onDragOver={handleDragOver}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50"
-            >
-              <label htmlFor="linkedin-file-upload" className="cursor-pointer block">
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                {!uploadedFile ? (
+            {!uploadedFile ? (
+              // Área de drag & drop cuando no hay archivo
+              <div
+                onDrop={handleFileDrop}
+                onDragOver={handleDragOver}
+                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50"
+              >
+                <label htmlFor="linkedin-file-upload" className="cursor-pointer block">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">
                     Arrastra un archivo hasta aquí o{" "}
                     <span className="text-blue-600 hover:text-blue-700 font-medium underline">
                       súbelo
                     </span>
                   </p>
-                ) : (
-                  <div className="flex items-center justify-center space-x-2">
-                    <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                    </svg>
-                    <span className="text-gray-800 font-medium">{uploadedFile.name}</span>
+                </label>
+                <input
+                  type="file"
+                  accept=".zip"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="linkedin-file-upload"
+                />
+              </div>
+            ) : (
+              // Mostrar archivo cargado
+              <div className="bg-white border-2 border-gray-300 rounded-xl p-6 flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {/* Ícono del archivo ZIP */}
+                  <svg className="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                  </svg>
+                  
+                  {/* Información del archivo */}
+                  <div>
+                    <p className="text-gray-800 font-medium truncate max-w-xs">
+                      {uploadedFile.name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
                   </div>
-                )}
-              </label>
-              <input
-                type="file"
-                accept=".zip"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="linkedin-file-upload"
-              />
-            </div>
+                </div>
+
+                {/* Botón eliminar */}
+                <button
+                  onClick={() => setUploadedFile(null)}
+                  className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Eliminar archivo"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Botón guardar */}
