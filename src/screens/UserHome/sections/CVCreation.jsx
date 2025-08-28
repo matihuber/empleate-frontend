@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { ChevronRight, ChevronLeft } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Plus, Trash2 } from 'lucide-react'
 import LoginButton from '../../../components/LoginButton'
-import CVTemplate1 from '../../../components/CVTemplate1'
+import CVTemplate1 from '../../../components/CVTemplate1' // Importar tu template
 
 export default function CVCreation() {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
-  const [currentStep, setCurrentStep] = useState('selection') // 'selection', 'personalization', 'preview'
+  const [currentStep, setCurrentStep] = useState('selection') // 'selection', 'personalization', 'skills', 'preview'
 
-  // Estados para la personalización
+  // Estados para las habilidades técnicas
+  const [skills, setSkills] = useState([])
   const [personalizationData, setPersonalizationData] = useState({
     rol: '',
     empresa: '',
@@ -37,17 +38,21 @@ export default function CVCreation() {
 
   const handlePersonalizationContinue = () => {
     console.log('Datos de personalización:', personalizationData)
+    setCurrentStep('skills') // Ir a habilidades
+  }
+
+  const handleSkillsContinue = () => {
+    console.log('Habilidades:', skills)
     setCurrentStep('preview') // Ir a vista previa
   }
 
   // Función para combinar datos de personalización con datos del template
   const getCombinedCVData = () => {
-    // Hardcoded ahora - luego vendra de linkedin/cv
+    // Datos base del template (podrían venir de la API del usuario)
     const baseCVData = {
       personalInfo: {
         name: "ANA MARÍA FERNÁNDEZ",
-        rol: personalizationData.rol,
-        empresa_deseada: personalizationData.empresa,
+        title: personalizationData.rol || "Java Programmer | Project Management | Business Tech",
         email: "ana@fernandez.com",
         phone: "+34 123 456 678",
         location: "León, México",
@@ -60,7 +65,7 @@ export default function CVCreation() {
       experience: [
         {
           position: "Java Developer Senior",
-          company: "Everis",
+          company: personalizationData.empresa || "Everis",
           location: "Madrid, Spain",
           period: "01/2020 - Presente",
           achievements: [
@@ -166,11 +171,30 @@ export default function CVCreation() {
     setCurrentStep('personalization') // Volver a personalización
   }
 
+  const handleBackToSkills = () => {
+    setCurrentStep('skills') // Volver a habilidades
+  }
+
   const handlePersonalizationChange = (field, value) => {
     setPersonalizationData(prev => ({
       ...prev,
       [field]: value
     }))
+  }
+
+  // Funciones para manejar habilidades
+  const handleSkillChange = (index, field, value) => {
+    setSkills(prev => prev.map((skill, i) => 
+      i === index ? { ...skill, [field]: value } : skill
+    ))
+  }
+
+  const addSkill = () => {
+    setSkills(prev => [...prev, { tool: '', level: 'Básico' }])
+  }
+
+  const removeSkill = (index) => {
+    setSkills(prev => prev.filter((_, i) => i !== index))
   }
 
   return (
@@ -239,6 +263,124 @@ export default function CVCreation() {
         </>
       )}
 
+      {currentStep === 'skills' && (
+        // Vista de habilidades técnicas
+        <>
+          {/* Título de la sección */}
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
+              Crea tu CV
+            </h1>
+            <h2 className="text-xl md:text-2xl text-gray-600">
+              Listá tu conocimiento
+            </h2>
+          </div>
+
+          {/* Lista de habilidades */}
+          <div className="max-w-3xl space-y-4">
+            {skills.length === 0 ? (
+              // Mensaje cuando no hay herramientas
+              <div className="">
+                <p className="text-gray-500 text-lg mb-6">
+                  Aún no tienes herramientas agregadas
+                </p>
+              </div>
+            ) : (
+              // Mostrar herramientas cuando hay al menos una
+              <>
+                {/* Header de la tabla */}
+                <div className="grid grid-cols-12 gap-4 items-center mb-4">
+                  <div className="col-span-5">
+                    <span className="text-base font-medium text-gray-700">Herramientas</span>
+                  </div>
+                  <div className="col-span-5">
+                    <span className="text-base font-medium text-gray-700">Nivel</span>
+                  </div>
+                  <div className="col-span-2"></div>
+                </div>
+
+                {/* Lista de habilidades */}
+                {skills.map((skill, index) => (
+                  <div key={index} className="grid grid-cols-12 gap-4 items-center">
+                    {/* Campo herramienta */}
+                    <div className="col-span-5">
+                      <input
+                        type="text"
+                        placeholder={"Escribe una herramienta"}
+                        value={skill.tool}
+                        onChange={(e) => handleSkillChange(index, 'tool', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
+                      />
+                    </div>
+
+                    {/* Selector de nivel */}
+                    <div className="col-span-5">
+                      <select
+                        value={skill.level}
+                        onChange={(e) => handleSkillChange(index, 'level', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
+                      >
+                        <option value="Básico">Básico</option>
+                        <option value="Intermedio">Intermedio</option>
+                        <option value="Avanzado">Avanzado</option>
+                        <option value="Experto">Experto</option>
+                      </select>
+                    </div>
+
+                    {/* Botón eliminar */}
+                    <div className="col-span-2 flex justify-center">
+                      <button
+                        onClick={() => removeSkill(index)}
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar herramienta"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Botón agregar herramienta */}
+            <div className="pt-4">
+              <button
+                onClick={addSkill}
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                <span>Agregar herramienta</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Botones */}
+          <div className="flex justify-between mt-8">
+            <button
+              onClick={handleBackToPersonalization}
+              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span>Volver</span>
+            </button>
+
+            <div className="w-48">
+              <LoginButton
+                onClick={handleSkillsContinue}
+                variant="primary"
+                icon={ChevronRight}
+              >
+                Siguiente
+              </LoginButton>
+            </div>
+          </div>
+        </>
+      )}
+
       {currentStep === 'personalization' && (
         // Vista de personalización
         <>
@@ -275,7 +417,7 @@ export default function CVCreation() {
                 </label>
                 <input
                   type="text"
-                  placeholder="Ingrese el nombre de la empresa"
+                  placeholder="Ingresá el nombre de la empresa"
                   value={personalizationData.empresa}
                   onChange={(e) => handlePersonalizationChange('empresa', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
@@ -290,7 +432,7 @@ export default function CVCreation() {
               </label>
               <input
                 type="url"
-                placeholder="Pegue aquí el enlace"
+                placeholder="Pegá aquí el enlace"
                 value={personalizationData.link}
                 onChange={(e) => handlePersonalizationChange('link', e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
@@ -300,10 +442,10 @@ export default function CVCreation() {
             {/* Aspectos que querés destacar */}
             <div>
               <label className="block text-base font-medium text-gray-700 mb-2">
-                Aspectos que quieres destacar <span className="text-gray-500">(opcional)</span>
+                Aspectos que querés destacar <span className="text-gray-500">(opcional)</span>
               </label>
               <textarea
-                placeholder="Escribe aquí tus prioridades e intereses"
+                placeholder="Escribí aquí tus prioridades e intereses"
                 value={personalizationData.aspectos}
                 onChange={(e) => handlePersonalizationChange('aspectos', e.target.value)}
                 rows={4}
@@ -367,17 +509,18 @@ export default function CVCreation() {
           {/* Header con botón volver */}
           <div className="mb-6 flex items-center justify-between">
             <button
-              onClick={handleBackToPersonalization}
+              onClick={handleBackToSkills}
               className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
-              <span>Volver a personalización</span>
+              <span>Volver a habilidades</span>
             </button>
             
             <div className="text-center">
               <h1 className="text-2xl font-bold text-gray-800">
                 Tu CV Personalizado
               </h1>
+              <p className="text-gray-600">Vista previa final</p>
             </div>
 
             <div className="flex space-x-2">
