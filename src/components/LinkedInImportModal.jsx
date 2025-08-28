@@ -63,7 +63,7 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
 
             <div>
               <p className="text-gray-800 font-medium">
-                <span className="font-bold">Paso 2:</span> Ve a Ajustes → <span className="underline text-blue-600">Gestiona tu cuenta y la privacidad</span>
+                <span className="font-bold">Paso 2:</span> Ve a Ajustes → Gestiona tu cuenta y la privacidad
               </p>
             </div>
 
