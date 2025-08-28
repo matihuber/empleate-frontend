@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronRight, ChevronLeft, Plus, Trash2 } from 'lucide-react'
+import { ChevronRight, ChevronLeft, } from 'lucide-react'
 import LoginButton from '../../../components/LoginButton'
 import CVTemplate1 from '../../../components/CVTemplate1' // Importar tu template
 
@@ -277,7 +277,7 @@ export default function CVCreation() {
           </div>
 
           {/* Lista de habilidades */}
-          <div className="max-w-3xl space-y-4">
+          <div className="space-y-4">
             {skills.length === 0 ? (
               // Mensaje cuando no hay herramientas
               <div className="">
@@ -328,7 +328,7 @@ export default function CVCreation() {
                     </div>
 
                     {/* Botón eliminar */}
-                    <div className="col-span-2 flex justify-center">
+                    <div className="col-span-2 flex justify-start">
                       <button
                         onClick={() => removeSkill(index)}
                         className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
@@ -395,7 +395,7 @@ export default function CVCreation() {
           </div>
 
           {/* Formulario de personalización */}
-          <div className="max-w-2xl space-y-6">
+          <div className="space-y-6">
             {/* Rol deseado */}
             <div className="grid md:grid-cols-2 gap-6">
               <div>

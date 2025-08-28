@@ -3,6 +3,7 @@ import { User, Upload, Camera, Linkedin, X, Check, Trash2 } from "lucide-react"
 import UserHomeInput from "../../../components/UserHomeInput"
 import LoginButton from "../../../components/LoginButton"
 import ImageModal from "../../../components/ImageModal" // Importar el nuevo modal
+import LinkedInImportModal from "../../../components/LinkedInImportModal"
 
 export default function MisDatosSection({ user }) {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -10,6 +11,7 @@ export default function MisDatosSection({ user }) {
   const [modalStep, setModalStep] = useState('confirm')
   const [userAvatar, setUserAvatar] = useState(user.avatar || null) // Estado para el avatar
   const [uploadedFile, setUploadedFile] = useState(null)
+  const [showLinkedInModal, setShowLinkedInModal] = useState(false)
 
   const handleFieldChange = (field, newValue) => {
     console.log(`Actualizando ${field}:`, newValue)
@@ -75,11 +77,6 @@ export default function MisDatosSection({ user }) {
     return null
   }
 
-  const handleLinkedInImport = () => {
-    console.log("Importar perfil de LinkedIn")
-    // Aquí iría la lógica para importar perfil de LinkedIn
-  }
-
   // Nueva función para manejar el cambio de avatar
   const handleAvatarChange = () => {
     setShowAvatarModal(true)
@@ -91,6 +88,15 @@ export default function MisDatosSection({ user }) {
     setUserAvatar(avatarData.imageUrl)
     // Aquí iría la lógica para subir la imagen al servidor
     // También podrías usar avatarData.useForCV y avatarData.cropSettings
+  }
+
+  const handleLinkedInImport = () => {
+    setShowLinkedInModal(true)
+  }
+
+  const handleLinkedInSave = (file) => {
+    console.log("Archivo de LinkedIn cargado:", file.name)
+    // Procesar el archivo ZIP de LinkedIn
   }
 
   return (
@@ -160,6 +166,13 @@ export default function MisDatosSection({ user }) {
         onClose={() => setShowAvatarModal(false)}
         onSave={handleAvatarSave}
         currentAvatar={userAvatar}
+      />
+
+      {/* Modal de importar LinkedIn */}
+      <LinkedInImportModal
+        isOpen={showLinkedInModal}
+        onClose={() => setShowLinkedInModal(false)}
+        onSave={handleLinkedInSave}
       />
 
       {/* Título de la sección */}

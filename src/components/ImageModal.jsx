@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
-import { X, Upload, RotateCcw, ZoomIn, ZoomOut, Check } from 'lucide-react'
+import { X, Upload, RotateCcw, } from 'lucide-react'
 
 export default function AvatarCropModal({ isOpen, onClose, onSave, currentAvatar }) {
   const [image, setImage] = useState(null)
@@ -97,7 +97,7 @@ export default function AvatarCropModal({ isOpen, onClose, onSave, currentAvatar
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-brightness-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
