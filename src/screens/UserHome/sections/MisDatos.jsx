@@ -1,14 +1,15 @@
 import { useState } from "react"
-import { User, Upload, Camera, Linkedin, X, Check } from "lucide-react"
+import { User, Upload, Camera, Linkedin, X, Check, Trash2 } from "lucide-react"
 import UserHomeInput from "../../../components/UserHomeInput"
 import LoginButton from "../../../components/LoginButton"
-import ImageModal from "../../../components/ImageModal"
+import ImageModal from "../../../components/ImageModal" // Importar el nuevo modal
 
 export default function MisDatosSection({ user }) {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showAvatarModal, setShowAvatarModal] = useState(false) // Nuevo estado
   const [modalStep, setModalStep] = useState('confirm')
-  const [showAvatarModal, setShowAvatarModal] = useState(false)
-  const [userAvatar, setUserAvatar] = useState(user.avatar || null)
+  const [userAvatar, setUserAvatar] = useState(user.avatar || null) // Estado para el avatar
+  const [uploadedFile, setUploadedFile] = useState(null)
 
   const handleFieldChange = (field, newValue) => {
     console.log(`Actualizando ${field}:`, newValue)
@@ -35,8 +36,43 @@ export default function MisDatosSection({ user }) {
     const file = event.target.files[0]
     if (file) {
       console.log("Archivo cargado:", file.name)
+      setUploadedFile(file)
       // Aquí iría la lógica para procesar el archivo
     }
+  }
+
+  const handleFileDrop = (event) => {
+    event.preventDefault()
+    const file = event.dataTransfer.files[0]
+    if (file && (file.type === 'application/pdf' || file.type.includes('word') || file.name.endsWith('.docx'))) {
+      console.log("Archivo arrastrado:", file.name)
+      setUploadedFile(file)
+    }
+  }
+
+  const handleDragOver = (event) => {
+    event.preventDefault()
+  }
+
+  const removeFile = () => {
+    setUploadedFile(null)
+  }
+
+  const getFileIcon = (file) => {
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      return (
+        <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+        </svg>
+      )
+    } else if (file.type.includes('word') || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+      return (
+        <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+        </svg>
+      )
+    }
+    return null
   }
 
   const handleLinkedInImport = () => {
@@ -44,18 +80,12 @@ export default function MisDatosSection({ user }) {
     // Aquí iría la lógica para importar perfil de LinkedIn
   }
 
-  const handleProfileImageUpload = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-      console.log("Imagen de perfil cargada:", file.name)
-      // Aquí iría la lógica para actualizar la imagen de perfil
-    }
-  }
-
+  // Nueva función para manejar el cambio de avatar
   const handleAvatarChange = () => {
     setShowAvatarModal(true)
   }
 
+  // Nueva función para guardar el avatar editado
   const handleAvatarSave = (avatarData) => {
     console.log("Guardando avatar:", avatarData)
     setUserAvatar(avatarData.imageUrl)
@@ -65,6 +95,7 @@ export default function MisDatosSection({ user }) {
 
   return (
     <div>
+      {/* Modal de cambio de contraseña */}
       {showPasswordModal && (
         <div className="fixed inset-0 backdrop-brightness-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative">
@@ -123,6 +154,7 @@ export default function MisDatosSection({ user }) {
         </div>
       )}
 
+      {/* Modal de cambio de avatar */}
       <ImageModal
         isOpen={showAvatarModal}
         onClose={() => setShowAvatarModal(false)}
@@ -159,7 +191,7 @@ export default function MisDatosSection({ user }) {
           />
         </div>
 
-        {/* Avatar */}
+        {/* Avatar - ACTUALIZADO */}
         <div className="md:row-span-2 flex justify-center md:justify-center items-center">
           <div className="relative">
             <div className="w-24 h-24 md:w-48 md:h-48 bg-gray-400 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
@@ -217,25 +249,58 @@ export default function MisDatosSection({ user }) {
           Carga tu CV
         </h2>
         
-        <label 
-          htmlFor="cv-upload"
-          className="block border-3 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-200"
-        >
-          <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-2">
-            Arrastra un archivo hasta aquí o{" "}
-            <span className="text-blue-600 hover:text-blue-700 font-medium">
-              súbelo
-            </span>
-          </p>
-          <input
-            type="file"
-            accept=".pdf,.docx,.doc"
-            onChange={handleFileUpload}
-            className="hidden"
-            id="cv-upload"
-          />
-        </label>
+        {!uploadedFile ? (
+          // Área de carga cuando no hay archivo
+          <div
+            onDrop={handleFileDrop}
+            onDragOver={handleDragOver}
+            className="block border-3 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:border-blue-400 transition-colors bg-gray-200"
+          >
+            <label htmlFor="cv-upload" className="cursor-pointer block">
+              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-2">
+                Arrastra un archivo hasta aquí o{" "}
+                <span className="text-blue-600 hover:text-blue-700 font-medium">
+                  súbelo
+                </span>
+              </p>
+            </label>
+            <input
+              type="file"
+              accept=".pdf,.docx,.doc"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="cv-upload"
+            />
+          </div>
+        ) : (
+          // Mostrar archivo cargado
+          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Ícono del archivo según tipo */}
+              {getFileIcon(uploadedFile)}
+              
+              {/* Información del archivo */}
+              <div>
+                <p className="text-gray-800 font-medium truncate max-w-xs">
+                  {uploadedFile.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
+                </p>
+              </div>
+            </div>
+
+            {/* Botón eliminar */}
+            <button
+              onClick={removeFile}
+              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              title="Eliminar archivo"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        )}
         
         <p className="text-sm text-gray-500 mt-4">
           Los tipos de archivos permitidos son PDF y DOCX
@@ -252,7 +317,7 @@ export default function MisDatosSection({ user }) {
           variant="primary"
           icon={Linkedin}
           onClick={handleLinkedInImport}
-          className="max-w-md drop-shadow-md"
+          className="max-w-md drop-shadow-md cursor-pointer"
         >
           Importar perfil de LinkedIn
         </LoginButton>
