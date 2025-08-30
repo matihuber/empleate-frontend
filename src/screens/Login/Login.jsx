@@ -1,13 +1,17 @@
-import { useState } from "react"
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react"
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Linkedin, Eye, EyeOff } from "lucide-react"
 import { FaApple, FaMicrosoft, FaGoogle } from "react-icons/fa"
 import AuthLayout from "../../components/AuthLayout"
 import LoginInput from "../../components/LoginInput"
 import LoginButton from "../../components/LoginButton"
+import { useAuth } from "../../contexts/AuthContext"
 
 export default function Login() {
+  
   const navigate = useNavigate()
+  const location = useLocation()
+  const { loginBasic, loginGoogle, loginLinkedIn, loginMicrosoft, isLoading, error, clearError } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showMoreOptions, setShowMoreOptions] = useState(false)
   const [formData, setFormData] = useState({
@@ -15,6 +19,45 @@ export default function Login() {
     password: "",
   })
   const [errors, setErrors] = useState({})
+  const [successMessage, setSuccessMessage] = useState("")
+
+  // Limpiar errores cuando cambie el error del contexto
+  useEffect(() => {
+
+    if (error) {
+      // Si es un error de credenciales incorrectas, mostrar en ambos campos
+      if (error.includes('incorrectas') || error.includes('credenciales') || error.includes('401')) {
+        const newErrors = { 
+          general: error,
+          email: "Credenciales incorrectas",
+          password: "Credenciales incorrectas"
+        }
+        setErrors(newErrors)
+      } else {
+        const newErrors = { general: error }
+        setErrors(newErrors)
+      }
+    } else {
+      // Si no hay error, limpiar errores
+      setErrors({})
+    }
+  }, [error])
+
+  // Limpiar errores al desmontar
+  useEffect(() => {
+    return () => {
+      clearError()
+    }
+  }, [clearError])
+
+  // Mostrar mensaje de éxito si viene del registro
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message)
+      // Limpiar el mensaje del estado de navegación
+      navigate(location.pathname, { replace: true })
+    }
+  }, [location.state, navigate])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -22,25 +65,62 @@ export default function Login() {
       ...prev,
       [name]: value,
     }))
-    // Limpiar error cuando el usuario empiece a escribir
+    // Limpiar error del campo específico cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
         [name]: "",
       }))
     }
+    // También limpiar el error general si existe
+    if (errors.general) {
+      setErrors((prev) => ({
+        ...prev,
+        general: "",
+      }))
+    }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Aquí iría la lógica de validación y envío
-    console.log("Form submitted:", formData)
-    navigate('/user-home')
+    
+    // Validación básica
+    const newErrors = {}
+    if (!formData.email) newErrors.email = "El email es requerido"
+    if (!formData.password) newErrors.password = "La contraseña es requerida"
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    try {
+      console.log('Iniciando login...')
+      // Limpiar errores previos
+      setErrors({})
+      
+      // Llamar al login del AuthContext
+      await loginBasic(formData.email, formData.password)
+      
+      console.log('Login completado, redirigiendo a la página de destino')
+      // Si llegamos aquí, el login fue exitoso (no se lanzó excepción)
+      // Redirigir a la página de origen o a la home del usuario por defecto
+      const from = location.state?.from?.pathname || '/user-home'
+      navigate(from, { replace: true })
+    } catch (error) {
+      console.log('Error capturado en handleSubmit:', error)
+      // No redirigir, solo mostrar el error
+      setErrors({ general: error.message })
+    }
   }
 
-  const handleLinkedInLogin = () => {
-    // Lógica para login con LinkedIn
-    console.log("LinkedIn login")
+  const handleLinkedInLogin = async () => {
+    try {
+      setErrors({})
+      await loginLinkedIn()
+    } catch (error) {
+      setErrors({ general: error.message })
+    }
   }
 
   const handleMoreOptions = () => {
@@ -52,12 +132,22 @@ export default function Login() {
     console.log("Apple login")
   }
 
-  const handleMicrosoftLogin = () => {
-    console.log("Microsoft login")
+  const handleMicrosoftLogin = async () => {
+    try {
+      setErrors({})
+      await loginMicrosoft()
+    } catch (error) {
+      setErrors({ general: error.message })
+    }
   }
 
-  const handleGoogleLogin = () => {
-    console.log("Google login")
+  const handleGoogleLogin = async () => {
+    try {
+      setErrors({})
+      await loginGoogle()
+    } catch (error) {
+      setErrors({ general: error.message })
+    }
   }
 
   return (
@@ -118,6 +208,20 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Mensaje de éxito */}
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">
+              {successMessage}
+            </div>
+          )}
+
+          {/* Error general */}
+          {errors.general && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm mb-4">
+              {errors.general}
+            </div>
+          )}
+
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <LoginInput
@@ -160,8 +264,8 @@ export default function Login() {
             </div>
 
             {/* Submit button */}
-            <LoginButton type="submit" variant="primary">
-              Iniciar sesión
+            <LoginButton type="submit" variant="primary" disabled={isLoading}>
+              {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
             </LoginButton>
           </form>
 

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useContext } from "react"
 import { 
   Home, 
   User, 
@@ -9,21 +9,28 @@ import {
   Settings,
   LogOut,
 } from "lucide-react"
+import { AuthContext } from "../../contexts/AuthContext"
 import Inicio from "./sections/Inicio"
 import MisDatos from "./sections/MisDatos"
 import CVCreation from "./sections/CVCreation"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
+  const { user, logout } = useContext(AuthContext)
   
-  // Datos del usuario (esto vendría de una API o estado global)
-  const user = {
-    firstName: "Matias",
-    lastName: "Garcia",
-    profileCompletion: 70,
-    email: "matiasgarcia@gmail.com",
-    profileImage: null,
+  // Si no hay usuario, mostrar loading o redirigir
+  if (!user) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center">
+        <div className="text-lg">Cargando...</div>
+      </div>
+    )
   }
+  
+  // Extraer nombre del usuario del contexto
+  const firstName = user.name ? user.name.split(' ')[0] : user.email?.split('@')[0] || 'Usuario'
+  const lastName = user.name ? user.name.split(' ').slice(1).join(' ') : ''
+  const profileCompletion = 70 // Esto se puede calcular basado en datos del usuario
 
   const menuItems = [
     { id: 'inicio', label: 'Inicio', icon: Home },
@@ -40,8 +47,8 @@ export default function UserHome() {
   }
 
   const handleLogout = () => {
-    console.log("Cerrar sesión")
-    // Aquí iría la lógica de logout
+    console.log("Cerrando sesión...")
+    logout()
   }
 
   return (
@@ -117,9 +124,27 @@ export default function UserHome() {
           {/* Content */}
           <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-scroll">
             {/* Renderizar secciones */}
-            {activeSection === 'inicio' && <Inicio user={user} />}
-            {activeSection === 'mis-datos' && <MisDatos user={user} />}
-            {activeSection === 'crear-cv' && <CVCreation user={user} />}
+            {activeSection === 'inicio' && <Inicio user={{
+              firstName,
+              lastName,
+              profileCompletion,
+              email: user.email,
+              profileImage: null
+            }} />}
+            {activeSection === 'mis-datos' && <MisDatos user={{
+              firstName,
+              lastName,
+              profileCompletion,
+              email: user.email,
+              profileImage: null
+            }} />}
+            {activeSection === 'crear-cv' && <CVCreation user={{
+              firstName,
+              lastName,
+              profileCompletion,
+              email: user.email,
+              profileImage: null
+            }} />}
 
             {/* Otras secciones pendientes */}
             {!['inicio', 'mis-datos', 'crear-cv'].includes(activeSection) && (

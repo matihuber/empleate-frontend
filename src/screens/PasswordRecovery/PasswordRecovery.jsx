@@ -1,16 +1,32 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Mail } from "lucide-react"
 import { Link } from "react-router-dom"
 import AuthLayout from "../../components/AuthLayout"
 import LoginInput from "../../components/LoginInput"
 import LoginButton from "../../components/LoginButton"
+import { useAuth } from "../../contexts/AuthContext"
 
 export default function PasswordRecovery() {
+  const { requestPasswordReset, isLoading, error: authError, clearError } = useAuth()
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const handleSubmit = (e) => {
+  // Limpiar errores cuando cambie el error del contexto
+  useEffect(() => {
+    if (authError) {
+      setError(authError)
+    }
+  }, [authError])
+
+  // Limpiar errores al desmontar
+  useEffect(() => {
+    return () => {
+      clearError()
+    }
+  }, [clearError])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     if (!email.trim()) {
@@ -18,9 +34,18 @@ export default function PasswordRecovery() {
       return
     }
 
-    // Aquí iría la lógica para enviar el email
-    console.log("Sending reset email to:", email)
-    setIsSubmitted(true)
+    try {
+      // Limpiar errores previos
+      setError("")
+      
+      // Llamar al servicio de reset de contraseña
+      await requestPasswordReset(email)
+      
+      // Si es exitoso, mostrar mensaje de confirmación
+      setIsSubmitted(true)
+    } catch (error) {
+      setError(error.message)
+    }
   }
 
   const handleEmailChange = (e) => {
@@ -55,8 +80,8 @@ export default function PasswordRecovery() {
                 error={error}
               />
 
-              <LoginButton type="submit" variant="primary" size="full">
-                Enviar
+              <LoginButton type="submit" variant="primary" size="full" disabled={isLoading}>
+                {isLoading ? "Enviando..." : "Enviar"}
               </LoginButton>
             </form>
           ) : (

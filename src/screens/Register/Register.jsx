@@ -1,11 +1,14 @@
-import { useState } from "react"
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react"
+import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import AuthLayout from "../../components/AuthLayout"
 import LoginInput from "../../components/LoginInput"
 import LoginButton from "../../components/LoginButton"
+import { useAuth } from "../../contexts/AuthContext"
 
 export default function Register() {
+  const navigate = useNavigate()
+  const { register, isLoading, error, clearError } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
@@ -17,6 +20,20 @@ export default function Register() {
     confirmPassword: "",
   })
   const [errors, setErrors] = useState({})
+
+  // Limpiar errores cuando cambie el error del contexto
+  useEffect(() => {
+    if (error) {
+      setErrors({ general: error })
+    }
+  }, [error])
+
+  // Limpiar errores al desmontar
+  useEffect(() => {
+    return () => {
+      clearError()
+    }
+  }, [clearError])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -52,15 +69,24 @@ export default function Register() {
     setCurrentStep(2)
   }
 
-  const handleStep2Submit = (e) => {
+  const handleStep2Submit = async (e) => {
     e.preventDefault()
+    
     const newErrors = {}
+    
+    // Validaciones
     if (!formData.email.trim()) {
       newErrors.email = "El email es requerido"
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "El email no es válido"
     }
+    
     if (!formData.password.trim()) {
       newErrors.password = "La contraseña es requerida"
+    } else if (formData.password.length < 8) {
+      newErrors.password = "La contraseña debe tener al menos 8 caracteres"
     }
+    
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Las contraseñas no coinciden"
     }
@@ -70,8 +96,33 @@ export default function Register() {
       return
     }
 
-    // Enviar datos completos
-    console.log("Registro completo:", formData)
+    try {
+      // Limpiar errores previos
+      setErrors({})
+      
+      // Preparar datos para el registro
+      const userData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirmPassword
+      }
+      
+      // Llamar al registro del AuthContext
+      const response = await register(userData)
+      
+      // Si el registro es exitoso, redirigir al login
+      if (response.success) {
+        navigate('/login', { 
+          state: { 
+            message: 'Registro exitoso. Por favor, inicia sesión con tu nueva cuenta.' 
+          } 
+        })
+      }
+    } catch (error) {
+      setErrors({ general: error.message })
+    }
   }
 
   const goBackToStep1 = () => {
@@ -98,6 +149,13 @@ export default function Register() {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-800">Regístrate</h1>
           </div>
+
+          {/* Error general */}
+          {errors.general && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {errors.general}
+            </div>
+          )}
 
           {/* PASO 1: Nombre y Apellido */}
           {currentStep === 1 && (
@@ -187,8 +245,8 @@ export default function Register() {
               </p>
 
               <div className="pt-4">
-                <LoginButton type="submit" variant="primary" size="full">
-                  Crear cuenta
+                <LoginButton type="submit" variant="primary" size="full" disabled={isLoading}>
+                  {isLoading ? "Creando cuenta..." : "Crear cuenta"}
                 </LoginButton>
               </div>
             </form>

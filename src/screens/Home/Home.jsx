@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react"
-import { User, Facebook, Instagram, Twitter } from "lucide-react"
+import { Facebook, Instagram, Twitter } from "lucide-react"
 import CardHome from "../../components/CardHome"
-import { Link } from "react-router-dom"
+import Navigation from "../../components/Navigation"
 
 export default function Home() {
   const [currentSection, setCurrentSection] = useState(0)
@@ -71,30 +71,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-100">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <img
-              src="/images/logo.png"
-              alt="Empleate Logo"
-              className="w-6 h-6"
-              onError={(e) => {
-                console.log("Error cargando logo:", e)
-                e.target.src =
-                  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%232563eb'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ctext x='12' y='16' textAnchor='middle' fill='white' fontSize='12'%3Ee%3C/text%3E%3C/svg%3E"
-              }}
-            />
-            <span className="text-xl font-semibold text-blue-600">Empleate</span>
-          </div>
-          <Link 
-            to="/login" 
-            className="p-2 rounded-full hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-          >
-            <User className="w-5 h-5 text-gray-600" />
-          </Link>
-        </div>
-      </header>
+      {/* Navigation Component */}
+      <Navigation />
         
       {/* Section 1 */}
       <section
