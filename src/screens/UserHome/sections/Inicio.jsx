@@ -92,7 +92,7 @@ export default function Inicio({ user }) {
           ¡Hola, {user.firstName}!
         </h1>
         <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-full flex items-center justify-center shadow-sm">
-          <span className="text-gray-600 font-medium text-sm md:text-base">M</span>
+          <span className="text-gray-600 font-medium text-sm md:text-base">{user.firstName.charAt(0)}</span>
         </div>
       </div>
 

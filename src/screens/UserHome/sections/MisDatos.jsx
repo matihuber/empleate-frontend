@@ -1,21 +1,95 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { User, Upload, Camera, Linkedin, X, Check, Trash2 } from "lucide-react"
 import UserHomeInput from "../../../components/UserHomeInput"
 import LoginButton from "../../../components/LoginButton"
-import ImageModal from "../../../components/ImageModal" // Importar el nuevo modal
+import ImageModal from "../../../components/ImageModal"
 import LinkedInImportModal from "../../../components/LinkedInImportModal"
+import userProfileService from "../../../services/userProfileService"
+import imageCacheService from "../../../services/imageCacheService"
 
 export default function MisDatosSection({ user }) {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [showAvatarModal, setShowAvatarModal] = useState(false) // Nuevo estado
+  const [showAvatarModal, setShowAvatarModal] = useState(false)
   const [modalStep, setModalStep] = useState('confirm')
-  const [userAvatar, setUserAvatar] = useState(user.avatar || null) // Estado para el avatar
+  const [userAvatar, setUserAvatar] = useState(user.avatar || null)
   const [uploadedFile, setUploadedFile] = useState(null)
   const [showLinkedInModal, setShowLinkedInModal] = useState(false)
+  
+  // Estados para cambios pendientes
+  const [pendingChanges, setPendingChanges] = useState({})
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
+
+  // Cargar imagen del usuario cuando se monta el componente
+  useEffect(() => {
+    console.log('MisDatosSection: useEffect [user] ejecutado, user:', user)
+    console.log('MisDatosSection: user.sub disponible:', user.sub)
+    
+    const loadUserAvatar = async () => {
+      try {
+        // Primero intentar obtener del cache
+        const cachedAvatar = imageCacheService.getImage(user.sub, 'profile')
+        if (cachedAvatar) {
+          console.log('MisDatosSection: Avatar cargado desde cache:', cachedAvatar)
+          setUserAvatar(cachedAvatar)
+          return
+        }
+
+        console.log('MisDatosSection: Cache miss, cargando desde backend para usuario:', user.sub)
+        // Obtener la imagen del usuario desde el backend
+        const avatarData = await userProfileService.getUserAvatar(user.sub)
+        if (avatarData && avatarData.imageUrl) {
+          // Guardar en cache para futuras cargas
+          imageCacheService.setImage(user.sub, 'profile', avatarData)
+          setUserAvatar(avatarData)
+          console.log('MisDatosSection: Avatar cargado desde backend y cacheado:', avatarData)
+        } else {
+          console.log('MisDatosSection: No se encontró avatar para el usuario')
+        }
+      } catch (error) {
+        console.log('MisDatosSection: No se pudo cargar la imagen del usuario:', error)
+        // Si no hay imagen, mantener el estado por defecto
+      }
+    }
+
+    if (user && user.sub) {
+      loadUserAvatar()
+    } else {
+      console.log('MisDatosSection: No hay usuario válido para cargar avatar')
+      console.log('MisDatosSection: user object completo:', user)
+    }
+  }, [user])
+
+  // Recargar imagen cuando cambie userAvatar (para casos de actualización)
+  useEffect(() => {
+    if (userAvatar && userAvatar.imageUrl && !userAvatar.imageUrl.startsWith('data:')) {
+      // Si ya tenemos una imagen válida del backend, no hacer nada
+      return
+    }
+    
+    // Si no hay imagen o es una imagen temporal (base64), cargar desde el backend
+    if (user && user.sub) {
+      const loadUserAvatar = async () => {
+        try {
+          const avatarData = await userProfileService.getUserAvatar(user.sub)
+          if (avatarData && avatarData.imageUrl) {
+            setUserAvatar(avatarData)
+          }
+        } catch (error) {
+          console.log('No se pudo recargar la imagen del usuario:', error)
+        }
+      }
+      loadUserAvatar()
+    }
+  }, [userAvatar, user])
 
   const handleFieldChange = (field, newValue) => {
     console.log(`Actualizando ${field}:`, newValue)
-    // Aquí iría la lógica para actualizar el campo en el estado/API
+    // Guardar cambio pendiente
+    setPendingChanges(prev => ({
+      ...prev,
+      [field]: newValue
+    }))
   }
 
   const handlePasswordChange = () => {
@@ -85,7 +159,7 @@ export default function MisDatosSection({ user }) {
   // Nueva función para guardar el avatar editado
   const handleAvatarSave = (avatarData) => {
     console.log("Guardando avatar:", avatarData)
-    setUserAvatar(avatarData.imageUrl)
+    setUserAvatar(avatarData)  // Guardar el objeto completo, no solo imageUrl
     // Aquí iría la lógica para subir la imagen al servidor
     // También podrías usar avatarData.useForCV y avatarData.cropSettings
   }
@@ -98,6 +172,62 @@ export default function MisDatosSection({ user }) {
     console.log("Archivo de LinkedIn cargado:", file.name)
     // Procesar el archivo ZIP de LinkedIn
   }
+
+  // Función para guardar todos los cambios pendientes
+  const handleSaveChanges = async () => {
+    if (Object.keys(pendingChanges).length === 0 && !uploadedFile && !userAvatar) {
+      setSaveMessage('No hay cambios para guardar')
+      return
+    }
+
+    setIsSaving(true)
+    setSaveMessage('')
+
+    try {
+      // Llamar al servicio para guardar todos los cambios
+      const result = await userProfileService.saveAllChanges({
+        pendingChanges,
+        uploadedFile,
+        userAvatar
+      })
+
+      console.log('Resultado del guardado:', result)
+
+      // Limpiar cambios pendientes
+      setPendingChanges({})
+      setUploadedFile(null)
+      
+      // Si se subió una imagen, actualizar el estado con la respuesta del backend
+      if (userAvatar && result.fileUploads) {
+        const photoUpload = result.fileUploads.find(upload => upload.file_type === 'photo')
+        if (photoUpload) {
+          // Actualizar el estado con la información del backend
+          const filename = photoUpload.file_key.split('/').pop() || 'profile-photo.jpg'
+          setUserAvatar({
+            imageUrl: photoUpload.presigned_url,
+            filename: filename,
+            useForCV: userAvatar.useForCV || false,
+            cropSettings: userAvatar.cropSettings || {}
+          })
+          console.log('Avatar actualizado con respuesta del backend:', photoUpload)
+        }
+      }
+      
+      setSaveMessage('Cambios guardados exitosamente!')
+      
+      // Limpiar mensaje después de 3 segundos
+      setTimeout(() => setSaveMessage(''), 3000)
+      
+    } catch (error) {
+      console.error('Error guardando cambios:', error)
+      setSaveMessage(`Error al guardar los cambios: ${error.message}`)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Verificar si hay cambios pendientes
+  const hasPendingChanges = Object.keys(pendingChanges).length > 0 || uploadedFile || userAvatar
 
   return (
     <div>
@@ -208,9 +338,9 @@ export default function MisDatosSection({ user }) {
         <div className="md:row-span-2 flex justify-center md:justify-center items-center">
           <div className="relative">
             <div className="w-24 h-24 md:w-48 md:h-48 bg-gray-400 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
-              {userAvatar ? (
+              {userAvatar && userAvatar.imageUrl ? (
                 <img 
-                  src={userAvatar} 
+                  src={userAvatar.imageUrl} 
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />
@@ -334,6 +464,36 @@ export default function MisDatosSection({ user }) {
         >
           Importar perfil de LinkedIn
         </LoginButton>
+      </div>
+
+      {/* Botón Guardar Cambios */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="flex flex-col items-end space-y-3">
+          <LoginButton
+            variant="primary"
+            onClick={handleSaveChanges}
+            disabled={!hasPendingChanges || isSaving}
+            className={`min-w-[200px] ${
+              !hasPendingChanges 
+                ? 'opacity-50 cursor-not-allowed' 
+                : 'hover:bg-blue-600'
+            }`}
+          >
+            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+          </LoginButton>
+          
+          {saveMessage && (
+            <p className={`text-sm ${
+              saveMessage.includes('Error') 
+                ? 'text-red-600' 
+                : saveMessage.includes('No hay cambios') 
+                  ? 'text-gray-500' 
+                  : 'text-green-600'
+            }`}>
+              {saveMessage}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )

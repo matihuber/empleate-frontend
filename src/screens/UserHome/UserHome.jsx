@@ -124,21 +124,22 @@ export default function UserHome() {
           {/* Content */}
           <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-scroll">
             {/* Renderizar secciones */}
-            {activeSection === 'inicio' && <Inicio user={{
+            {activeSection === 'inicio' && <Inicio key="inicio" user={{
               firstName,
               lastName,
               profileCompletion,
               email: user.email,
               profileImage: null
             }} />}
-            {activeSection === 'mis-datos' && <MisDatos user={{
+            {activeSection === 'mis-datos' && <MisDatos key="mis-datos" user={{
               firstName,
               lastName,
               profileCompletion,
               email: user.email,
-              profileImage: null
+              profileImage: null,
+              sub: user.sub  // Agregar el sub del usuario para autenticación
             }} />}
-            {activeSection === 'crear-cv' && <CVCreation user={{
+            {activeSection === 'crear-cv' && <CVCreation key="crear-cv" user={{
               firstName,
               lastName,
               profileCompletion,

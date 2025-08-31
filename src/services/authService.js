@@ -183,16 +183,26 @@ class AuthService {
   // Logout
   async logout() {
     try {
+      console.log('AuthService: Iniciando logout, refreshToken:', this.refreshToken ? 'existe' : 'no existe');
+      
       if (this.refreshToken) {
+        const logoutBody = {
+          refresh_token: this.refreshToken
+        };
+        console.log('AuthService: Enviando logout con body:', logoutBody);
+        
         await this.makeRequest(ENDPOINTS.LOGOUT, {
           method: 'POST',
-          body: JSON.stringify({
-            refresh_token: this.refreshToken
-          })
+          body: JSON.stringify(logoutBody)
         });
+        
+        console.log('AuthService: Logout exitoso en el servidor');
+      } else {
+        console.warn('AuthService: No hay refreshToken para enviar al logout');
       }
     } catch (error) {
-      console.warn('Error en logout del servidor:', error);
+      console.error('AuthService: Error en logout del servidor:', error);
+      throw error; // Re-lanzar el error para que se maneje en el componente
     } finally {
       // Limpiar tokens y datos del usuario localmente
       this.clearTokens();

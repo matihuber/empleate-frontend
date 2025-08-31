@@ -59,6 +59,20 @@ export default function Login() {
     }
   }, [location.state, navigate])
 
+  // Mostrar mensaje de sesión expirada si viene de la URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search)
+    const message = urlParams.get('message')
+    
+    if (message === 'session_expired') {
+      setErrors({ 
+        general: "Tu sesión ha expirado. Por favor, inicia sesión nuevamente." 
+      })
+      // Limpiar el parámetro de la URL
+      navigate(location.pathname, { replace: true })
+    }
+  }, [location.search, location.pathname, navigate])
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({
