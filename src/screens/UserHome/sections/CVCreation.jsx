@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react'
 import { ChevronRight, ChevronLeft, } from 'lucide-react'
 import LoginButton from '../../../components/LoginButton'
 import CVTemplate1 from '../../../components/CVTemplate1' // Importar tu template
+import TemplatePreview from '../../../components/TemplatePreview'
 import apiInterceptor from '../../../services/apiInterceptor'
+import templateService from '../../../services/templateService'
 import { SessionExpired } from '../../../components'
 
 export default function CVCreation() {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
+  const [templates, setTemplates] = useState([])
+  const [loadingTemplates, setLoadingTemplates] = useState(true)
   const [currentStep, setCurrentStep] = useState('selection') // 'selection', 'personalization', 'skills', 'preview'
   const [sessionExpired, setSessionExpired] = useState(false)
 
@@ -27,19 +31,34 @@ export default function CVCreation() {
     });
   }, []);
 
+  // Cargar templates al montar el componente
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        setLoadingTemplates(true)
+        const templatesData = await templateService.getTemplates()
+        setTemplates(templatesData)
+        console.log('Templates cargados:', templatesData)
+      } catch (error) {
+        console.error('Error cargando templates:', error)
+        // En caso de error, usar templates por defecto
+        setTemplates([
+          { id: 'default-1', name: 'Template 1', description: 'Template por defecto' },
+          { id: 'default-2', name: 'Template 2', description: 'Template por defecto' },
+          { id: 'default-3', name: 'Template 3', description: 'Template por defecto' }
+        ])
+      } finally {
+        setLoadingTemplates(false)
+      }
+    }
+
+    loadTemplates()
+  }, [])
+
   // Si la sesión expiró, mostrar el componente de sesión expirada
   if (sessionExpired) {
     return <SessionExpired />;
   }
-
-  const templates = [
-    { id: 1, name: 'Template 1' },
-    { id: 2, name: 'Template 2' },
-    { id: 3, name: 'Template 3' },
-    { id: 4, name: 'Template 4' },
-    { id: 5, name: 'Template 5' },
-    { id: 6, name: 'Template 6' }
-  ]
 
   const handleTemplateSelect = (templateId) => {
     setSelectedTemplate(templateId)
@@ -229,39 +248,58 @@ export default function CVCreation() {
           </div>
 
           {/* Grid de templates */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {templates.map((template) => (
-              <div key={template.id} className="flex flex-col items-center">
-                {/* Contenedor vacío del template */}
-                <div 
-                  className={`w-full bg-white rounded-2xl shadow-lg border-2 transition-all cursor-pointer hover:shadow-xl ${
-                    selectedTemplate === template.id 
-                      ? 'border-blue-500' 
-                      : 'border-gray-200'
-                  }`}
-                  onClick={() => handleTemplateSelect(template.id)}
-                  style={{ aspectRatio: '0.7', minHeight: '300px' }}
-                >
-                  {/* Contenido vacío - aquí irán las previews después */}
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <span className="text-lg">{template.name}</span>
+          {loadingTemplates ? (
+            // Loading state
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <div className="w-full bg-gray-200 rounded-2xl animate-pulse" style={{ aspectRatio: '0.7', minHeight: '300px' }}>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-16 h-4 bg-gray-300 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="mt-4 w-5 h-5 bg-gray-300 rounded-full animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Templates loaded
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {templates.map((template) => (
+                <div key={template.id} className="flex flex-col items-center">
+                  {/* Contenedor de la card con estilos existentes */}
+                  <div 
+                    className={`w-full bg-white rounded-2xl shadow-lg border-2 transition-all cursor-pointer hover:shadow-xl ${
+                      selectedTemplate === template.id 
+                        ? 'border-blue-500' 
+                        : 'border-gray-200'
+                    }`}
+                    onClick={() => handleTemplateSelect(template.id)}
+                    style={{ aspectRatio: '0.7', minHeight: '300px' }}
+                  >
+                    {/* Preview del template usando el nuevo componente */}
+                    <TemplatePreview
+                      template={template}
+                      isSelected={selectedTemplate === template.id}
+                      onClick={() => handleTemplateSelect(template.id)}
+                    />
+                  </div>
+
+                  {/* Checkbox circular de selección */}
+                  <div className="mt-4">
+                    <input
+                      type="radio"
+                      name="template-selection"
+                      id={`template-${template.id}`}
+                      checked={selectedTemplate === template.id}
+                      onChange={() => handleTemplateSelect(template.id)}
+                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
+                    />
                   </div>
                 </div>
-
-                {/* Checkbox circular de selección */}
-                <div className="mt-4">
-                  <input
-                    type="radio"
-                    name="template-selection"
-                    id={`template-${template.id}`}
-                    checked={selectedTemplate === template.id}
-                    onChange={() => handleTemplateSelect(template.id)}
-                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Botón continuar */}
           <div className="flex justify-end">

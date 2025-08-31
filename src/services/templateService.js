@@ -1,0 +1,94 @@
+import authService from './authService'
+import apiInterceptor from './apiInterceptor'
+
+const API_BASE_URL = 'http://localhost:8000/api/v1'
+
+class TemplateService {
+  constructor() {
+    this.baseURL = API_BASE_URL
+  }
+
+  /**
+   * Get all available CV templates
+   */
+  async getTemplates(category = null) {
+    try {
+      let url = `${this.baseURL}/template-engine/templates`
+      if (category) {
+        url += `?category=${category}`
+      }
+
+      const response = await apiInterceptor.fetchWithInterceptor(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authService.accessToken}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const templates = await response.json()
+      console.log('TemplateService: Templates obtenidos exitosamente')
+      return templates
+    } catch (error) {
+      console.error('Error getting templates:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get template by ID
+   */
+  async getTemplate(templateId) {
+    try {
+      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/template-engine/templates/${templateId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authService.accessToken}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const template = await response.json()
+      console.log('TemplateService: Template obtenido exitosamente')
+      return template
+    } catch (error) {
+      console.error('Error getting template:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get template layout specification
+   */
+  async getTemplateLayout(templateId) {
+    try {
+      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/template-engine/templates/${templateId}/layout`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authService.accessToken}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const layout = await response.json()
+      console.log('TemplateService: Layout del template obtenido exitosamente')
+      return layout
+    } catch (error) {
+      console.error('Error getting template layout:', error)
+      throw error
+    }
+  }
+}
+
+// Export singleton instance
+const templateService = new TemplateService()
+export default templateService
