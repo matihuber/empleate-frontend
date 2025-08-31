@@ -6,48 +6,70 @@ import ImageModal from "../../../components/ImageModal"
 import LinkedInImportModal from "../../../components/LinkedInImportModal"
 import userProfileService from "../../../services/userProfileService"
 import imageCacheService from "../../../services/imageCacheService"
+import apiInterceptor from "../../../services/apiInterceptor"
+import { SessionExpired } from "../../../components"
 
 export default function MisDatosSection({ user }) {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showAvatarModal, setShowAvatarModal] = useState(false)
   const [modalStep, setModalStep] = useState('confirm')
   const [userAvatar, setUserAvatar] = useState(user.avatar || null)
+  const [currentCV, setCurrentCV] = useState(null)  // CV actual del usuario
+  const [currentLinkedIn, setCurrentLinkedIn] = useState(null)  // Perfil de LinkedIn actual del usuario
   const [uploadedFile, setUploadedFile] = useState(null)
   const [showLinkedInModal, setShowLinkedInModal] = useState(false)
+  const [sessionExpired, setSessionExpired] = useState(false)
   
   // Estados para cambios pendientes
   const [pendingChanges, setPendingChanges] = useState({})
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
 
+  // Si la sesión expiró, mostrar el componente de sesión expirada
+  if (sessionExpired) {
+    return <SessionExpired />;
+  }
+
   // Cargar imagen del usuario cuando se monta el componente
   useEffect(() => {
-    console.log('MisDatosSection: useEffect [user] ejecutado, user:', user)
-    console.log('MisDatosSection: user.sub disponible:', user.sub)
+    // Configurar el interceptor para manejar sesión expirada
+    apiInterceptor.setOnSessionExpired(() => {
+      setSessionExpired(true);
+    });
+
+    console.log('MisDatosSection: Cargando datos del usuario')
     
     const loadUserAvatar = async () => {
       try {
         // Primero intentar obtener del cache
         const cachedAvatar = imageCacheService.getImage(user.sub, 'profile')
         if (cachedAvatar) {
-          console.log('MisDatosSection: Avatar cargado desde cache:', cachedAvatar)
-          setUserAvatar(cachedAvatar)
+          console.log('MisDatosSection: Foto de perfil cargada desde cache')
+          // Marcar que NO necesita ser subido (ya existe en el servidor)
+          setUserAvatar({
+            ...cachedAvatar,
+            needsUpload: false
+          })
           return
         }
 
-        console.log('MisDatosSection: Cache miss, cargando desde backend para usuario:', user.sub)
+        console.log('MisDatosSection: Cargando foto de perfil desde backend')
         // Obtener la imagen del usuario desde el backend
         const avatarData = await userProfileService.getUserAvatar(user.sub)
         if (avatarData && avatarData.imageUrl) {
           // Guardar en cache para futuras cargas
           imageCacheService.setImage(user.sub, 'profile', avatarData)
-          setUserAvatar(avatarData)
-          console.log('MisDatosSection: Avatar cargado desde backend y cacheado:', avatarData)
+          // Marcar que NO necesita ser subido (ya existe en el servidor)
+          setUserAvatar({
+            ...avatarData,
+            needsUpload: false
+          })
+          console.log('MisDatosSection: Foto de perfil cargada desde backend')
         } else {
-          console.log('MisDatosSection: No se encontró avatar para el usuario')
+          console.log('MisDatosSection: No se encontró foto de perfil')
         }
       } catch (error) {
-        console.log('MisDatosSection: No se pudo cargar la imagen del usuario:', error)
+        console.log('MisDatosSection: Error al cargar foto de perfil')
         // Si no hay imagen, mantener el estado por defecto
       }
     }
@@ -55,8 +77,7 @@ export default function MisDatosSection({ user }) {
     if (user && user.sub) {
       loadUserAvatar()
     } else {
-      console.log('MisDatosSection: No hay usuario válido para cargar avatar')
-      console.log('MisDatosSection: user object completo:', user)
+              console.log('MisDatosSection: Usuario no válido para cargar foto de perfil')
     }
   }, [user])
 
@@ -82,6 +103,40 @@ export default function MisDatosSection({ user }) {
       loadUserAvatar()
     }
   }, [userAvatar, user])
+
+  // Cargar CV actual cuando se monta el componente
+  useEffect(() => {
+    const loadCurrentCV = async () => {
+      try {
+        const cvData = await userProfileService.getUserCV(user.sub)
+        if (cvData) {
+          setCurrentCV(cvData)
+          console.log('MisDatosSection: CV cargado exitosamente')
+        }
+      } catch (error) {
+        console.log('No se pudo cargar el CV actual:', error)
+      }
+    }
+
+    if (user && user.sub) {
+      loadCurrentCV()
+      
+      // Cargar perfil de LinkedIn actual
+      const loadCurrentLinkedIn = async () => {
+        try {
+          const linkedinData = await userProfileService.getUserLinkedIn(user.sub)
+          if (linkedinData) {
+            setCurrentLinkedIn(linkedinData)
+            console.log('MisDatosSection: Perfil de LinkedIn cargado exitosamente')
+          }
+        } catch (error) {
+          console.log('MisDatosSection: Error al cargar perfil de LinkedIn del usuario')
+        }
+      }
+      
+      loadCurrentLinkedIn()
+    }
+  }, [user])
 
   const handleFieldChange = (field, newValue) => {
     console.log(`Actualizando ${field}:`, newValue)
@@ -135,6 +190,11 @@ export default function MisDatosSection({ user }) {
   }
 
   const getFileIcon = (file) => {
+    // Validar que el archivo existe y tiene las propiedades necesarias
+    if (!file || !file.name || !file.type) {
+      return null
+    }
+    
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
       return (
         <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
@@ -159,7 +219,11 @@ export default function MisDatosSection({ user }) {
   // Nueva función para guardar el avatar editado
   const handleAvatarSave = (avatarData) => {
     console.log("Guardando avatar:", avatarData)
-    setUserAvatar(avatarData)  // Guardar el objeto completo, no solo imageUrl
+    // Marcar que SÍ necesita ser subido (es una nueva imagen)
+    setUserAvatar({
+      ...avatarData,
+      needsUpload: true
+    })
     // Aquí iría la lógica para subir la imagen al servidor
     // También podrías usar avatarData.useForCV y avatarData.cropSettings
   }
@@ -168,14 +232,31 @@ export default function MisDatosSection({ user }) {
     setShowLinkedInModal(true)
   }
 
-  const handleLinkedInSave = (file) => {
-    console.log("Archivo de LinkedIn cargado:", file.name)
-    // Procesar el archivo ZIP de LinkedIn
+  const handleLinkedInSave = (data) => {
+    console.log("Archivo de LinkedIn cargado:", data.file.name, "Tipo:", data.importType)
+    
+    // Marcar que hay un archivo de LinkedIn pendiente de subir
+    setUploadedFile({
+      file: data.file,
+      type: 'linkedin',
+      importType: data.importType
+    })
+    
+    // Marcar que hay cambios pendientes
+    setPendingChanges(prev => ({
+      ...prev,
+      linkedinProfile: true
+    }))
+    
+    // Ocultar el perfil de LinkedIn actual ya que se va a reemplazar
+    setCurrentLinkedIn(null)
   }
 
   // Función para guardar todos los cambios pendientes
   const handleSaveChanges = async () => {
-    if (Object.keys(pendingChanges).length === 0 && !uploadedFile && !userAvatar) {
+            console.log('MisDatos: Guardando cambios')
+    
+    if (Object.keys(pendingChanges).length === 0 && !(uploadedFile && uploadedFile.file) && !userAvatar) {
       setSaveMessage('No hay cambios para guardar')
       return
     }
@@ -187,7 +268,7 @@ export default function MisDatosSection({ user }) {
       // Llamar al servicio para guardar todos los cambios
       const result = await userProfileService.saveAllChanges({
         pendingChanges,
-        uploadedFile,
+        uploadedFile: uploadedFile && uploadedFile.file ? uploadedFile : null,
         userAvatar
       })
 
@@ -196,6 +277,28 @@ export default function MisDatosSection({ user }) {
       // Limpiar cambios pendientes
       setPendingChanges({})
       setUploadedFile(null)
+      
+      // Si se subió un archivo de LinkedIn, mostrar mensaje de éxito y actualizar estado
+      if (uploadedFile && uploadedFile.type === 'linkedin') {
+        setSaveMessage(`Perfil de LinkedIn (${uploadedFile.importType.toUpperCase()}) importado exitosamente!`)
+        
+        // Actualizar el estado con la información del backend
+        if (result.fileUploads) {
+          const linkedinUpload = result.fileUploads.find(upload => upload.file_type === 'linkedin')
+          if (linkedinUpload) {
+            setCurrentLinkedIn({
+              file_key: linkedinUpload.file_key,
+              filename: linkedinUpload.original_filename || 'linkedin-profile',
+              mime: linkedinUpload.mime,
+              size: linkedinUpload.size,
+              fileType: 'linkedin',
+              uploadedAt: new Date().toISOString(),
+              presigned_url: linkedinUpload.presigned_url
+            })
+            console.log('Perfil de LinkedIn actualizado exitosamente')
+          }
+        }
+      }
       
       // Si se subió una imagen, actualizar el estado con la respuesta del backend
       if (userAvatar && result.fileUploads) {
@@ -207,9 +310,10 @@ export default function MisDatosSection({ user }) {
             imageUrl: photoUpload.presigned_url,
             filename: filename,
             useForCV: userAvatar.useForCV || false,
-            cropSettings: userAvatar.cropSettings || {}
+            cropSettings: userAvatar.cropSettings || {},
+            needsUpload: false  // Ya no necesita ser subido
           })
-          console.log('Avatar actualizado con respuesta del backend:', photoUpload)
+          console.log('Foto de perfil actualizada exitosamente')
         }
       }
       
@@ -227,7 +331,9 @@ export default function MisDatosSection({ user }) {
   }
 
   // Verificar si hay cambios pendientes
-  const hasPendingChanges = Object.keys(pendingChanges).length > 0 || uploadedFile || userAvatar
+  const hasPendingChanges = Object.keys(pendingChanges).length > 0 || 
+                           (uploadedFile && uploadedFile.file) || 
+                           (userAvatar && userAvatar.needsUpload)
 
   return (
     <div>
@@ -392,8 +498,8 @@ export default function MisDatosSection({ user }) {
           Carga tu CV
         </h2>
         
-        {!uploadedFile ? (
-          // Área de carga cuando no hay archivo
+        {!uploadedFile && !currentCV ? (
+          // Área de carga cuando no hay archivo ni CV actual
           <div
             onDrop={handleFileDrop}
             onDragOver={handleDragOver}
@@ -416,20 +522,32 @@ export default function MisDatosSection({ user }) {
               id="cv-upload"
             />
           </div>
-        ) : (
-          // Mostrar archivo cargado
+        ) : uploadedFile ? (
+          // Mostrar archivo nuevo cargado (pendiente de guardar)
           <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {/* Ícono del archivo según tipo */}
-              {getFileIcon(uploadedFile)}
+              {uploadedFile && uploadedFile.file ? 
+                getFileIcon(uploadedFile.file) : 
+                getFileIcon(uploadedFile)
+              }
               
               {/* Información del archivo */}
               <div>
                 <p className="text-gray-800 font-medium truncate max-w-xs">
-                  {uploadedFile.name}
+                  {uploadedFile.file ? uploadedFile.file.name : uploadedFile.name}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
+                  {uploadedFile.file ? 
+                    `${(uploadedFile.file.size / (1024 * 1024)).toFixed(2)} MB` : 
+                    uploadedFile.size ? `${(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'
+                  }
+                </p>
+                <p className="text-xs text-blue-600 font-medium">
+                  {uploadedFile.type === 'linkedin' ? 
+                    `Perfil de LinkedIn (${uploadedFile.importType.toUpperCase()}) - Pendiente de guardar` : 
+                    'Nuevo archivo - Pendiente de guardar'
+                  }
                 </p>
               </div>
             </div>
@@ -441,6 +559,42 @@ export default function MisDatosSection({ user }) {
               title="Eliminar archivo"
             >
               <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        ) : (
+          // Mostrar CV actual guardado
+          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Ícono del archivo según tipo */}
+              {currentCV && currentCV.filename && currentCV.mime ? 
+                getFileIcon({ name: currentCV.filename, type: currentCV.mime }) : 
+                null
+              }
+              
+              {/* Información del archivo */}
+              <div>
+                <p className="text-gray-800 font-medium truncate max-w-xs">
+                  {currentCV?.filename || 'Nombre no disponible'}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {currentCV?.size ? `${(currentCV.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'}
+                </p>
+                <p className="text-xs text-green-600 font-medium">
+                  CV actual guardado
+                </p>
+              </div>
+            </div>
+
+            {/* Botón cambiar CV */}
+            <button
+              onClick={() => {
+                setCurrentCV(null)  // Ocultar CV actual
+                setUploadedFile(null)  // Limpiar archivo pendiente
+              }}
+              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Cambiar CV"
+            >
+              <Upload className="w-5 h-5" />
             </button>
           </div>
         )}
@@ -456,14 +610,86 @@ export default function MisDatosSection({ user }) {
           Perfil de LinkedIn
         </h2>
         
-        <LoginButton
-          variant="primary"
-          icon={Linkedin}
-          onClick={handleLinkedInImport}
-          className="max-w-md drop-shadow-md cursor-pointer"
-        >
-          Importar perfil de LinkedIn
-        </LoginButton>
+        {currentLinkedIn ? (
+          // Mostrar perfil de LinkedIn actual guardado
+          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Ícono del archivo según tipo */}
+              {getFileIcon({ name: currentLinkedIn.filename, type: currentLinkedIn.mime })}
+              
+              {/* Información del archivo */}
+              <div>
+                <p className="text-gray-800 font-medium truncate max-w-xs">
+                  {currentLinkedIn.filename}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {currentLinkedIn.size ? `${(currentLinkedIn.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'}
+                </p>
+                <p className="text-xs text-green-600 font-medium">
+                  Perfil de LinkedIn actual guardado
+                </p>
+              </div>
+            </div>
+
+            {/* Botón cambiar perfil */}
+            <button
+              onClick={() => {
+                setCurrentLinkedIn(null)  // Ocultar perfil actual
+                setUploadedFile(null)  // Limpiar archivo pendiente
+              }}
+              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Cambiar perfil de LinkedIn"
+            >
+              <Upload className="w-5 h-5" />
+            </button>
+          </div>
+        ) : uploadedFile && uploadedFile.type === 'linkedin' ? (
+          // Mostrar archivo nuevo cargado (pendiente de guardar)
+          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Ícono del archivo según tipo */}
+              {getFileIcon(uploadedFile.file)}
+              
+              {/* Información del archivo */}
+              <div>
+                <p className="text-gray-800 font-medium truncate max-w-xs">
+                  {uploadedFile.file.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {`${(uploadedFile.file.size / (1024 * 1024)).toFixed(2)} MB`}
+                </p>
+                <p className="text-xs text-blue-600 font-medium">
+                  Perfil de LinkedIn ({uploadedFile.importType.toUpperCase()}) - Pendiente de guardar
+                </p>
+              </div>
+            </div>
+
+            {/* Botón eliminar */}
+            <button
+              onClick={() => {
+                setUploadedFile(null)
+                // Restaurar el perfil actual si existía
+                if (currentLinkedIn) {
+                  setCurrentLinkedIn(currentLinkedIn)
+                }
+              }}
+              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              title="Eliminar archivo"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        ) : (
+          // Mostrar botón de importar cuando no hay perfil
+          <LoginButton
+            variant="primary"
+            icon={Linkedin}
+            onClick={handleLinkedInImport}
+            className="max-w-md drop-shadow-md cursor-pointer"
+          >
+            Importar perfil de LinkedIn
+          </LoginButton>
+        )}
       </div>
 
       {/* Botón Guardar Cambios */}
@@ -471,7 +697,13 @@ export default function MisDatosSection({ user }) {
         <div className="flex flex-col items-end space-y-3">
           <LoginButton
             variant="primary"
-            onClick={handleSaveChanges}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (!isSaving) {
+                handleSaveChanges()
+              }
+            }}
             disabled={!hasPendingChanges || isSaving}
             className={`min-w-[200px] ${
               !hasPendingChanges 

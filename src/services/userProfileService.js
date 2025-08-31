@@ -1,4 +1,5 @@
 import authService from './authService'
+import apiInterceptor from './apiInterceptor'
 
 const API_BASE_URL = 'http://localhost:8000/api/v1'
 
@@ -12,7 +13,7 @@ class UserProfileService {
    */
   async updateProfile(profileData) {
     try {
-      const response = await fetch(`${this.baseURL}/my-data/profile`, {
+      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -72,37 +73,32 @@ class UserProfileService {
    */
   async uploadFile(file, fileType) {
     try {
-      // Handle base64 image objects
-      let actualFile = file
-      if (file && typeof file === 'object' && file.imageUrl && file.imageUrl.startsWith('data:')) {
-        console.log('UserProfileService: Convirtiendo imagen base64 a archivo')
-        actualFile = this._base64ToFile(file.imageUrl, file.filename || 'profile-photo.jpg')
-      }
+              console.log('UserProfileService: Iniciando upload de archivo tipo:', fileType)
+
+        // Handle base64 image objects (solo para fotos)
+        let actualFile = file
+        if (fileType === 'photo' && file && typeof file === 'object' && file.imageUrl && file.imageUrl.startsWith('data:')) {
+          console.log('UserProfileService: Convirtiendo imagen base64 a archivo')
+          actualFile = this._base64ToFile(file.imageUrl, file.filename || 'profile-photo.jpg')
+        } else if (file instanceof File) {
+          // Para CV y LinkedIn, usar el archivo directamente
+          actualFile = file
+          console.log('UserProfileService: Archivo File detectado:', actualFile.name)
+        } else {
+          throw new Error(`Tipo de archivo no válido para ${fileType}: ${typeof file}`)
+        }
+
+        console.log('UserProfileService: Archivo procesado correctamente')
       
-      console.log('UserProfileService: Archivo original:', {
-        originalFile: file,
-        hasImageUrl: file && file.imageUrl ? 'Sí' : 'No',
-        imageUrlType: file && file.imageUrl ? typeof file.imageUrl : 'N/A'
-      })
-      
-      console.log('UserProfileService: Archivo procesado:', {
-        fileName: actualFile.name,
-        fileSize: actualFile.size,
-        fileType: actualFile.type,
-        fileTypeParam: fileType
-      })
+              console.log('UserProfileService: Archivo procesado correctamente')
       
       const formData = new FormData()
       formData.append('file', actualFile)
       formData.append('file_type', fileType)
 
-      console.log('UserProfileService: FormData creado:', {
-        hasFile: formData.has('file'),
-        hasFileType: formData.has('file_type'),
-        fileTypeValue: formData.get('file_type')
-      })
+              console.log('UserProfileService: FormData preparado correctamente')
 
-      const response = await fetch(`${this.baseURL}/my-data/upload`, {
+      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authService.accessToken}`
@@ -121,7 +117,7 @@ class UserProfileService {
       }
 
       const result = await response.json()
-      console.log('UserProfileService: Upload exitoso:', result)
+              console.log('UserProfileService: Archivo subido exitosamente')
       return result
     } catch (error) {
       console.error('Error uploading file:', error)
@@ -134,19 +130,34 @@ class UserProfileService {
    */
   async saveAllChanges(changes) {
     try {
+      console.log('UserProfileService: Iniciando guardado de cambios')
       const { pendingChanges, uploadedFile, userAvatar } = changes
       
       // Upload files first if any
       let fileUploads = []
       
       if (uploadedFile) {
-        const cvUpload = await this.uploadFile(uploadedFile, 'cv')
-        fileUploads.push(cvUpload)
+        // Determinar el tipo de archivo basado en la estructura
+        let fileType = 'cv' // por defecto
+        if (uploadedFile.type === 'linkedin') {
+          fileType = 'linkedin'
+          console.log('UserProfileService: Subiendo archivo de LinkedIn:', uploadedFile.importType)
+        } else {
+          console.log('UserProfileService: Subiendo archivo CV')
+        }
+        
+        const fileUpload = await this.uploadFile(uploadedFile.file || uploadedFile, fileType)
+        fileUploads.push(fileUpload)
+        console.log('UserProfileService: Archivo subido exitosamente')
       }
       
-      if (userAvatar) {
+      if (userAvatar && userAvatar.needsUpload) {
+        console.log('UserProfileService: Subiendo nueva foto de perfil')
         const photoUpload = await this.uploadFile(userAvatar, 'photo')
         fileUploads.push(photoUpload)
+        console.log('UserProfileService: Avatar subido exitosamente')
+      } else if (userAvatar && !userAvatar.needsUpload) {
+        console.log('UserProfileService: Avatar ya existe, no necesita ser subido')
       }
       
       // Update profile data if any
@@ -173,7 +184,7 @@ class UserProfileService {
    */
   async getUserAvatar(userId) {
     try {
-      const response = await fetch(`${this.baseURL}/my-data/profile-picture/${userId}`, {
+      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/profile-picture/${userId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authService.accessToken}`
@@ -189,10 +200,68 @@ class UserProfileService {
       }
 
       const result = await response.json()
-      console.log('UserProfileService: Avatar cargado:', result)
+      console.log('UserProfileService: Foto de perfil cargada exitosamente')
       return result
     } catch (error) {
       console.error('Error getting user avatar:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get user CV
+   */
+  async getUserCV(userId) {
+    try {
+      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/cv/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authService.accessToken}`
+        }
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No CV found
+          return null
+        }
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('UserProfileService: CV cargado exitosamente')
+      return result
+    } catch (error) {
+      console.error('Error getting user CV:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get user LinkedIn profile
+   */
+  async getUserLinkedIn(userId) {
+    try {
+      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/linkedin/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authService.accessToken}`
+        }
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No LinkedIn profile found
+          return null
+        }
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('UserProfileService: Perfil de LinkedIn cargado exitosamente')
+      return result
+    } catch (error) {
+      console.error('Error getting user LinkedIn profile:', error)
       throw error
     }
   }

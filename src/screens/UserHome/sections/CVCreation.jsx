@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronRight, ChevronLeft, } from 'lucide-react'
 import LoginButton from '../../../components/LoginButton'
 import CVTemplate1 from '../../../components/CVTemplate1' // Importar tu template
+import apiInterceptor from '../../../services/apiInterceptor'
+import { SessionExpired } from '../../../components'
 
 export default function CVCreation() {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [currentStep, setCurrentStep] = useState('selection') // 'selection', 'personalization', 'skills', 'preview'
+  const [sessionExpired, setSessionExpired] = useState(false)
 
   // Estados para las habilidades técnicas
   const [skills, setSkills] = useState([])
@@ -16,6 +19,19 @@ export default function CVCreation() {
     aspectos: '',
     nivel: 'Medio'
   })
+
+  // Configurar el interceptor para manejar sesión expirada
+  useEffect(() => {
+    apiInterceptor.setOnSessionExpired(() => {
+      setSessionExpired(true);
+    });
+  }, []);
+
+  // Si la sesión expiró, mostrar el componente de sesión expirada
+  if (sessionExpired) {
+    return <SessionExpired />;
+  }
+
   const templates = [
     { id: 1, name: 'Template 1' },
     { id: 2, name: 'Template 2' },

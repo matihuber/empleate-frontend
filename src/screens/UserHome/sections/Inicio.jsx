@@ -1,47 +1,59 @@
 import { Bell, Edit, Linkedin, FileText, User, Camera } from "lucide-react"
 import { useEffect, useState } from "react"
 import authService from "../../../services/authService"
+import apiInterceptor from "../../../services/apiInterceptor"
+import { SessionExpired } from "../../../components"
 
 export default function Inicio({ user }) {
   const [homeData, setHomeData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [sessionExpired, setSessionExpired] = useState(false)
 
   useEffect(() => {
-      const fetchHomeData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const token = authService.getAccessToken()
-      if (!token) {
-        throw new Error('No hay token de acceso')
-      }
+    // Configurar el interceptor para manejar sesión expirada
+    apiInterceptor.setOnSessionExpired(() => {
+      setSessionExpired(true);
+      setLoading(false);
+    });
 
-      console.log('🔍 Inicio: Token a enviar:', token.substring(0, 50) + '...')
-      console.log('🔍 Inicio: URL:', 'http://localhost:8000/api/v1/home')
-
-      const response = await fetch('http://localhost:8000/api/v1/home', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+    const fetchHomeData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        setSessionExpired(false)
+        
+        const token = authService.getAccessToken()
+        if (!token) {
+          throw new Error('No hay token de acceso')
         }
-      })
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`)
+        console.log('🔍 Inicio: Token a enviar:', token.substring(0, 50) + '...')
+        console.log('🔍 Inicio: URL:', 'http://localhost:8000/api/v1/home')
+
+        const response = await apiInterceptor.fetchWithInterceptor('http://localhost:8000/api/v1/home', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        setHomeData(data)
+      } catch (error) {
+        console.error('Error fetching home data:', error)
+        if (!error.message.includes('Sesión expirada')) {
+          setError(error.message)
+        }
+      } finally {
+        setLoading(false)
       }
-
-      const data = await response.json()
-      setHomeData(data)
-    } catch (error) {
-      console.error('Error fetching home data:', error)
-      setError(error.message)
-    } finally {
-      setLoading(false)
     }
-  }
 
     fetchHomeData()
   }, [])
@@ -68,6 +80,10 @@ export default function Inicio({ user }) {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
+  }
+
+  if (sessionExpired) {
+    return <SessionExpired onRetry={() => window.location.reload()} />;
   }
 
   if (error) {

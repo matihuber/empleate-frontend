@@ -1,4 +1,5 @@
-import { useState, useContext } from "react"
+import { useState, useContext, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { 
   Home, 
   User, 
@@ -10,6 +11,7 @@ import {
   LogOut,
 } from "lucide-react"
 import AuthContext from "../../contexts/AuthContext"
+import apiInterceptor from "../../services/apiInterceptor"
 import Inicio from "./sections/Inicio"
 import MisDatos from "./sections/MisDatos"
 import CVCreation from "./sections/CVCreation"
@@ -17,6 +19,17 @@ import CVCreation from "./sections/CVCreation"
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
   const { user, logout } = useContext(AuthContext)
+  const navigate = useNavigate()
+  
+  // Configurar el interceptor de API para manejar expiración de sesión
+  useEffect(() => {
+    apiInterceptor.setNavigate(navigate)
+    apiInterceptor.setOnSessionExpired(() => {
+      console.log('UserHome: Sesión expirada, redirigiendo al login')
+      logout()
+      navigate('/login?message=session_expired')
+    })
+  }, [navigate, logout])
   
   // Si no hay usuario, mostrar loading o redirigir
   if (!user) {

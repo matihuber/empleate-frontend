@@ -1,12 +1,16 @@
 import { useState } from 'react'
-import { X, Upload } from 'lucide-react'
+import { X, Upload, FileText, Download } from 'lucide-react'
 
 export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
   const [uploadedFile, setUploadedFile] = useState(null)
+  const [importType, setImportType] = useState('zip') // 'zip' o 'pdf'
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0]
-    if (file && file.name.endsWith('.zip')) {
+    if (file && (
+      (importType === 'zip' && file.name.endsWith('.zip')) ||
+      (importType === 'pdf' && file.name.endsWith('.pdf'))
+    )) {
       setUploadedFile(file)
     }
   }
@@ -14,7 +18,10 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
   const handleFileDrop = (event) => {
     event.preventDefault()
     const file = event.dataTransfer.files[0]
-    if (file && file.name.endsWith('.zip')) {
+    if (file && (
+      (importType === 'zip' && file.name.endsWith('.zip')) ||
+      (importType === 'pdf' && file.name.endsWith('.pdf'))
+    )) {
       setUploadedFile(file)
     }
   }
@@ -25,14 +32,20 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
 
   const handleSave = () => {
     if (uploadedFile) {
-      onSave(uploadedFile)
+      // Enviar archivo con información del tipo de importación
+      onSave({
+        file: uploadedFile,
+        importType: importType
+      })
       setUploadedFile(null)
+      setImportType('zip')
       onClose()
     }
   }
 
   const handleClose = () => {
     setUploadedFile(null)
+    setImportType('zip') // Reset al tipo por defecto
     onClose()
   }
 
@@ -53,46 +66,108 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
         </div>
 
         <div className="p-6">
+          {/* Selector de tipo de importación */}
+          <div className="mb-6">
+            <div className="flex space-x-2 mb-4">
+              <button
+                onClick={() => setImportType('zip')}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                  importType === 'zip'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <Download className="w-5 h-5" />
+                  <span>Exportación Completa (ZIP/CSV)</span>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => setImportType('pdf')}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+                  importType === 'pdf'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <FileText className="w-5 h-5" />
+                  <span>PDF Directo ⭐ RECOMENDADO</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
           {/* Pasos para obtener el archivo */}
           <div className="mb-8 space-y-4">
-            <div>
-              <p className="text-gray-800 font-medium">
-                <span className="font-bold">Paso 1:</span> Entra a LinkedIn y dirígete al perfil
-              </p>
-            </div>
+            {importType === 'zip' ? (
+              // Pasos para exportación completa (ZIP/CSV)
+              <>
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 1:</span> Entra a LinkedIn y dirígete al perfil
+                  </p>
+                </div>
 
-            <div>
-              <p className="text-gray-800 font-medium">
-                <span className="font-bold">Paso 2:</span> Ve a Ajustes → Gestiona tu cuenta y la privacidad
-              </p>
-            </div>
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 2:</span> Ve a Ajustes → Gestiona tu cuenta y la privacidad
+                  </p>
+                </div>
 
-            <div>
-              <p className="text-gray-800 font-medium">
-                <span className="font-bold">Paso 3:</span> En el panel izquierdo de Ajustes, seleccionar "Privacidad de datos"
-              </p>
-            </div>
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 3:</span> En el panel izquierdo de Ajustes, seleccionar "Privacidad de datos"
+                  </p>
+                </div>
 
-            <div>
-              <p className="text-gray-800 font-medium">
-                <span className="font-bold">Paso 4:</span> Dentro de la sección "Cómo utiliza LinkedIn tus datos", seleccionar "Obtener una copia de tus datos"
-              </p>
-            </div>
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 4:</span> Dentro de la sección "Cómo utiliza LinkedIn tus datos", seleccionar "Obtener una copia de tus datos"
+                  </p>
+                </div>
 
-            <div>
-              <p className="text-gray-800 font-medium">
-                <span className="font-bold">Paso 5:</span> Tildar la casilla del "Perfil"
-              </p>
-            </div>
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 5:</span> Tildar la casilla del "Perfil"
+                  </p>
+                </div>
 
-            <div>
-              <p className="text-gray-800 font-medium">
-                <span className="font-bold">Paso 6:</span> Hacer click en "Solicitar archivo"
-              </p>
-              <p className="text-sm text-gray-600 italic mt-1">
-                *El archivo estará disponible a los 10 minutos de haberlo solicitado, subir el archivo .ZIP obtenido*
-              </p>
-            </div>
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 6:</span> Hacer click en "Solicitar archivo"
+                  </p>
+                  <p className="text-sm text-gray-600 italic mt-1">
+                    *El archivo estará disponible a los 10 minutos de haberlo solicitado, subir el archivo .ZIP obtenido*
+                  </p>
+                </div>
+              </>
+            ) : (
+              // Pasos para PDF directo
+              <>
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 1:</span> Entra a LinkedIn y dirígete al perfil
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 2:</span> Haz click en el botón "Recursos" (en la parte superior del perfil)
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-gray-800 font-medium">
+                    <span className="font-bold">Paso 3:</span> Selecciona "Guardar en PDF"
+                  </p>
+                  <p className="text-sm text-gray-600 italic mt-1">
+                    *Esta opción tiene un límite mensual de descargas, pero es más rápida y directa*
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Área de drag & drop o archivo cargado */}
@@ -107,7 +182,7 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
                 <label htmlFor="linkedin-file-upload" className="cursor-pointer block">
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">
-                    Arrastra un archivo hasta aquí o{" "}
+                    Arrastra un archivo {importType === 'zip' ? 'ZIP/CSV' : 'PDF'} hasta aquí o{" "}
                     <span className="text-blue-600 hover:text-blue-700 font-medium underline">
                       súbelo
                     </span>
@@ -115,7 +190,7 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
                 </label>
                 <input
                   type="file"
-                  accept=".zip"
+                  accept={importType === 'zip' ? '.zip,.csv' : '.pdf'}
                   onChange={handleFileUpload}
                   className="hidden"
                   id="linkedin-file-upload"
@@ -125,10 +200,16 @@ export default function LinkedInImportModal({ isOpen, onClose, onSave }) {
               // Mostrar archivo cargado
               <div className="bg-white border-2 border-gray-300 rounded-xl p-6 flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  {/* Ícono del archivo ZIP */}
-                  <svg className="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                  </svg>
+                  {/* Ícono del archivo según tipo */}
+                  {importType === 'zip' ? (
+                    <svg className="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                  )}
                   
                   {/* Información del archivo */}
                   <div>

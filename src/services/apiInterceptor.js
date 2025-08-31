@@ -1,30 +1,42 @@
-import { useNavigate } from 'react-router-dom';
-
 // Interceptor global para manejar respuestas 401
 class ApiInterceptor {
   constructor() {
     this.navigate = null;
+    this.onSessionExpired = null;
   }
 
   setNavigate(navigate) {
     this.navigate = navigate;
   }
 
+  setOnSessionExpired(callback) {
+    this.onSessionExpired = callback;
+  }
+
   async handleResponse(response, options = {}) {
     if (response.status === 401) {
-      console.log('API Interceptor: Token expirado o inválido, redirigiendo al login');
+      console.log('API Interceptor: Token expirado o inválido, ejecutando logout forzado');
       
-      // Limpiar datos de sesión del localStorage
+      // Limpiar localStorage
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       
-      // Mostrar mensaje al usuario
+      // Limpiar cache de imágenes
+      if (window.imageCacheService) {
+        window.imageCacheService.clearAll();
+      }
+      
+      // Notificar al componente padre sobre la sesión expirada
+      if (this.onSessionExpired) {
+        this.onSessionExpired();
+        return response; // No lanzar error, dejar que el componente maneje la UI
+      }
+      
+      // Fallback: redirigir al login
       if (this.navigate) {
-        // Redirigir al login con mensaje de sesión expirada
         this.navigate('/login?message=session_expired');
       } else {
-        // Fallback: recargar la página para que AuthContext maneje la redirección
         window.location.href = '/login?message=session_expired';
       }
       

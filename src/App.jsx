@@ -8,6 +8,7 @@ import Register from './screens/Register';
 import PasswordRecovery from './screens/PasswordRecovery';
 import UserHome from './screens/UserHome';
 import AuthCallback from './screens/AuthCallback';
+import SessionExpired from './components/SessionExpired';
 
 function App() {
   return (
@@ -39,6 +40,9 @@ function App() {
           
           {/* Callback de OAuth (accesible para todos) */}
           <Route path="/auth/callback" element={<AuthCallback />} />
+          
+          {/* Ruta para sesión expirada */}
+          <Route path="/session-expired" element={<SessionExpired />} />
           
           {/* Ruta por defecto */}
           <Route path="*" element={<Navigate to="/" replace />} />

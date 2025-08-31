@@ -16,3 +16,4 @@ export { default as LinkedInImportModal } from './LinkedInImportModal'
 // Componentes de usuario
 export { default as UserHomeInput } from './UserHomeInput'
 export { default as CardHome } from './CardHome'
+export { default as SessionExpired } from './SessionExpired'
