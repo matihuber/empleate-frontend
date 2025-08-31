@@ -79,30 +79,10 @@ export default function MisDatosSection({ user }) {
     } else {
               console.log('MisDatosSection: Usuario no válido para cargar foto de perfil')
     }
-  }, [user])
+  }, [user?.sub]) // Solo ejecutar cuando cambie user.sub, no todo el objeto user
 
-  // Recargar imagen cuando cambie userAvatar (para casos de actualización)
-  useEffect(() => {
-    if (userAvatar && userAvatar.imageUrl && !userAvatar.imageUrl.startsWith('data:')) {
-      // Si ya tenemos una imagen válida del backend, no hacer nada
-      return
-    }
-    
-    // Si no hay imagen o es una imagen temporal (base64), cargar desde el backend
-    if (user && user.sub) {
-      const loadUserAvatar = async () => {
-        try {
-          const avatarData = await userProfileService.getUserAvatar(user.sub)
-          if (avatarData && avatarData.imageUrl) {
-            setUserAvatar(avatarData)
-          }
-        } catch (error) {
-          console.log('No se pudo recargar la imagen del usuario:', error)
-        }
-      }
-      loadUserAvatar()
-    }
-  }, [userAvatar, user])
+  // Este useEffect se eliminó para evitar re-renders infinitos
+  // La lógica de carga de avatar ya está manejada en el useEffect principal
 
   // Cargar CV actual cuando se monta el componente
   useEffect(() => {
@@ -136,7 +116,7 @@ export default function MisDatosSection({ user }) {
       
       loadCurrentLinkedIn()
     }
-  }, [user])
+  }, [user?.sub]) // Solo ejecutar cuando cambie user.sub, no todo el objeto user
 
   const handleFieldChange = (field, newValue) => {
     console.log(`Actualizando ${field}:`, newValue)

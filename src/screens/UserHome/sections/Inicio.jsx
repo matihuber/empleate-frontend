@@ -28,9 +28,6 @@ export default function Inicio({ user }) {
           throw new Error('No hay token de acceso')
         }
 
-        console.log('🔍 Inicio: Token a enviar:', token.substring(0, 50) + '...')
-        console.log('🔍 Inicio: URL:', 'http://localhost:8000/api/v1/home')
-
         const response = await apiInterceptor.fetchWithInterceptor('http://localhost:8000/api/v1/home', {
           method: 'GET',
           headers: {
@@ -46,7 +43,6 @@ export default function Inicio({ user }) {
         const data = await response.json()
         setHomeData(data)
       } catch (error) {
-        console.error('Error fetching home data:', error)
         if (!error.message.includes('Sesión expirada')) {
           setError(error.message)
         }

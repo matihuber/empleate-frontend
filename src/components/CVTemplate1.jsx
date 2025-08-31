@@ -1,7 +1,7 @@
 import { Mail, Phone, MapPin, Linkedin, Globe, Star, Award, Calendar } from 'lucide-react'
 
 export default function CVTemplate1({ cvData }) {
-  // Si no hay datos, mostrar template con datos de ejemplo
+  // Validar y normalizar datos
   const data = cvData || {
     personalInfo: {
       name: "ANA MARÍA FERNÁNDEZ",
@@ -114,26 +114,14 @@ export default function CVTemplate1({ cvData }) {
   }
 
   const renderStars = (level) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <Star
-        key={index}
-        className={`w-3 h-3 ${
-          index < level ? 'text-yellow-400 fill-current' : 'text-gray-300'
-        }`}
-      />
-    ))
+    // ATS-friendly: solo texto descriptivo, sin elementos visuales
+    const levelText = level === 5 ? "Experto" : level === 4 ? "Avanzado" : level === 3 ? "Intermedio" : level === 2 ? "Básico" : "Principiante"
+    return <span className="text-xs text-slate-300 font-medium">({levelText})</span>
   }
 
   const renderLanguageLevel = (level) => {
-    const dots = level === "Nativo" ? 5 : level === "Competente" ? 4 : 3
-    return Array.from({ length: 5 }, (_, index) => (
-      <div
-        key={index}
-        className={`w-2 h-2 rounded-full ${
-          index < dots ? 'bg-white' : 'bg-slate-600'
-        }`}
-      />
-    ))
+    // ATS-friendly: solo texto descriptivo, sin elementos visuales
+    return <span className="text-xs text-slate-300 font-medium">({level})</span>
   }
 
   return (
@@ -144,7 +132,7 @@ export default function CVTemplate1({ cvData }) {
           {/* Foto de perfil */}
           <div className="text-center mb-6">
             <div className="w-32 h-32 mx-auto bg-slate-600 rounded-full flex items-center justify-center mb-4 overflow-hidden">
-              {data.personalInfo.avatar ? (
+              {data.personalInfo?.avatar ? (
                 <img 
                   src={data.personalInfo.avatar} 
                   alt="Profile"
@@ -153,7 +141,7 @@ export default function CVTemplate1({ cvData }) {
               ) : (
                 <div className="w-full h-full bg-slate-500 flex items-center justify-center">
                   <span className="text-2xl font-bold text-slate-300">
-                    {data.personalInfo.name.split(' ').map(n => n[0]).join('')}
+                    {data.personalInfo?.name ? data.personalInfo.name.split(' ').map(n => n[0]).join('') : 'CV'}
                   </span>
                 </div>
               )}
@@ -164,62 +152,59 @@ export default function CVTemplate1({ cvData }) {
           <div className="mb-8">
             <h3 className="text-lg font-bold mb-3 text-center">PERFIL PROFESIONAL</h3>
             <p className="text-sm leading-relaxed text-slate-200">
-              {data.summary}
+              {data.summary || 'Resumen profesional no disponible'}
             </p>
           </div>
 
           {/* Logros Clave */}
-          <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4">LOGROS CLAVE</h3>
-            <div className="space-y-4">
-              {data.achievements.map((achievement, index) => (
-                <div key={index} className="flex items-start space-x-3">
-                  <Award className="w-5 h-5 text-blue-300 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-sm mb-1">{achievement.title}</h4>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      {achievement.description}
-                    </p>
+          {data.achievements && data.achievements.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-bold mb-4">LOGROS CLAVE</h3>
+              <div className="space-y-4">
+                {data.achievements.map((achievement, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <Award className="w-5 h-5 text-blue-300 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-semibold mb-1">{achievement.title}</h4>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {achievement.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Habilidades */}
-          <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4">HABILIDADES</h3>
-            <div className="space-y-3">
-              {data.skills.technical.map((skill, index) => (
-                <div key={index}>
-                  <div className="flex justify-between items-center mb-1">
+          {data.skills?.technical && data.skills.technical.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-bold mb-4">HABILIDADES</h3>
+              <div className="space-y-2">
+                {data.skills.technical.map((skill, index) => (
+                  <div key={index} className="flex justify-between items-center">
                     <span className="text-sm font-medium">{skill.name}</span>
-                  </div>
-                  <div className="flex space-x-1">
                     {renderStars(skill.level)}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Idiomas */}
-          <div>
-            <h3 className="text-lg font-bold mb-4">IDIOMAS</h3>
-            <div className="space-y-3">
-              {data.skills.languages.map((language, index) => (
-                <div key={index}>
-                  <div className="flex justify-between items-center mb-2">
+          {data.skills?.languages && data.skills.languages.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold mb-4">IDIOMAS</h3>
+              <div className="space-y-2">
+                {data.skills.languages.map((language, index) => (
+                  <div key={index} className="flex justify-between items-center">
                     <span className="text-sm font-medium">{language.name}</span>
-                    <span className="text-xs text-slate-300">{language.level}</span>
-                  </div>
-                  <div className="flex space-x-1">
                     {renderLanguageLevel(language.level)}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Contenido principal */}
@@ -227,37 +212,45 @@ export default function CVTemplate1({ cvData }) {
           {/* Header con información personal */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              {data.personalInfo.name}
+              {data.personalInfo?.name || 'Nombre no especificado'}
             </h1>
             <p className="text-lg text-blue-600 mb-4">
-              {data.personalInfo.title}
+              {data.personalInfo?.title || 'Título no especificado'}
             </p>
             
             {/* Información de contacto */}
             <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-              <div className="flex items-center space-x-2">
-                <Phone className="w-4 h-4" />
-                <span>{data.personalInfo.phone}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="w-4 h-4" />
-                <span>{data.personalInfo.email}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Linkedin className="w-4 h-4" />
-                <span>{data.personalInfo.linkedin}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4" />
-                <span>{data.personalInfo.location}</span>
-              </div>
-              {data.personalInfo.website && (
+              {data.personalInfo?.phone && (
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4" />
+                  <span>{data.personalInfo.phone}</span>
+                </div>
+              )}
+              {data.personalInfo?.email && (
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4" />
+                  <span>{data.personalInfo.email}</span>
+                </div>
+              )}
+              {data.personalInfo?.linkedin && (
+                <div className="flex items-center space-x-2">
+                  <Linkedin className="w-4 h-4" />
+                  <span>{data.personalInfo.linkedin}</span>
+                </div>
+              )}
+              {data.personalInfo?.location && (
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-4 h-4" />
+                  <span>{data.personalInfo.location}</span>
+                </div>
+              )}
+              {data.personalInfo?.website && (
                 <div className="flex items-center space-x-2">
                   <Globe className="w-4 h-4" />
                   <span>{data.personalInfo.website}</span>
                 </div>
               )}
-              {data.personalInfo.age && (
+              {data.personalInfo?.age && (
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4" />
                   <span>{data.personalInfo.age}</span>
@@ -267,66 +260,72 @@ export default function CVTemplate1({ cvData }) {
           </div>
 
           {/* Experiencia */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">
-              EXPERIENCIA
-            </h2>
-            <div className="space-y-6">
-              {data.experience.map((job, index) => (
-                <div key={index}>
-                  <div className="flex justify-between items-start mb-2">
+          {data.experience && data.experience.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">
+                EXPERIENCIA
+              </h2>
+              <div className="space-y-6">
+                {data.experience.map((job, index) => (
+                  <div key={index}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {job.position}
+                        </h3>
+                        <p className="text-blue-600 font-medium">
+                          {job.company}
+                        </p>
+                        {job.location && (
+                          <p className="text-sm text-gray-500">{job.location}</p>
+                        )}
+                      </div>
+                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        {job.period}
+                      </span>
+                    </div>
+                    {job.achievements && job.achievements.length > 0 && (
+                      <ul className="space-y-1 text-sm text-gray-700">
+                        {job.achievements.map((achievement, achIndex) => (
+                          <li key={achIndex} className="flex items-start space-x-2">
+                            <span className="text-blue-600 mt-2">•</span>
+                            <span className="leading-relaxed">{achievement}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Educación */}
+          {data.education && data.education.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">
+                EDUCACIÓN
+              </h2>
+              <div className="space-y-4">
+                {data.education.map((edu, index) => (
+                  <div key={index} className="flex justify-between items-start">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800">
-                        {job.position}
+                        {edu.degree}
                       </h3>
-                      <p className="text-blue-600 font-medium">
-                        {job.company}
-                      </p>
-                      {job.location && (
-                        <p className="text-sm text-gray-500">{job.location}</p>
+                      <p className="text-blue-600 font-medium">{edu.institution}</p>
+                      {edu.location && (
+                        <p className="text-sm text-gray-500">{edu.location}</p>
                       )}
                     </div>
                     <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      {job.period}
+                      {edu.period}
                     </span>
                   </div>
-                  <ul className="space-y-1 text-sm text-gray-700">
-                    {job.achievements.map((achievement, achIndex) => (
-                      <li key={achIndex} className="flex items-start space-x-2">
-                        <span className="text-blue-600 mt-2">•</span>
-                        <span className="leading-relaxed">{achievement}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-
-          {/* Educación */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">
-              EDUCACIÓN
-            </h2>
-            <div className="space-y-4">
-              {data.education.map((edu, index) => (
-                <div key={index} className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {edu.degree}
-                    </h3>
-                    <p className="text-blue-600 font-medium">{edu.institution}</p>
-                    {edu.location && (
-                      <p className="text-sm text-gray-500">{edu.location}</p>
-                    )}
-                  </div>
-                  <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {edu.period}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* Certificaciones */}
           {data.certifications && data.certifications.length > 0 && (
