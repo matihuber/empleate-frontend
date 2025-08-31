@@ -9,7 +9,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react"
-import { AuthContext } from "../../contexts/AuthContext"
+import AuthContext from "../../contexts/AuthContext"
 import Inicio from "./sections/Inicio"
 import MisDatos from "./sections/MisDatos"
 import CVCreation from "./sections/CVCreation"

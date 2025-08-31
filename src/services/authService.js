@@ -183,9 +183,12 @@ class AuthService {
   // Logout
   async logout() {
     try {
-      if (this.accessToken) {
+      if (this.refreshToken) {
         await this.makeRequest(ENDPOINTS.LOGOUT, {
-          method: 'POST'
+          method: 'POST',
+          body: JSON.stringify({
+            refresh_token: this.refreshToken
+          })
         });
       }
     } catch (error) {

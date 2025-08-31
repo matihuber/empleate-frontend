@@ -201,6 +201,11 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.loginBasic(email, password);
       
       console.log('AuthContext: Login exitoso, respuesta:', response)
+      
+      // Establecer tokens en el servicio de autenticación
+      authService.setTokens(response.accessToken, response.refreshToken)
+      authService.setUser(response.user)
+      
       // Actualizar estado con la respuesta real
       dispatch({ type: AUTH_ACTIONS.SET_TOKENS, payload: {
         accessToken: response.accessToken,
