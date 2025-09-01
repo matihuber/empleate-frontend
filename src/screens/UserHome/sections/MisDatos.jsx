@@ -13,7 +13,7 @@ export default function MisDatosSection({ user }) {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showAvatarModal, setShowAvatarModal] = useState(false)
   const [modalStep, setModalStep] = useState('confirm')
-  const [userAvatar, setUserAvatar] = useState(user.avatar || null)
+  const [userAvatar, setUserAvatar] = useState(null)
   const [currentCV, setCurrentCV] = useState(null)  // CV actual del usuario
   const [currentLinkedIn, setCurrentLinkedIn] = useState(null)  // Perfil de LinkedIn actual del usuario
   const [uploadedFile, setUploadedFile] = useState(null)
@@ -39,11 +39,15 @@ export default function MisDatosSection({ user }) {
 
     console.log('MisDatosSection: Cargando datos del usuario')
     
+    // Limpiar cache del usuario para empezar limpio (solo en desarrollo)
+    // imageCacheService.clearUserCache(user.sub)
+    
     const loadUserAvatar = async () => {
       try {
         // Primero intentar obtener del cache
         const cachedAvatar = imageCacheService.getImage(user.sub, 'profile')
-        if (cachedAvatar) {
+        // console.log('MisDatosSection: Cached avatar:', cachedAvatar)
+        if (cachedAvatar && cachedAvatar.imageUrl) {
           console.log('MisDatosSection: Foto de perfil cargada desde cache')
           // Marcar que NO necesita ser subido (ya existe en el servidor)
           setUserAvatar({
@@ -67,10 +71,13 @@ export default function MisDatosSection({ user }) {
           console.log('MisDatosSection: Foto de perfil cargada desde backend')
         } else {
           console.log('MisDatosSection: No se encontró foto de perfil')
+          // Asegurar que el estado sea null cuando no hay avatar
+          setUserAvatar(null)
         }
       } catch (error) {
         console.log('MisDatosSection: Error al cargar foto de perfil')
         // Si no hay imagen, mantener el estado por defecto
+        setUserAvatar(null)
       }
     }
 
@@ -94,7 +101,7 @@ export default function MisDatosSection({ user }) {
           console.log('MisDatosSection: CV cargado exitosamente')
         }
       } catch (error) {
-        console.log('No se pudo cargar el CV actual:', error)
+        console.log('MisDatosSection: No se encontró CV cargado (esto es normal si no has subido un CV)')
       }
     }
 
@@ -110,7 +117,7 @@ export default function MisDatosSection({ user }) {
             console.log('MisDatosSection: Perfil de LinkedIn cargado exitosamente')
           }
         } catch (error) {
-          console.log('MisDatosSection: Error al cargar perfil de LinkedIn del usuario')
+          console.log('MisDatosSection: No se encontró perfil de LinkedIn (esto es normal si no has importado tu perfil)')
         }
       }
       
@@ -236,7 +243,7 @@ export default function MisDatosSection({ user }) {
   const handleSaveChanges = async () => {
             console.log('MisDatos: Guardando cambios')
     
-    if (Object.keys(pendingChanges).length === 0 && !(uploadedFile && uploadedFile.file) && !userAvatar) {
+    if (Object.keys(pendingChanges).length === 0 && !(uploadedFile && (uploadedFile.file || uploadedFile instanceof File)) && !userAvatar) {
       setSaveMessage('No hay cambios para guardar')
       return
     }
@@ -248,7 +255,7 @@ export default function MisDatosSection({ user }) {
       // Llamar al servicio para guardar todos los cambios
       const result = await userProfileService.saveAllChanges({
         pendingChanges,
-        uploadedFile: uploadedFile && uploadedFile.file ? uploadedFile : null,
+        uploadedFile: uploadedFile && (uploadedFile.file || uploadedFile instanceof File) ? uploadedFile : null,
         userAvatar
       })
 
@@ -257,6 +264,24 @@ export default function MisDatosSection({ user }) {
       // Limpiar cambios pendientes
       setPendingChanges({})
       setUploadedFile(null)
+      
+      // Si se subió un archivo CV, mostrar mensaje de éxito y actualizar estado
+      if (uploadedFile && uploadedFile.type !== 'linkedin' && result.fileUploads) {
+        const cvUpload = result.fileUploads.find(upload => upload.file_type === 'cv')
+        if (cvUpload) {
+          setCurrentCV({
+            file_key: cvUpload.file_key,
+            filename: cvUpload.original_filename || 'cv-uploaded',
+            mime: cvUpload.mime,
+            size: cvUpload.size,
+            fileType: 'cv',
+            uploadedAt: new Date().toISOString(),
+            presigned_url: cvUpload.presigned_url
+          })
+          setSaveMessage('CV subido exitosamente!')
+          console.log('CV actualizado exitosamente')
+        }
+      }
       
       // Si se subió un archivo de LinkedIn, mostrar mensaje de éxito y actualizar estado
       if (uploadedFile && uploadedFile.type === 'linkedin') {
@@ -297,7 +322,10 @@ export default function MisDatosSection({ user }) {
         }
       }
       
-      setSaveMessage('Cambios guardados exitosamente!')
+      // Solo mostrar mensaje general si no hay mensaje específico
+      if (!saveMessage || saveMessage === '') {
+        setSaveMessage('Cambios guardados exitosamente!')
+      }
       
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSaveMessage(''), 3000)
@@ -312,8 +340,21 @@ export default function MisDatosSection({ user }) {
 
   // Verificar si hay cambios pendientes
   const hasPendingChanges = Object.keys(pendingChanges).length > 0 || 
-                           (uploadedFile && uploadedFile.file) || 
+                           (uploadedFile && (uploadedFile.file || uploadedFile instanceof File)) || 
                            (userAvatar && userAvatar.needsUpload)
+
+  // Debug: Log del estado para diagnosticar
+  console.log('MisDatos Debug:', {
+    pendingChanges: Object.keys(pendingChanges).length,
+    uploadedFile: uploadedFile ? {
+      hasFile: !!(uploadedFile.file || uploadedFile instanceof File),
+      isFile: uploadedFile instanceof File,
+      hasFileProp: !!uploadedFile.file,
+      type: typeof uploadedFile
+    } : null,
+    userAvatar: userAvatar ? { needsUpload: userAvatar.needsUpload } : null,
+    hasPendingChanges
+  })
 
   return (
     <div>
@@ -421,9 +462,9 @@ export default function MisDatosSection({ user }) {
         </div>
 
         {/* Avatar - ACTUALIZADO */}
-        <div className="md:row-span-2 flex justify-center md:justify-center items-center">
+        <div className="md:row-span-2 flex justify-center items-center">
           <div className="relative">
-            <div className="w-24 h-24 md:w-48 md:h-48 bg-gray-400 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+            <div className="w-24 h-24 md:w-48 md:h-48 bg-gray-600 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
               {userAvatar && userAvatar.imageUrl ? (
                 <img 
                   src={userAvatar.imageUrl} 
@@ -431,7 +472,10 @@ export default function MisDatosSection({ user }) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <User className="w-12 h-12 md:w-24 md:h-24 text-white" />
+                <div className="flex flex-col items-center justify-center text-white">
+                  <User className="w-12 h-12 md:w-24 md:h-24 text-white" />
+                  <span className="text-xs mt-1">Sin foto</span>
+                </div>
               )}
             </div>
             <button
@@ -483,13 +527,13 @@ export default function MisDatosSection({ user }) {
           <div
             onDrop={handleFileDrop}
             onDragOver={handleDragOver}
-            className="block border-3 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:border-blue-400 transition-colors bg-gray-200"
+            className="block border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:border-blue-400 transition-colors bg-gray-50"
           >
             <label htmlFor="cv-upload" className="cursor-pointer block">
               <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 mb-2">
                 Arrastra un archivo hasta aquí o{" "}
-                <span className="text-blue-600 hover:text-blue-700 font-medium">
+                <span className="text-blue-600 hover:text-blue-700 font-medium underline">
                   súbelo
                 </span>
               </p>
