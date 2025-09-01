@@ -607,13 +607,8 @@ export default function CVCreation() {
       console.log('🔍 CVCreation: selectedTemplate:', selectedTemplate)
       console.log('🔍 CVCreation: selectedTemplate.id:', selectedTemplate?.id)
       
-      // Pedir nombre del CV si no existe
-      const cvName = prompt('Ingresa un nombre para tu CV:', 'Mi CV Personalizado')
-      if (!cvName) {
-        console.log('❌ CVCreation: Usuario canceló el guardado')
-        return // Usuario canceló
-      }
-      
+      // Usar el nombre del CV que ya está en el editor
+      const cvName = cvData.name || 'Mi CV Personalizado'
       console.log('🔍 CVCreation: Nombre del CV:', cvName)
       
       // Importar servicio dinámicamente
@@ -625,12 +620,67 @@ export default function CVCreation() {
       await cvStorageService.saveCV(cvData, cvName, selectedTemplate?.id || 'moderno')
       console.log('✅ CVCreation: CV guardado exitosamente en backend')
       
-      alert(`✅ CV "${cvName}" guardado exitosamente`)
+      // Mostrar notificación más elegante
+      const notification = document.createElement('div')
+      notification.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #10b981;
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          z-index: 10000;
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+        ">
+          ✅ CV "${cvName}" guardado exitosamente
+        </div>
+      `
+      document.body.appendChild(notification)
+      
+      // Remover la notificación después de 3 segundos
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification)
+        }
+      }, 3000)
       
     } catch (error) {
       console.error('❌ CVCreation: Error guardando CV:', error)
       console.error('❌ CVCreation: Stack trace:', error.stack)
-      alert('❌ Error guardando CV: ' + error.message)
+      
+      // Mostrar error más elegante
+      const errorNotification = document.createElement('div')
+      errorNotification.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #ef4444;
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          z-index: 10000;
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+        ">
+          ❌ Error guardando CV: ${error.message}
+        </div>
+      `
+      document.body.appendChild(errorNotification)
+      
+      // Remover la notificación después de 5 segundos
+      setTimeout(() => {
+        if (errorNotification.parentNode) {
+          errorNotification.parentNode.removeChild(errorNotification)
+        }
+      }, 5000)
     }
   }
 
@@ -638,11 +688,9 @@ export default function CVCreation() {
     try {
       console.log('🔍 CVCreation: Exportando CV...')
       
-      // Pedir nombre del archivo
-      const fileName = prompt('Ingresa un nombre para el archivo PDF:', 'Mi CV')
-      if (!fileName) {
-        return // Usuario canceló
-      }
+      // Usar el nombre del CV que ya está en el editor
+      const fileName = cvData.name || 'Mi CV'
+      console.log('🔍 CVCreation: Nombre del archivo:', fileName)
       
       // Importar servicio dinámicamente
       const { pdfExportService } = await import('../../../services/pdfExportService')
@@ -650,17 +698,99 @@ export default function CVCreation() {
       try {
         // Intentar exportar usando el backend
         await pdfExportService.exportToPDF(cvData, fileName, selectedTemplate.id)
-        alert(`✅ PDF "${fileName}.pdf" descargado exitosamente`)
+        
+        // Mostrar notificación de éxito
+        const notification = document.createElement('div')
+        notification.innerHTML = `
+          <div style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+          ">
+            ✅ PDF "${fileName}.pdf" descargado exitosamente
+          </div>
+        `
+        document.body.appendChild(notification)
+        
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification)
+          }
+        }, 3000)
+        
       } catch (backendError) {
         console.log('⚠️ Backend no disponible, usando fallback...')
         // Fallback: usar html2canvas + jsPDF
         await pdfExportService.exportToPDFFallback(cvData, fileName)
-        alert(`✅ PDF "${fileName}.pdf" descargado exitosamente (modo local)`)
+        
+        // Mostrar notificación de éxito con fallback
+        const notification = document.createElement('div')
+        notification.innerHTML = `
+          <div style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+          ">
+            ✅ PDF "${fileName}.pdf" descargado exitosamente (modo local)
+          </div>
+        `
+        document.body.appendChild(notification)
+        
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification)
+          }
+        }, 3000)
       }
       
     } catch (error) {
       console.error('❌ CVCreation: Error exportando CV:', error)
-      alert('❌ Error exportando CV: ' + error.message)
+      
+      // Mostrar error más elegante
+      const errorNotification = document.createElement('div')
+      errorNotification.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #ef4444;
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          z-index: 10000;
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+        ">
+          ❌ Error exportando CV: ${error.message}
+        </div>
+      `
+      document.body.appendChild(errorNotification)
+      
+      setTimeout(() => {
+        if (errorNotification.parentNode) {
+          errorNotification.parentNode.removeChild(errorNotification)
+        }
+      }, 5000)
     }
   }
 
