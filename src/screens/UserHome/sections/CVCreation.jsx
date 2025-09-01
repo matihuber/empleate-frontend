@@ -603,23 +603,33 @@ export default function CVCreation() {
   const handleSaveCV = async (cvData) => {
     try {
       console.log('🔍 CVCreation: Guardando CV...')
+      console.log('🔍 CVCreation: cvData:', cvData)
+      console.log('🔍 CVCreation: selectedTemplate:', selectedTemplate)
+      console.log('🔍 CVCreation: selectedTemplate.id:', selectedTemplate?.id)
       
       // Pedir nombre del CV si no existe
       const cvName = prompt('Ingresa un nombre para tu CV:', 'Mi CV Personalizado')
       if (!cvName) {
+        console.log('❌ CVCreation: Usuario canceló el guardado')
         return // Usuario canceló
       }
       
+      console.log('🔍 CVCreation: Nombre del CV:', cvName)
+      
       // Importar servicio dinámicamente
       const { cvStorageService } = await import('../../../services/cvStorageService')
+      console.log('🔍 CVCreation: Servicio importado correctamente')
       
       // Guardar en el backend
-      await cvStorageService.saveCV(cvData, cvName, selectedTemplate.id)
+      console.log('🔍 CVCreation: Llamando a cvStorageService.saveCV...')
+      await cvStorageService.saveCV(cvData, cvName, selectedTemplate?.id || 'moderno')
+      console.log('✅ CVCreation: CV guardado exitosamente en backend')
       
       alert(`✅ CV "${cvName}" guardado exitosamente`)
       
     } catch (error) {
       console.error('❌ CVCreation: Error guardando CV:', error)
+      console.error('❌ CVCreation: Stack trace:', error.stack)
       alert('❌ Error guardando CV: ' + error.message)
     }
   }

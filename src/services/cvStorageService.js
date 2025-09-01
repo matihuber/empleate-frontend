@@ -14,8 +14,19 @@ class CVStorageService {
       const token = authService.accessToken
       
       console.log('🔍 CVStorageService: Guardando CV...')
+      console.log('🔍 CVStorageService: URL:', url)
       console.log('🔍 CVStorageService: Nombre:', cvName)
       console.log('🔍 CVStorageService: Template:', templateId)
+      console.log('🔍 CVStorageService: Token disponible:', !!token)
+      console.log('🔍 CVStorageService: cvData:', cvData)
+      
+      const requestBody = {
+        name: cvName,
+        template_id: templateId,
+        content_json: cvData,
+        is_draft: false
+      }
+      console.log('🔍 CVStorageService: Request body:', requestBody)
       
       const response = await fetch(url, {
         method: 'POST',
@@ -23,16 +34,16 @@ class CVStorageService {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          name: cvName,
-          template_id: templateId,
-          content_json: cvData,
-          is_draft: false
-        })
+        body: JSON.stringify(requestBody)
       })
 
+      console.log('🔍 CVStorageService: Response status:', response.status)
+      console.log('🔍 CVStorageService: Response headers:', response.headers)
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('❌ CVStorageService: Error response:', errorText)
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
       }
 
       const result = await response.json()
