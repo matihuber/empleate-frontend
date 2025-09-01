@@ -40,6 +40,8 @@ const CVCanvasEditor = ({ cvData, template, onSave, onExport, onBack }) => {
       initialCVData={transformedCVData}
       selectedTemplate={template?.id || 'moderno'}
       onBack={onBack}
+      onSave={onSave}
+      onExport={onExport}
     />
   )
 }

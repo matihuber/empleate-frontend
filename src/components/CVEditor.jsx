@@ -3,7 +3,7 @@ import CVEditorToolbar from './CVEditorToolbar'
 import CVCanvas from './CVCanvas'
 import { getTemplateStyles } from '../lib/templates'
 
-const CVEditor = ({ initialCVData, selectedTemplate, onBack }) => {
+const CVEditor = ({ initialCVData, selectedTemplate, onBack, onSave, onExport }) => {
   const [cvData, setCVData] = useState(initialCVData)
   const [zoom, setZoom] = useState(1)
   const [isSaving, setIsSaving] = useState(false)
@@ -19,19 +19,27 @@ const CVEditor = ({ initialCVData, selectedTemplate, onBack }) => {
   const handleSave = useCallback(async () => {
     setIsSaving(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800)) // Simulate network delay
+      console.log('🔍 CVEditor: handleSave llamado')
+      console.log('🔍 CVEditor: cvData:', cvData)
+      console.log('🔍 CVEditor: onSave prop:', onSave)
       
-      // Save to localStorage for now
-      localStorage.setItem('cvData', JSON.stringify(cvData))
-
-      // Show success message
-      alert(`${cvData.name} se ha guardado correctamente.`)
+      if (onSave) {
+        console.log('🔍 CVEditor: Llamando a onSave prop...')
+        await onSave(cvData)
+        console.log('✅ CVEditor: onSave completado')
+      } else {
+        console.log('⚠️ CVEditor: No hay onSave prop, usando fallback')
+        // Fallback: Save to localStorage
+        localStorage.setItem('cvData', JSON.stringify(cvData))
+        alert(`${cvData.name} se ha guardado correctamente.`)
+      }
     } catch (error) {
+      console.error('❌ CVEditor: Error en handleSave:', error)
       alert('No se pudo guardar el CV. Inténtalo de nuevo.')
     } finally {
       setIsSaving(false)
     }
-  }, [cvData])
+  }, [cvData, onSave])
 
   const handleExportPDF = useCallback(async () => {
     if (!canvasRef.current) {
@@ -41,18 +49,27 @@ const CVEditor = ({ initialCVData, selectedTemplate, onBack }) => {
 
     setIsExporting(true)
     try {
-      // For now, just show a success message
-      // In a real implementation, you would use html2canvas + jsPDF
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      console.log('🔍 CVEditor: handleExportPDF llamado')
+      console.log('🔍 CVEditor: cvData:', cvData)
+      console.log('🔍 CVEditor: onExport prop:', onExport)
       
-      alert(`${cvData.name} se ha exportado correctamente.`)
+      if (onExport) {
+        console.log('🔍 CVEditor: Llamando a onExport prop...')
+        await onExport(cvData)
+        console.log('✅ CVEditor: onExport completado')
+      } else {
+        console.log('⚠️ CVEditor: No hay onExport prop, usando fallback')
+        // Fallback: Just show a success message
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        alert(`${cvData.name} se ha exportado correctamente.`)
+      }
     } catch (error) {
-      console.error('Export error:', error)
+      console.error('❌ CVEditor: Error en handleExportPDF:', error)
       alert('No se pudo exportar el PDF. Inténtalo de nuevo.')
     } finally {
       setIsExporting(false)
     }
-  }, [cvData])
+  }, [cvData, onExport])
 
   const handleZoomIn = useCallback(() => {
     setZoom((prev) => Math.min(prev + 0.1, 2))
