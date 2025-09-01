@@ -2,8 +2,10 @@ import authService from './authService'
 
 class CVStorageService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
+    // Forzar la URL correcta ya que la variable de entorno está mal configurada
+    this.baseURL = 'http://localhost:8000/api/v1'
     console.log('🔍 CVStorageService: baseURL configurado:', this.baseURL)
+    console.log('🔍 CVStorageService: VITE_API_BASE_URL original:', import.meta.env.VITE_API_BASE_URL)
   }
 
   /**
