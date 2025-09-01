@@ -3,6 +3,7 @@ import authService from './authService'
 class CVStorageService {
   constructor() {
     this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
+    console.log('🔍 CVStorageService: baseURL configurado:', this.baseURL)
   }
 
   /**
@@ -11,9 +12,18 @@ class CVStorageService {
   async saveCV(cvData, cvName, templateId) {
     try {
       const url = `${this.baseURL}/cv/save`
+      console.log('🔍 CVStorageService: URL construida:', url)
+      
+      // Debug: verificar si la URL es correcta
+      if (!url.includes('/api/v1')) {
+        console.error('❌ CVStorageService: URL incorrecta, no contiene /api/v1')
+        console.error('❌ CVStorageService: baseURL:', this.baseURL)
+        console.error('❌ CVStorageService: VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL)
+      }
       const token = authService.accessToken
       
       console.log('🔍 CVStorageService: Guardando CV...')
+      console.log('🔍 CVStorageService: baseURL:', this.baseURL)
       console.log('🔍 CVStorageService: URL:', url)
       console.log('🔍 CVStorageService: Nombre:', cvName)
       console.log('🔍 CVStorageService: Template:', templateId)
