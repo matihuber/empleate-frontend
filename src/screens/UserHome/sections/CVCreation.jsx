@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react'
 import { ChevronRight, ChevronLeft, } from 'lucide-react'
 import LoginButton from '../../../components/LoginButton'
-import CVTemplate1 from '../../../components/CVTemplate1' // Importar tu template
+import CVTemplate1 from '../../../components/CVTemplate1'
 import TemplatePreview from '../../../components/TemplatePreview'
 import apiInterceptor from '../../../services/apiInterceptor'
 import templateService from '../../../services/templateService'
+import cvPrepService from '../../../services/cvPrepService'
+import cvGenerationService from '../../../services/cvGenerationService'
+import CVCanvasEditor from '../../../components/CVCanvasEditor'
+import CVTemplateSelector from '../../../components/CVTemplateSelector'
 import { SessionExpired } from '../../../components'
 
 export default function CVCreation() {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [templates, setTemplates] = useState([])
   const [loadingTemplates, setLoadingTemplates] = useState(true)
-  const [currentStep, setCurrentStep] = useState('selection') // 'selection', 'personalization', 'skills', 'preview'
+  const [currentStep, setCurrentStep] = useState('selection') // 'selection', 'personalization', 'skills', 'generating', 'editor'
   const [sessionExpired, setSessionExpired] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generatedCV, setGeneratedCV] = useState(null)
+  const [error, setError] = useState(null)
 
   // Estados para las habilidades técnicas
   const [skills, setSkills] = useState([])
@@ -31,21 +38,47 @@ export default function CVCreation() {
     });
   }, []);
 
+  // Mapeo de templates del backend a IDs locales
+  const mapBackendToLocalTemplate = (backendTemplate) => {
+    // Mapear por nombre o descripción
+    const name = backendTemplate.name?.toLowerCase() || ''
+    const description = backendTemplate.description?.toLowerCase() || ''
+    
+    if (name.includes('modern') || description.includes('modern') || description.includes('tech')) {
+      return { ...backendTemplate, localId: 'moderno' }
+    } else if (name.includes('clas') || description.includes('harvard') || description.includes('tradicional')) {
+      return { ...backendTemplate, localId: 'clasico' }
+    } else if (name.includes('minimal') || description.includes('simple') || description.includes('elegante')) {
+      return { ...backendTemplate, localId: 'minimalista' }
+    } else if (name.includes('ejecut') || description.includes('profesional') || description.includes('sofisticado')) {
+      return { ...backendTemplate, localId: 'ejecutivo' }
+    } else if (name.includes('creat') || description.includes('innovador') || description.includes('dinamico')) {
+      return { ...backendTemplate, localId: 'creativo' }
+    } else if (name.includes('academ') || description.includes('serio') || description.includes('investigativo')) {
+      return { ...backendTemplate, localId: 'academico' }
+    } else {
+      // Default al moderno si no coincide
+      return { ...backendTemplate, localId: 'moderno' }
+    }
+  }
+
   // Cargar templates al montar el componente
   useEffect(() => {
     const loadTemplates = async () => {
       try {
         setLoadingTemplates(true)
         const templatesData = await templateService.getTemplates()
-        setTemplates(templatesData)
-        console.log('Templates cargados:', templatesData)
+        // Mapear cada template del backend a un ID local
+        const mappedTemplates = templatesData.map(mapBackendToLocalTemplate)
+        setTemplates(mappedTemplates)
+        console.log('Templates cargados y mapeados:', mappedTemplates)
       } catch (error) {
         console.error('Error cargando templates:', error)
         // En caso de error, usar templates por defecto
         setTemplates([
-          { id: 'default-1', name: 'Template 1', description: 'Template por defecto' },
-          { id: 'default-2', name: 'Template 2', description: 'Template por defecto' },
-          { id: 'default-3', name: 'Template 3', description: 'Template por defecto' }
+          { id: 'default-1', name: 'Template 1', description: 'Template por defecto', localId: 'moderno' },
+          { id: 'default-2', name: 'Template 2', description: 'Template por defecto', localId: 'clasico' },
+          { id: 'default-3', name: 'Template 3', description: 'Template por defecto', localId: 'minimalista' }
         ])
       } finally {
         setLoadingTemplates(false)
@@ -60,25 +93,111 @@ export default function CVCreation() {
     return <SessionExpired />;
   }
 
-  const handleTemplateSelect = (templateId) => {
-    setSelectedTemplate(templateId)
+  const handleTemplateSelect = (template) => {
+    setSelectedTemplate(template)
   }
 
-  const handleContinue = () => {
-    if (selectedTemplate) {
-      console.log(`Template seleccionado: ${selectedTemplate}`)
-      setCurrentStep('personalization') // Ir a personalización
+  const handleContinue = async () => {
+    if (!selectedTemplate) {
+      alert('Por favor selecciona un template')
+      return
+    }
+
+    try {
+      console.log('🔍 CVCreation: Template seleccionado:', selectedTemplate)
+      
+      // NO llamar al backend - usar solo templates locales
+      console.log('✅ CVCreation: Template seleccionado localmente')
+      
+      setCurrentStep('personalization')
+    } catch (error) {
+      console.error('❌ CVCreation: Error:', error)
+      alert('Error: ' + error.message)
     }
   }
 
-  const handlePersonalizationContinue = () => {
-    console.log('Datos de personalización:', personalizationData)
-    setCurrentStep('skills') // Ir a habilidades
+  const handlePersonalizationContinue = async () => {
+    try {
+      console.log('🔍 CVCreation: Datos de personalización:', personalizationData)
+      
+      // NO llamar al backend - guardar solo localmente
+      console.log('✅ CVCreation: Datos de personalización guardados localmente')
+      
+      setCurrentStep('skills')
+    } catch (error) {
+      console.error('❌ CVCreation: Error:', error)
+      alert('Error: ' + error.message)
+    }
   }
 
-  const handleSkillsContinue = () => {
-    console.log('Habilidades:', skills)
-    setCurrentStep('preview') // Ir a vista previa
+  const handleSkillsContinue = async () => {
+    try {
+      console.log('🔍 CVCreation: Habilidades:', skills)
+      
+      // Generar CV automáticamente
+      await generateCV()
+    } catch (error) {
+      console.error('❌ CVCreation: Error generando CV:', error)
+      setError(error.message)
+    }
+  }
+
+  const generateCV = async () => {
+    try {
+      setIsGenerating(true)
+      setError(null)
+      setCurrentStep('generating')
+      
+      console.log('🚀 CVCreation: Generando CV...')
+      
+      // Preparar datos para generación
+      const generationData = {
+        template_id: selectedTemplate.id,
+        target_role: personalizationData.rol,
+        target_company: personalizationData.empresa || null,
+        job_posting_url: personalizationData.link || null,
+        language: 'es', // Por defecto español
+        tone: 'modern', // Usar valor válido del enum
+        personalization_level: personalizationData.nivel.toLowerCase()
+      }
+      
+      console.log('🔍 CVCreation: Datos de generación:', generationData)
+      
+      // Llamar al servicio de generación
+      const result = await cvGenerationService.generateCV(generationData)
+      
+      console.log('✅ CVCreation: CV generado exitosamente:', result)
+      console.log('🔍 CVCreation: Estructura del CV:', JSON.stringify(result, null, 2))
+      
+      setGeneratedCV(result)
+      setCurrentStep('editor')
+      
+    } catch (error) {
+      console.error('❌ CVCreation: Error generando CV:', error)
+      setError(error.message)
+      setCurrentStep('skills') // Volver al paso anterior
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  // Función para transformar datos del backend al formato del frontend
+  const transformBackendCVData = (backendData) => {
+    // Transformar skills de objetos {name, level} a strings
+    const transformedSkills = backendData.skills?.hard?.map(skill => 
+      typeof skill === 'object' ? skill.name : skill
+    ) || []
+    
+    // Transformar languages de objetos {name, level} a strings
+    const transformedLanguages = backendData.languages?.map(lang => 
+      typeof lang === 'object' ? lang.name : lang
+    ) || []
+    
+    return {
+      ...backendData,
+      skills: transformedSkills,
+      languages: transformedLanguages
+    }
   }
 
   // Función para combinar datos de personalización con datos del template
@@ -99,500 +218,413 @@ export default function CVCreation() {
       summary: personalizationData.aspectos || "Apasionada desarrolladora de Java con más de 8 años de experiencia en desarrollo de aplicaciones y tecnologías web, con operación en funciones directas. Lider para la integración de sistemas y desarrollo de proyectos anteriores.",
       experience: [
         {
-          position: "Java Developer Senior",
-          company: personalizationData.empresa || "Everis",
-          location: "Madrid, Spain",
+          title: "Java Developer Senior",
+          company: "Meta",
           period: "01/2020 - Presente",
-          achievements: [
-            "Lidero un equipo de 5 desarrolladores en un proyecto público, logrando un ahorro del 20% en costos operativos.",
-            "Implementé microservicios con tecnologías REST y SOAP, mejorando la eficiencia del sistema en un 15%.",
-            "Desarrollé mejoras del Snail y SQL para automatización de procesos, aumentando la productividad individual y del equipo en un 25%.",
-            "Colaboré con equipos internacionales en la integración de sistemas, alcanzando una compatibilidad del 95% con plataformas existentes.",
-            "Optimicé queries de base de datos, reduciendo significativamente el tiempo de actividad del 98,9%."
-          ]
+          location: "Madrid, Spain",
+          description: "Lidero un equipo de 5 desarrolladores en un proyecto público, logrando un ahorro del 20% en costos operativos. Implementé microservicios con tecnologías REST y SOAP, mejorando la eficiencia del sistema en un 15%."
         },
         {
-          position: "Java Developer",
-          company: "Everis",
-          location: "Sevilla, Spain", 
-          period: "06/2017 - 12/2019",
-          achievements: [
-            "Desarrollé componentes reutilizables en Struts, logrando una reducción del 40% en tiempos de desarrollo futuro.",
-            "Implementé servicios web con XML mejorando la comunicación entre sistemas en un 30%.",
-            "Colaboré en proyectos de migración de datos SQL a Oracle, mejorando la eficiencia y seguridad de los datos.",
-            "Optimicé consultas en PL/SQL, reduciendo los tiempos de respuesta de aplicaciones críticas en un 30%."
-          ]
-        },
-        {
-          position: "Junior Java Developer",
-          company: "DXC Technology",
-          location: "México City, México",
-          period: "02/2015 - 05/2017",
-          achievements: [
-            "Desarrollé funcionalidades en J2EE para aplicaciones de negocio, mejorando la experiencia del usuario.",
-            "Asistí en la implementación de servicios web SOAP para clientes principales.",
-            "Participé en la integración de sistemas en un centro de distribución, optimizando el tiempo de ejecución manual en un 30%."
-          ]
+          title: "Full Stack Developer",
+          company: "Google",
+          period: "03/2018 - 12/2019",
+          location: "Barcelona, Spain",
+          description: "Desarrollé aplicaciones web responsivas usando React, Node.js y MongoDB. Colaboré en la implementación de CI/CD pipelines que redujeron el tiempo de deployment en un 40%."
         }
+      ],
+      skills: skills.length > 0 ? skills.map(skill => skill.name || skill) : [
+        "Java",
+        "Spring Boot", 
+        "React",
+        "Node.js",
+        "PostgreSQL",
+        "Docker"
       ],
       education: [
         {
-          degree: "Master en Informática",
-          institution: "Universidad Politécnica de Madrid",
-          location: "Madrid, Spain",
-          period: "01/2013 - 01/2015"
+          degree: "Ingeniería en Sistemas",
+          institution: "Universidad de León",
+          period: "2015 - 2019"
         },
         {
-          degree: "Grado en Ciencias de la Computación",
-          institution: "Universidad de Guanajuato",
-          location: "Guanajuato, México", 
-          period: "01/2009 - 01/2013"
-        }
-      ],
-      skills: {
-        technical: [
-          { name: "Java", level: 5 },
-          { name: "J2EE", level: 5 },
-          { name: "Struts", level: 4 },
-          { name: "WebServices (SOAP/REST)", level: 4 },
-          { name: "SQL/PL-SQL", level: 4 },
-          { name: "Shell Scripting", level: 3 }
-        ],
-        languages: [
-          { name: "Español", level: "Nativo" },
-          { name: "Inglés", level: "Competente" }
-        ]
-      },
-      achievements: [
-        {
-          title: "Líder en equipo de proyecto público",
-          description: "Lideré con éxito un ahorro del 20% en costos operativos mediante la optimización de procesos."
-        },
-        {
-          title: "Mejora en eficiencia del sistema",
-          description: "Desarrollé servicios web microservicios logrando una mejora en la eficiencia del sistema de un 15% en más."
-        },
-        {
-          title: "Automatización de procesos",
-          description: "Desarrollé scripts que redujeron el tiempo manual de tareas, mejorando la productividad."
-        },
-        {
-          title: "Capacitación para desarrolladores",
-          description: "Generé nuevos miembros en tecnologías clave, aumentando la productividad en un 30% en promedio."
+          degree: "Certificación AWS Developer",
+          institution: "Amazon Web Services",
+          period: "2020"
         }
       ],
       certifications: [
-        {
-          name: "Oracle Certified Professional Java SE",
-          issuer: "Oracle",
-          date: "2019"
-        },
-        {
-          name: "AWS Cloud Practitioner",
-          issuer: "Amazon Web Services",
-          date: "2020"
-        }
+        "Oracle Certified Professional Java Programmer",
+        "Scrum Master Certified (SMC)",
+        "AWS Solutions Architect Associate"
+      ],
+      languages: [
+        "Español",
+        "Inglés", 
+        "Francés"
       ]
     }
-
+    
     return baseCVData
   }
 
-  const handleBackToSelection = () => {
-    setCurrentStep('selection') // Volver a la selección
+  // Renderizar el paso actual
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 'selection':
+        return (
+          <>
+            {/* Título de la sección */}
+            <div className="mb-8">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
+                Crea tu CV
+              </h1>
+              <h2 className="text-xl md:text-2xl text-gray-600">
+                Selecciona una plantilla
+              </h2>
+            </div>
+
+            {/* Nuevo Selector de Templates */}
+            <CVTemplateSelector
+              selectedTemplate={selectedTemplate}
+              onTemplateSelect={(templateId) => {
+                console.log('🔍 CVCreation: onTemplateSelect llamado con:', templateId)
+                // Usar directamente el template local
+                handleTemplateSelect({ id: templateId })
+              }}
+            />
+
+            {/* Botón continuar */}
+            <div className="flex justify-end">
+              <div className="w-48">
+                <LoginButton
+                  onClick={handleContinue}
+                  disabled={!selectedTemplate}
+                  variant="primary"
+                  icon={ChevronRight}
+                >
+                  Siguiente
+                </LoginButton>
+              </div>
+            </div>
+          </>
+        )
+
+      case 'personalization':
+        return (
+          <>
+            {/* Título de la sección */}
+            <div className="mb-8">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
+                Crea tu CV
+              </h1>
+              <h2 className="text-xl md:text-2xl text-gray-600">
+                Personaliza tu CV según tu objetivo
+              </h2>
+            </div>
+
+            {/* Formulario de personalización */}
+            <div className="space-y-6">
+              {/* Rol deseado */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-base font-medium text-gray-700 mb-2">
+                    Rol deseado <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Desarrollador Backend"
+                    value={personalizationData.rol}
+                    onChange={(e) => setPersonalizationData(prev => ({ ...prev, rol: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-base font-medium text-gray-700 mb-2">
+                    Empresa objetivo <span className="text-gray-500">(opcional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ingresá el nombre de la empresa"
+                    value={personalizationData.empresa}
+                    onChange={(e) => setPersonalizationData(prev => ({ ...prev, empresa: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
+                  />
+                </div>
+              </div>
+
+              {/* Link a la oferta laboral */}
+              <div>
+                <label className="block text-base font-medium text-gray-700 mb-2">
+                  Link a la oferta laboral <span className="text-gray-500">(recomendado)</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder="Pegá aquí el enlace"
+                  value={personalizationData.link}
+                  onChange={(e) => setPersonalizationData(prev => ({ ...prev, link: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
+                />
+              </div>
+
+              {/* Aspectos que querés destacar */}
+              <div>
+                <label className="block text-base font-medium text-gray-700 mb-2">
+                  Aspectos que querés destacar <span className="text-gray-500">(opcional)</span>
+                </label>
+                <textarea
+                  placeholder="Escribí aquí tus prioridades e intereses"
+                  value={personalizationData.aspectos}
+                  onChange={(e) => setPersonalizationData(prev => ({ ...prev, aspectos: e.target.value }))}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50 resize-none"
+                />
+              </div>
+
+              {/* Nivel de personalización */}
+              <div>
+                <label className="block text-base font-medium text-gray-700 mb-4">
+                  Nivel de personalización
+                </label>
+                <div className="flex items-center space-x-8">
+                  {['Básico', 'Medio', 'Avanzado'].map((nivel) => (
+                    <div key={nivel} className="flex items-center">
+                      <input
+                        type="radio"
+                        id={nivel}
+                        name="nivel"
+                        value={nivel}
+                        checked={personalizationData.nivel === nivel}
+                        onChange={(e) => setPersonalizationData(prev => ({ ...prev, nivel: e.target.value }))}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
+                      />
+                      <label htmlFor={nivel} className="ml-2 text-sm font-medium text-gray-700">
+                        {nivel}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={() => setCurrentStep('selection')}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span>Volver</span>
+              </button>
+
+              <div className="w-48">
+                <LoginButton
+                  onClick={handlePersonalizationContinue}
+                  disabled={!personalizationData.rol}
+                  variant="primary"
+                  icon={ChevronRight}
+                >
+                  Siguiente
+                </LoginButton>
+              </div>
+            </div>
+          </>
+        )
+
+      case 'skills':
+        return (
+          <>
+            {/* Título de la sección */}
+            <div className="mb-8">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
+                Crea tu CV
+              </h1>
+              <h2 className="text-xl md:text-2xl text-gray-600">
+                Listá tu conocimiento
+              </h2>
+            </div>
+
+            {/* Lista de habilidades */}
+            <div className="space-y-4">
+              {skills.length === 0 ? (
+                // Mensaje cuando no hay herramientas
+                <div className="">
+                  <p className="text-gray-500 text-lg mb-6">
+                    Aún no tienes herramientas agregadas
+                  </p>
+                </div>
+              ) : (
+                // Mostrar herramientas cuando hay al menos una
+                <>
+                  {/* Header de la tabla */}
+                  <div className="grid grid-cols-12 gap-4 items-center mb-4">
+                    <div className="col-span-5">
+                      <span className="text-base font-medium text-gray-700">Herramientas</span>
+                    </div>
+                    <div className="col-span-5">
+                      <span className="text-base font-medium text-gray-700">Nivel</span>
+                    </div>
+                    <div className="col-span-2"></div>
+                  </div>
+
+                  {/* Lista de habilidades */}
+                  {skills.map((skill, index) => (
+                    <div key={index} className="grid grid-cols-12 gap-4 items-center">
+                      {/* Campo herramienta */}
+                      <div className="col-span-5">
+                        <input
+                          type="text"
+                          placeholder={"Escribe una herramienta"}
+                          value={skill.tool}
+                          onChange={(e) => {
+                            const newSkills = [...skills]
+                            newSkills[index].tool = e.target.value
+                            setSkills(newSkills)
+                          }}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
+                        />
+                      </div>
+
+                      {/* Selector de nivel */}
+                      <div className="col-span-5">
+                        <select
+                          value={skill.level}
+                          onChange={(e) => {
+                            const newSkills = [...skills]
+                            newSkills[index].level = e.target.value
+                            setSkills(newSkills)
+                          }}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
+                        >
+                          <option value="Básico">Básico</option>
+                          <option value="Intermedio">Intermedio</option>
+                          <option value="Avanzado">Avanzado</option>
+                          <option value="Experto">Experto</option>
+                        </select>
+                      </div>
+
+                      {/* Botón eliminar */}
+                      <div className="col-span-2 flex justify-start">
+                        <button
+                          onClick={() => setSkills(skills.filter((_, i) => i !== index))}
+                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar herramienta"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Botón agregar herramienta */}
+              <div className="pt-4">
+                <button
+                  onClick={() => setSkills([...skills, { tool: '', level: 'Básico' }])}
+                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  <span>Agregar herramienta</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={() => setCurrentStep('personalization')}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span>Volver</span>
+              </button>
+
+              <div className="w-48">
+                <LoginButton
+                  onClick={handleSkillsContinue}
+                  variant="primary"
+                  icon={ChevronRight}
+                >
+                  Siguiente
+                </LoginButton>
+              </div>
+            </div>
+          </>
+        )
+
+      case 'generating':
+        return (
+          <div className="text-center space-y-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+            <h2 className="text-2xl font-bold text-gray-900">Generando tu CV</h2>
+            <p className="text-gray-600">Estamos procesando tu información con IA para crear un CV optimizado...</p>
+            <div className="text-sm text-gray-500">
+              <p>• Analizando tu perfil profesional</p>
+              <p>• Optimizando contenido para ATS</p>
+              <p>• Aplicando formato Harvard</p>
+            </div>
+          </div>
+        )
+
+      case 'editor':
+        return (
+          <div className="h-full">
+            {generatedCV ? (
+              <CVCanvasEditor
+                cvData={transformBackendCVData(generatedCV.content_json)}
+                template={selectedTemplate}
+                onSave={handleSaveCV}
+                onExport={handleExportCV}
+                onBack={() => setCurrentStep('skills')}
+              />
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No hay CV generado para editar</p>
+              </div>
+            )}
+          </div>
+        )
+
+      default:
+        return (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Paso no reconocido</p>
+          </div>
+        )
+    }
   }
 
-  const handleBackToPersonalization = () => {
-    setCurrentStep('personalization') // Volver a personalización
+  // Manejadores para el editor
+  const handleSaveCV = async (cvData) => {
+    try {
+      console.log('🔍 CVCreation: Guardando CV...')
+      // Aquí se implementaría la lógica para guardar el CV
+      alert('CV guardado exitosamente')
+    } catch (error) {
+      console.error('❌ CVCreation: Error guardando CV:', error)
+      alert('Error guardando CV: ' + error.message)
+    }
   }
 
-  const handleBackToSkills = () => {
-    setCurrentStep('skills') // Volver a habilidades
-  }
-
-  const handlePersonalizationChange = (field, value) => {
-    setPersonalizationData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  // Funciones para manejar habilidades
-  const handleSkillChange = (index, field, value) => {
-    setSkills(prev => prev.map((skill, i) => 
-      i === index ? { ...skill, [field]: value } : skill
-    ))
-  }
-
-  const addSkill = () => {
-    setSkills(prev => [...prev, { tool: '', level: 'Básico' }])
-  }
-
-  const removeSkill = (index) => {
-    setSkills(prev => prev.filter((_, i) => i !== index))
+  const handleExportCV = async (cvData) => {
+    try {
+      console.log('🔍 CVCreation: Exportando CV...')
+      // Aquí se implementaría la lógica para exportar el CV
+      alert('CV exportado exitosamente')
+    } catch (error) {
+      console.error('❌ CVCreation: Error exportando CV:', error)
+      alert('Error exportando CV: ' + error.message)
+    }
   }
 
   return (
     <div>
-      {currentStep === 'selection' && (
-        // Vista de selección de templates
-        <>
-          {/* Título de la sección */}
-          <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
-              Crea tu CV
-            </h1>
-            <h2 className="text-xl md:text-2xl text-gray-600">
-              Selecciona una plantilla
-            </h2>
-          </div>
-
-          {/* Grid de templates */}
-          {loadingTemplates ? (
-            // Loading state
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex flex-col items-center">
-                  <div className="w-full bg-gray-200 rounded-2xl animate-pulse" style={{ aspectRatio: '0.7', minHeight: '300px' }}>
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="w-16 h-4 bg-gray-300 rounded animate-pulse"></div>
-                    </div>
-                  </div>
-                  <div className="mt-4 w-5 h-5 bg-gray-300 rounded-full animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            // Templates loaded
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {templates.map((template) => (
-                <div key={template.id} className="flex flex-col items-center">
-                  {/* Contenedor de la card con estilos existentes */}
-                  <div 
-                    className={`w-full bg-white rounded-2xl shadow-lg border-2 transition-all cursor-pointer hover:shadow-xl ${
-                      selectedTemplate === template.id 
-                        ? 'border-blue-500' 
-                        : 'border-gray-200'
-                    }`}
-                    onClick={() => handleTemplateSelect(template.id)}
-                    style={{ aspectRatio: '0.7', minHeight: '300px' }}
-                  >
-                    {/* Preview del template usando el nuevo componente */}
-                    <TemplatePreview
-                      template={template}
-                      isSelected={selectedTemplate === template.id}
-                      onClick={() => handleTemplateSelect(template.id)}
-                    />
-                  </div>
-
-                  {/* Checkbox circular de selección */}
-                  <div className="mt-4">
-                    <input
-                      type="radio"
-                      name="template-selection"
-                      id={`template-${template.id}`}
-                      checked={selectedTemplate === template.id}
-                      onChange={() => handleTemplateSelect(template.id)}
-                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Botón continuar */}
-          <div className="flex justify-end">
-            <div className="w-48">
-              <LoginButton
-                onClick={handleContinue}
-                disabled={!selectedTemplate}
-                variant="primary"
-                icon={ChevronRight}
-              >
-                Siguiente
-              </LoginButton>
-            </div>
-          </div>
-        </>
-      )}
-
-      {currentStep === 'skills' && (
-        // Vista de habilidades técnicas
-        <>
-          {/* Título de la sección */}
-          <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
-              Crea tu CV
-            </h1>
-            <h2 className="text-xl md:text-2xl text-gray-600">
-              Listá tu conocimiento
-            </h2>
-          </div>
-
-          {/* Lista de habilidades */}
-          <div className="space-y-4">
-            {skills.length === 0 ? (
-              // Mensaje cuando no hay herramientas
-              <div className="">
-                <p className="text-gray-500 text-lg mb-6">
-                  Aún no tienes herramientas agregadas
-                </p>
-              </div>
-            ) : (
-              // Mostrar herramientas cuando hay al menos una
-              <>
-                {/* Header de la tabla */}
-                <div className="grid grid-cols-12 gap-4 items-center mb-4">
-                  <div className="col-span-5">
-                    <span className="text-base font-medium text-gray-700">Herramientas</span>
-                  </div>
-                  <div className="col-span-5">
-                    <span className="text-base font-medium text-gray-700">Nivel</span>
-                  </div>
-                  <div className="col-span-2"></div>
-                </div>
-
-                {/* Lista de habilidades */}
-                {skills.map((skill, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                    {/* Campo herramienta */}
-                    <div className="col-span-5">
-                      <input
-                        type="text"
-                        placeholder={"Escribe una herramienta"}
-                        value={skill.tool}
-                        onChange={(e) => handleSkillChange(index, 'tool', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
-                      />
-                    </div>
-
-                    {/* Selector de nivel */}
-                    <div className="col-span-5">
-                      <select
-                        value={skill.level}
-                        onChange={(e) => handleSkillChange(index, 'level', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
-                      >
-                        <option value="Básico">Básico</option>
-                        <option value="Intermedio">Intermedio</option>
-                        <option value="Avanzado">Avanzado</option>
-                        <option value="Experto">Experto</option>
-                      </select>
-                    </div>
-
-                    {/* Botón eliminar */}
-                    <div className="col-span-2 flex justify-start">
-                      <button
-                        onClick={() => removeSkill(index)}
-                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Eliminar herramienta"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {/* Botón agregar herramienta */}
-            <div className="pt-4">
-              <button
-                onClick={addSkill}
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                <span>Agregar herramienta</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Botones */}
-          <div className="flex justify-between mt-8">
-            <button
-              onClick={handleBackToPersonalization}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span>Volver</span>
-            </button>
-
-            <div className="w-48">
-              <LoginButton
-                onClick={handleSkillsContinue}
-                variant="primary"
-                icon={ChevronRight}
-              >
-                Siguiente
-              </LoginButton>
-            </div>
-          </div>
-        </>
-      )}
-
-      {currentStep === 'personalization' && (
-        // Vista de personalización
-        <>
-          {/* Título de la sección */}
-          <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
-              Crea tu CV
-            </h1>
-            <h2 className="text-xl md:text-2xl text-gray-600">
-              Personaliza tu CV según tu objetivo
-            </h2>
-          </div>
-
-          {/* Formulario de personalización */}
-          <div className="space-y-6">
-            {/* Rol deseado */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-base font-medium text-gray-700 mb-2">
-                  Rol deseado <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Desarrollador Backend"
-                  value={personalizationData.rol}
-                  onChange={(e) => handlePersonalizationChange('rol', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-base font-medium text-gray-700 mb-2">
-                  Empresa objetivo <span className="text-gray-500">(opcional)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ingresá el nombre de la empresa"
-                  value={personalizationData.empresa}
-                  onChange={(e) => handlePersonalizationChange('empresa', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
-                />
-              </div>
-            </div>
-
-            {/* Link a la oferta laboral */}
-            <div>
-              <label className="block text-base font-medium text-gray-700 mb-2">
-                Link a la oferta laboral <span className="text-gray-500">(recomendado)</span>
-              </label>
-              <input
-                type="url"
-                placeholder="Pegá aquí el enlace"
-                value={personalizationData.link}
-                onChange={(e) => handlePersonalizationChange('link', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
-              />
-            </div>
-
-            {/* Aspectos que querés destacar */}
-            <div>
-              <label className="block text-base font-medium text-gray-700 mb-2">
-                Aspectos que querés destacar <span className="text-gray-500">(opcional)</span>
-              </label>
-              <textarea
-                placeholder="Escribí aquí tus prioridades e intereses"
-                value={personalizationData.aspectos}
-                onChange={(e) => handlePersonalizationChange('aspectos', e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50 resize-none"
-              />
-            </div>
-
-            {/* Nivel de personalización */}
-            <div>
-              <label className="block text-base font-medium text-gray-700 mb-4">
-                Nivel de personalización
-              </label>
-              <div className="flex items-center space-x-8">
-                {['Básico', 'Medio', 'Avanzado'].map((nivel) => (
-                  <div key={nivel} className="flex items-center">
-                    <input
-                      type="radio"
-                      id={nivel}
-                      name="nivel"
-                      value={nivel}
-                      checked={personalizationData.nivel === nivel}
-                      onChange={(e) => handlePersonalizationChange('nivel', e.target.value)}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label htmlFor={nivel} className="ml-2 text-sm font-medium text-gray-700">
-                      {nivel}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Botones */}
-          <div className="flex justify-between mt-8">
-            <button
-              onClick={handleBackToSelection}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span>Volver</span>
-            </button>
-
-            <div className="w-48">
-              <LoginButton
-                onClick={handlePersonalizationContinue}
-                disabled={!personalizationData.rol}
-                variant="primary"
-                icon={ChevronRight}
-              >
-                Siguiente
-              </LoginButton>
-            </div>
-          </div>
-        </>
-      )}
-
-      {currentStep === 'preview' && (
-        // Vista del template personalizado
-        <>
-          {/* Header con botón volver */}
-          <div className="mb-6 flex items-center justify-between">
-            <button
-              onClick={handleBackToSkills}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span>Volver a habilidades</span>
-            </button>
-            
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-800">
-                Tu CV Personalizado
-              </h1>
-              <p className="text-gray-600">Vista previa final</p>
-            </div>
-
-            <div className="flex space-x-2">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                Editar CV
-              </button>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                Descargar PDF
-              </button>
-            </div>
-          </div>
-
-          {/* Template completo */}
-          <div className="bg-gray-100 p-8 rounded-2xl">
-            <CVTemplate1 cvData={getCombinedCVData()} />
-          </div>
-        </>
-      )}
+      {renderCurrentStep()}
     </div>
   )
 }
