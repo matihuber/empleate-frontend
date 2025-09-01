@@ -12,6 +12,10 @@ export { default as PublicRoute } from './PublicRoute'
 export { default as CVTemplate1 } from './CVTemplate1'
 export { default as ImageModal } from './ImageModal'
 export { default as LinkedInImportModal } from './LinkedInImportModal'
+export { default as TemplatePreview } from './TemplatePreview'
+export { default as CVCanvasEditor } from './CVCanvasEditor'
+export { default as CVHistory } from './CVHistory'
+export { default as EmpleateLoader } from './EmpleateLoader'
 
 // Componentes de usuario
 export { default as UserHomeInput } from './UserHomeInput'
