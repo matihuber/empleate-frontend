@@ -34,24 +34,59 @@ class PDFExportService {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      // Obtener el PDF como blob
-      const pdfBlob = await response.blob()
+      // El backend devuelve HTML, lo convertimos a PDF usando html2canvas + jsPDF
+      const htmlContent = await response.text()
       
-      // Crear URL temporal para descarga
-      const pdfUrl = window.URL.createObjectURL(pdfBlob)
+      // Crear un elemento temporal para renderizar el HTML
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = htmlContent
+      tempDiv.style.position = 'absolute'
+      tempDiv.style.left = '-9999px'
+      tempDiv.style.top = '-9999px'
+      tempDiv.style.width = '210mm' // A4 width
+      tempDiv.style.backgroundColor = 'white'
+      document.body.appendChild(tempDiv)
       
-      // Crear enlace de descarga
-      const downloadLink = document.createElement('a')
-      downloadLink.href = pdfUrl
-      downloadLink.download = `${cvName || 'CV'}.pdf`
+      // Importar librerías dinámicamente
+      const html2canvas = (await import('html2canvas')).default
+      const jsPDF = (await import('jspdf')).default
       
-      // Simular click para descargar
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      document.body.removeChild(downloadLink)
+      // Convertir a canvas
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      })
       
-      // Limpiar URL temporal
-      window.URL.revokeObjectURL(pdfUrl)
+      // Crear PDF
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      
+      const imgWidth = 210 // A4 width in mm
+      const pageHeight = 295 // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      let heightLeft = imgHeight
+      
+      let position = 0
+      
+      // Agregar imagen al PDF
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+      
+      // Agregar páginas adicionales si es necesario
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight
+        pdf.addPage()
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+        heightLeft -= pageHeight
+      }
+      
+      // Limpiar elemento temporal
+      document.body.removeChild(tempDiv)
+      
+      // Descargar PDF
+      pdf.save(`${cvName || 'CV'}.pdf`)
       
       console.log('✅ PDFExportService: PDF exportado exitosamente')
       return true
