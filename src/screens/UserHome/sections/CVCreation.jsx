@@ -603,22 +603,54 @@ export default function CVCreation() {
   const handleSaveCV = async (cvData) => {
     try {
       console.log('🔍 CVCreation: Guardando CV...')
-      // Aquí se implementaría la lógica para guardar el CV
-      alert('CV guardado exitosamente')
+      
+      // Pedir nombre del CV si no existe
+      const cvName = prompt('Ingresa un nombre para tu CV:', 'Mi CV Personalizado')
+      if (!cvName) {
+        return // Usuario canceló
+      }
+      
+      // Importar servicio dinámicamente
+      const { cvStorageService } = await import('../../../services/cvStorageService')
+      
+      // Guardar en el backend
+      await cvStorageService.saveCV(cvData, cvName, selectedTemplate.id)
+      
+      alert(`✅ CV "${cvName}" guardado exitosamente`)
+      
     } catch (error) {
       console.error('❌ CVCreation: Error guardando CV:', error)
-      alert('Error guardando CV: ' + error.message)
+      alert('❌ Error guardando CV: ' + error.message)
     }
   }
 
   const handleExportCV = async (cvData) => {
     try {
       console.log('🔍 CVCreation: Exportando CV...')
-      // Aquí se implementaría la lógica para exportar el CV
-      alert('CV exportado exitosamente')
+      
+      // Pedir nombre del archivo
+      const fileName = prompt('Ingresa un nombre para el archivo PDF:', 'Mi CV')
+      if (!fileName) {
+        return // Usuario canceló
+      }
+      
+      // Importar servicio dinámicamente
+      const { pdfExportService } = await import('../../../services/pdfExportService')
+      
+      try {
+        // Intentar exportar usando el backend
+        await pdfExportService.exportToPDF(cvData, fileName, selectedTemplate.id)
+        alert(`✅ PDF "${fileName}.pdf" descargado exitosamente`)
+      } catch (backendError) {
+        console.log('⚠️ Backend no disponible, usando fallback...')
+        // Fallback: usar html2canvas + jsPDF
+        await pdfExportService.exportToPDFFallback(cvData, fileName)
+        alert(`✅ PDF "${fileName}.pdf" descargado exitosamente (modo local)`)
+      }
+      
     } catch (error) {
       console.error('❌ CVCreation: Error exportando CV:', error)
-      alert('Error exportando CV: ' + error.message)
+      alert('❌ Error exportando CV: ' + error.message)
     }
   }
 
