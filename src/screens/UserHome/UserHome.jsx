@@ -15,6 +15,7 @@ import apiInterceptor from "../../services/apiInterceptor"
 import Inicio from "./sections/Inicio"
 import MisDatos from "./sections/MisDatos"
 import CVCreation from "./sections/CVCreation"
+import CVHistory from "./sections/CVHistory"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
@@ -159,9 +160,17 @@ export default function UserHome() {
               email: user.email,
               profileImage: null
             }} />}
+            {activeSection === 'historial-cvs' && <CVHistory key="historial-cvs" user={{
+              firstName,
+              lastName,
+              profileCompletion,
+              email: user.email,
+              profileImage: null,
+              sub: user.sub  // Agregar el sub del usuario para autenticación
+            }} />}
 
             {/* Otras secciones pendientes */}
-            {!['inicio', 'mis-datos', 'crear-cv'].includes(activeSection) && (
+            {!['inicio', 'mis-datos', 'crear-cv', 'historial-cvs'].includes(activeSection) && (
               <div className="text-center py-20">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   {menuItems.find(item => item.id === activeSection)?.label}
