@@ -121,42 +121,42 @@ const CVEditorToolbar = ({
           </div>
 
           {/* Save Button */}
-          <button
-            onClick={onSave}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center shadow-sm hover:shadow-md"
-            disabled={isSaving || isExporting}
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            <span className="hidden sm:inline">
-              {isSaving ? "Guardando..." : "Guardar"}
-            </span>
-            <span className="sm:hidden">
-              {isSaving ? "..." : "💾"}
-            </span>
-          </button>
+          <div className="relative group">
+            <button
+              onClick={onSave}
+              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center shadow-sm hover:shadow-md"
+              disabled={isSaving || isExporting}
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+            </button>
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
+              {isSaving ? "Guardando..." : "Guardar (Ctrl + S)"}
+            </div>
+          </div>
 
           {/* Export PDF Button */}
-          <button
-            onClick={onExportPDF}
-            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center shadow-sm hover:shadow-md"
-            disabled={isSaving || isExporting}
-          >
-            {isExporting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <FileText className="w-4 h-4 mr-2" />
-            )}
-            <span className="hidden sm:inline">
+          <div className="relative group">
+            <button
+              onClick={onExportPDF}
+              className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center shadow-sm hover:shadow-md"
+              disabled={isSaving || isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+            </button>
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
               {isExporting ? "Exportando..." : "Exportar PDF"}
-            </span>
-            <span className="sm:hidden">
-              {isExporting ? "..." : "📄"}
-            </span>
-          </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

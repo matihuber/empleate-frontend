@@ -104,9 +104,14 @@ const CVEditor = ({ initialCVData, selectedTemplate, onBack, onSave, onExport })
     setZoom(1.0) // Exactamente 100%
   }, [])
 
-  // Atajos de teclado para zoom
+  // Atajos de teclado para zoom y guardar
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Ctrl/Cmd + S para guardar
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        handleSave()
+      }
       // Ctrl/Cmd + Plus para zoom in
       if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
         e.preventDefault()
@@ -126,7 +131,7 @@ const CVEditor = ({ initialCVData, selectedTemplate, onBack, onSave, onExport })
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleZoomIn, handleZoomOut, handleZoomReset])
+  }, [handleSave, handleZoomIn, handleZoomOut, handleZoomReset])
 
   const handleCVDataChange = useCallback((newData) => {
     setCVData(newData)
