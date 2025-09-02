@@ -35,7 +35,7 @@ export default function UserHome() {
   useEffect(() => {
     if (sessionExpired) {
       console.log('UserHome: Redirigiendo al login por sesión expirada')
-      navigate('/login?message=session_expired')
+      navigate('/session-expired?message=session_expired')
     }
   }, [sessionExpired, navigate])
   

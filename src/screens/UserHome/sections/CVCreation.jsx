@@ -673,7 +673,7 @@ export default function CVCreation() {
     }
   }
 
-  const handleExportCV = async (cvData) => {
+  const handleExportCV = async (cvData, onProgress = null) => {
     try {
       console.log('🔍 CVCreation: Exportando CV...')
       
@@ -686,7 +686,7 @@ export default function CVCreation() {
       
       try {
         // Intentar exportar usando el backend
-        await pdfExportService.exportToPDF(cvData, fileName, selectedTemplate.id)
+        await pdfExportService.exportToPDF(cvData, fileName, selectedTemplate.id, onProgress)
         
         // Mostrar notificación de éxito
         const notification = document.createElement('div')

@@ -9,7 +9,7 @@ class PDFExportService {
   /**
    * Exportar CV a PDF usando el backend
    */
-  async exportToPDF(cvData, cvName, templateId) {
+  async exportToPDF(cvData, cvName, templateId, onProgress = null) {
     try {
       const url = `${this.baseURL}/cv/export/pdf`
       const token = authService.accessToken
@@ -17,6 +17,9 @@ class PDFExportService {
       console.log('🔍 PDFExportService: Exportando CV a PDF...')
       console.log('🔍 PDFExportService: Nombre:', cvName)
       console.log('🔍 PDFExportService: Template:', templateId)
+      
+      // Simular progreso inicial
+      if (onProgress) onProgress(10)
       
       const response = await fetch(url, {
         method: 'POST',
@@ -35,8 +38,14 @@ class PDFExportService {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
+      // Simular progreso
+      if (onProgress) onProgress(30)
+
       // El backend devuelve HTML, lo convertimos a PDF usando html2canvas + jsPDF
       const htmlContent = await response.text()
+      
+      // Simular progreso
+      if (onProgress) onProgress(50)
       
       // Crear un elemento temporal para renderizar el HTML
       const tempDiv = document.createElement('div')
@@ -48,9 +57,15 @@ class PDFExportService {
       tempDiv.style.backgroundColor = 'white'
       document.body.appendChild(tempDiv)
       
+      // Simular progreso
+      if (onProgress) onProgress(70)
+
       // Importar librerías dinámicamente
       const html2canvas = (await import('html2canvas')).default
       const jsPDF = (await import('jspdf')).default
+      
+      // Simular progreso
+      if (onProgress) onProgress(80)
       
       // Convertir a canvas
       const canvas = await html2canvas(tempDiv, {
@@ -83,11 +98,17 @@ class PDFExportService {
         heightLeft -= pageHeight
       }
       
+      // Simular progreso
+      if (onProgress) onProgress(95)
+
       // Limpiar elemento temporal
       document.body.removeChild(tempDiv)
       
       // Descargar PDF
       pdf.save(`${cvName || 'CV'}.pdf`)
+      
+      // Progreso completado
+      if (onProgress) onProgress(100)
       
       console.log('✅ PDFExportService: PDF exportado exitosamente')
       return true
