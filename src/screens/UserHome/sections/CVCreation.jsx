@@ -172,6 +172,8 @@ export default function CVCreation() {
 
   // Función para transformar datos del backend al formato del frontend
   const transformBackendCVData = (backendData) => {
+    console.log('🔍 CVCreation: Transformando datos del backend:', backendData)
+    
     // Transformar skills de objetos {name, level} a strings
     const transformedSkills = backendData.skills?.hard?.map(skill => 
       typeof skill === 'object' ? skill.name : skill
@@ -182,11 +184,47 @@ export default function CVCreation() {
       typeof lang === 'object' ? lang.name : lang
     ) || []
     
-    return {
-      ...backendData,
+    // Transformar experience
+    const transformedExperience = backendData.experience?.map((exp, index) => ({
+      id: `exp-${index}`,
+      company: exp.company || 'Empresa',
+      position: exp.role || 'Cargo',
+      startDate: exp.start_date || '2020',
+      endDate: exp.end_date || '2023',
+      current: exp.end_date === 'present' || exp.end_date === null,
+      description: exp.description || 'Descripción del cargo...',
+    })) || []
+    
+    // Transformar education
+    const transformedEducation = backendData.education?.map((edu, index) => ({
+      id: `edu-${index}`,
+      institution: edu.institution || 'Institución',
+      degree: edu.degree || 'Título',
+      year: edu.end_date || '2023',
+    })) || []
+    
+    const transformedData = {
+      id: 'cv-1',
+      name: 'Mi CV Personalizado',
+      template: 'moderno',
+      personalInfo: {
+        fullName: backendData.header?.full_name || 'Tu Nombre',
+        email: backendData.header?.email || 'email@ejemplo.com',
+        phone: backendData.header?.phone || 'Teléfono',
+        location: backendData.header?.location || 'Ubicación',
+        title: backendData.header?.title || 'Título Profesional',
+      },
+      summary: backendData.summary?.long || backendData.summary?.short || 'Resumen profesional...',
+      experience: transformedExperience,
+      education: transformedEducation,
       skills: transformedSkills,
-      languages: transformedLanguages
+      languages: transformedLanguages,
+      certifications: backendData.certifications || [],
+      projects: backendData.projects || [],
     }
+    
+    console.log('✅ CVCreation: Datos transformados:', transformedData)
+    return transformedData
   }
 
   // Función para combinar datos de personalización con datos del template

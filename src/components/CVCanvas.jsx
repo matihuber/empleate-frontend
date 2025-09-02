@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
 import CVSection from './CVSection'
 
-const CVCanvas = ({ cvData, template, zoom, onCVDataChange }) => {
+const CVCanvas = ({ cvData, template, zoom, onCVDataChange, onZoomIn, onZoomOut }) => {
   const canvasRef = useRef(null)
   const [draggedSection, setDraggedSection] = useState(null)
   const [dragOverSection, setDragOverSection] = useState(null)
@@ -16,6 +16,17 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange }) => {
     { id: "certifications", title: "Certificaciones", type: "certifications" },
     { id: "projects", title: "Proyectos", type: "projects" },
   ])
+
+  // Available sections that can be added
+  const availableSections = [
+    { id: "personal", title: "Información Personal", type: "personal" },
+    { id: "summary", title: "Resumen Profesional", type: "summary" },
+    { id: "experience", title: "Experiencia Laboral", type: "experience" },
+    { id: "education", title: "Educación", type: "education" },
+    { id: "skills", title: "Habilidades", type: "skills" },
+    { id: "certifications", title: "Certificaciones", type: "certifications" },
+    { id: "projects", title: "Proyectos", type: "projects" },
+  ]
 
   const handleDragStart = (sectionId) => {
     setDraggedSection(sectionId)
@@ -60,6 +71,12 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange }) => {
   }
 
   const handleSectionUpdate = (sectionType, data) => {
+    if (data === null) {
+      // Remove section
+      setSectionOrder(prev => prev.filter(section => section.type !== sectionType))
+      return
+    }
+
     const updatedCVData = { ...cvData }
 
     switch (sectionType) {
@@ -89,8 +106,36 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange }) => {
     onCVDataChange(updatedCVData)
   }
 
+  const handleAddSection = (sectionType) => {
+    const section = availableSections.find(s => s.type === sectionType)
+    if (section && !sectionOrder.find(s => s.id === section.id)) {
+      setSectionOrder(prev => [...prev, section])
+    }
+  }
+
+  const getAvailableSectionsToAdd = () => {
+    return availableSections.filter(section => 
+      !sectionOrder.find(s => s.id === section.id)
+    )
+  }
+
+  // Manejar zoom con rueda del mouse
+  const handleWheel = (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
+      if (e.deltaY < 0) {
+        onZoomIn?.()
+      } else {
+        onZoomOut?.()
+      }
+    }
+  }
+
   return (
-    <div className="h-full overflow-auto bg-gray-100 p-8">
+    <div 
+      className="h-full overflow-auto bg-gray-100 p-8"
+      onWheel={handleWheel}
+    >
       <div className="flex justify-center">
         <div
           ref={canvasRef}
@@ -134,6 +179,24 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange }) => {
                 />
               </div>
             ))}
+            
+            {/* Add Section Button */}
+            {getAvailableSectionsToAdd().length > 0 && (
+              <div className="mt-6 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                <p className="text-gray-500 mb-3">Agregar nueva sección:</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {getAvailableSectionsToAdd().map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => handleAddSection(section.type)}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                      + {section.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

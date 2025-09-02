@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { GripVertical, Edit2, Check, X } from 'lucide-react'
+import ConfirmationModal from './ConfirmationModal'
+import DeleteConfirmModal from './DeleteConfirmModal'
 
 const CVSection = ({
   id,
@@ -14,6 +16,9 @@ const CVSection = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState({})
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showDeleteItemModal, setShowDeleteItemModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
 
   const startEditing = () => {
     // Initialize edit data based on section type
@@ -26,6 +31,18 @@ const CVSection = ({
         break
       case "skills":
         setEditData(cvData.skills.join(", "))
+        break
+      case "experience":
+        setEditData(cvData.experience || [])
+        break
+      case "education":
+        setEditData(cvData.education || [])
+        break
+      case "certifications":
+        setEditData(cvData.certifications || [])
+        break
+      case "projects":
+        setEditData(cvData.projects || [])
         break
       default:
         setEditData({})
@@ -49,6 +66,18 @@ const CVSection = ({
             .filter(Boolean)
         )
         break
+      case "experience":
+        onUpdate(editData)
+        break
+      case "education":
+        onUpdate(editData)
+        break
+      case "certifications":
+        onUpdate(editData)
+        break
+      case "projects":
+        onUpdate(editData)
+        break
     }
     setIsEditing(false)
   }
@@ -56,6 +85,19 @@ const CVSection = ({
   const cancelEditing = () => {
     setIsEditing(false)
     setEditData({})
+  }
+
+  const handleDeleteItem = (index, itemName) => {
+    setItemToDelete({ index, itemName })
+    setShowDeleteItemModal(true)
+  }
+
+  const confirmDeleteItem = () => {
+    if (itemToDelete !== null) {
+      const newData = editData.filter((_, i) => i !== itemToDelete.index)
+      setEditData(newData)
+      setItemToDelete(null)
+    }
   }
 
   const renderEditableContent = () => {
@@ -113,6 +155,250 @@ const CVSection = ({
             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         )
+      case "experience":
+        return (
+          <div className="space-y-4">
+            {editData.map((exp, index) => (
+              <div key={index} className="border border-gray-300 rounded p-4">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <input
+                    value={exp.company || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], company: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Empresa"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    value={exp.position || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], position: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Cargo"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <input
+                    value={exp.startDate || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], startDate: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Fecha inicio"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    value={exp.endDate || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], endDate: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Fecha fin"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <textarea
+                    value={exp.description || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], description: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Descripción del cargo..."
+                    rows={3}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => handleDeleteItem(index, `la experiencia en ${exp.company || 'esta empresa'}`)}
+                    className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => setEditData([...editData, { company: "", position: "", startDate: "", endDate: "", description: "" }])}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-500 hover:text-blue-500"
+            >
+              + Agregar experiencia
+            </button>
+          </div>
+        )
+      case "education":
+        return (
+          <div className="space-y-4">
+            {editData.map((edu, index) => (
+              <div key={index} className="border border-gray-300 rounded p-4">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <input
+                    value={edu.institution || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], institution: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Institución"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    value={edu.degree || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], degree: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Título"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <input
+                    value={edu.year || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], year: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Año"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => handleDeleteItem(index, `la educación en ${edu.institution || 'esta institución'}`)}
+                    className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => setEditData([...editData, { institution: "", degree: "", year: "" }])}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-500 hover:text-blue-500"
+            >
+              + Agregar educación
+            </button>
+          </div>
+        )
+      case "certifications":
+        return (
+          <div className="space-y-4">
+            {editData.map((cert, index) => (
+              <div key={index} className="border border-gray-300 rounded p-4">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <input
+                    value={cert.name || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], name: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Nombre de certificación"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    value={cert.issuer || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], issuer: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Emisor"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <input
+                    value={cert.date || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], date: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Fecha (YYYY-MM)"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => handleDeleteItem(index, `la certificación ${cert.name || 'seleccionada'}`)}
+                    className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => setEditData([...editData, { name: "", issuer: "", date: "" }])}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-500 hover:text-blue-500"
+            >
+              + Agregar certificación
+            </button>
+          </div>
+        )
+      case "projects":
+        return (
+          <div className="space-y-4">
+            {editData.map((project, index) => (
+              <div key={index} className="border border-gray-300 rounded p-4">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <input
+                    value={project.name || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], name: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Nombre del proyecto"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    value={project.link || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], link: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="URL del proyecto"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <textarea
+                    value={project.description || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], description: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Descripción del proyecto..."
+                    rows={3}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => handleDeleteItem(index, `el proyecto ${project.name || 'seleccionado'}`)}
+                    className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => setEditData([...editData, { name: "", description: "", link: "" }])}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-500 hover:text-blue-500"
+            >
+              + Agregar proyecto
+            </button>
+          </div>
+        )
       default:
         return <div>Edición no disponible para esta sección</div>
     }
@@ -139,9 +425,6 @@ const CVSection = ({
       case "summary":
         return (
           <div>
-            <h2 className="text-lg font-semibold mb-2" style={{ color: template.colors.primary }}>
-              Resumen Profesional
-            </h2>
             <p className="text-sm leading-relaxed">
               {cvData.summary || "Resumen profesional..."}
             </p>
@@ -150,9 +433,6 @@ const CVSection = ({
       case "experience":
         return (
           <div>
-            <h2 className="text-lg font-semibold mb-3" style={{ color: template.colors.primary }}>
-              Experiencia Laboral
-            </h2>
             <div className="space-y-4">
               {cvData.experience?.map((exp, index) => (
                 <div key={index} className="border-l-4 pl-4" style={{ borderColor: template.colors.accent }}>
@@ -168,9 +448,6 @@ const CVSection = ({
       case "education":
         return (
           <div>
-            <h2 className="text-lg font-semibold mb-3" style={{ color: template.colors.primary }}>
-              Educación
-            </h2>
             <div className="space-y-3">
               {cvData.education?.map((edu, index) => (
                 <div key={index}>
@@ -185,9 +462,6 @@ const CVSection = ({
       case "skills":
         return (
           <div>
-            <h2 className="text-lg font-semibold mb-2" style={{ color: template.colors.primary }}>
-              Habilidades
-            </h2>
             <div className="flex flex-wrap gap-2">
               {cvData.skills?.map((skill, index) => (
                 <span
@@ -200,6 +474,38 @@ const CVSection = ({
                 >
                   {skill}
                 </span>
+              ))}
+            </div>
+          </div>
+        )
+      case "certifications":
+        return (
+          <div>
+            <div className="space-y-3">
+              {cvData.certifications?.map((cert, index) => (
+                <div key={index} className="border-l-4 pl-4" style={{ borderColor: template.colors.accent }}>
+                  <h3 className="font-semibold">{cert.name || "Certificación"}</h3>
+                  <p className="text-sm text-gray-600">{cert.issuer || "Emisor"}</p>
+                  <p className="text-xs text-gray-500">{cert.date || "Fecha"}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      case "projects":
+        return (
+          <div>
+            <div className="space-y-4">
+              {cvData.projects?.map((project, index) => (
+                <div key={index} className="border-l-4 pl-4" style={{ borderColor: template.colors.accent }}>
+                  <h3 className="font-semibold">{project.name || "Proyecto"}</h3>
+                  <p className="text-sm text-gray-600">{project.description || "Descripción del proyecto..."}</p>
+                  {project.link && (
+                    <a href={project.link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                      Ver proyecto
+                    </a>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -234,23 +540,35 @@ const CVSection = ({
         </h3>
         <div className="flex items-center space-x-2">
           {!isEditing ? (
-            <button
-              onClick={startEditing}
-              className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
+            <>
+              <button
+                onClick={startEditing}
+                className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                title="Editar sección"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="p-2 text-red-500 hover:text-red-600 transition-colors"
+                title="Eliminar sección"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
           ) : (
             <>
               <button
                 onClick={saveChanges}
                 className="p-2 text-green-600 hover:text-green-700 transition-colors"
+                title="Guardar cambios"
               >
                 <Check className="w-4 h-4" />
               </button>
               <button
                 onClick={cancelEditing}
                 className="p-2 text-red-600 hover:text-red-700 transition-colors"
+                title="Cancelar edición"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -263,6 +581,29 @@ const CVSection = ({
       <div style={{ color: template.colors.text }}>
         {renderEditableContent()}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={() => onUpdate(null)}
+        title="Eliminar sección"
+        message={`¿Estás seguro de que quieres eliminar la sección "${title}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+      />
+
+      {/* Delete Item Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteItemModal}
+        onClose={() => {
+          setShowDeleteItemModal(false)
+          setItemToDelete(null)
+        }}
+        onConfirm={confirmDeleteItem}
+        itemName={itemToDelete?.itemName || "este elemento"}
+      />
     </div>
   )
 }

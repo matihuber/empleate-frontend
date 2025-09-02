@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import CVEditorToolbar from './CVEditorToolbar'
 import CVCanvas from './CVCanvas'
 import PDFExportModal from './PDFExportModal'
@@ -87,16 +87,46 @@ const CVEditor = ({ initialCVData, selectedTemplate, onBack, onSave, onExport })
   }, [cvData, onExport])
 
   const handleZoomIn = useCallback(() => {
-    setZoom((prev) => Math.min(prev + 0.1, 2))
+    setZoom((prev) => {
+      const newZoom = prev + 0.1
+      return Math.min(newZoom, 2.0) // Máximo 200%
+    })
   }, [])
 
   const handleZoomOut = useCallback(() => {
-    setZoom((prev) => Math.max(prev - 0.1, 0.5))
+    setZoom((prev) => {
+      const newZoom = prev - 0.1
+      return Math.max(newZoom, 0.3) // Mínimo 30%
+    })
   }, [])
 
   const handleZoomReset = useCallback(() => {
-    setZoom(1)
+    setZoom(1.0) // Exactamente 100%
   }, [])
+
+  // Atajos de teclado para zoom
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + Plus para zoom in
+      if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
+        e.preventDefault()
+        handleZoomIn()
+      }
+      // Ctrl/Cmd + Minus para zoom out
+      if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault()
+        handleZoomOut()
+      }
+      // Ctrl/Cmd + 0 para reset zoom
+      if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault()
+        handleZoomReset()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handleZoomIn, handleZoomOut, handleZoomReset])
 
   const handleCVDataChange = useCallback((newData) => {
     setCVData(newData)
@@ -123,7 +153,14 @@ const CVEditor = ({ initialCVData, selectedTemplate, onBack, onSave, onExport })
       />
 
       <div className="flex-1 overflow-hidden" ref={canvasRef}>
-        <CVCanvas cvData={cvData} template={template} zoom={zoom} onCVDataChange={handleCVDataChange} />
+        <CVCanvas 
+          cvData={cvData} 
+          template={template} 
+          zoom={zoom} 
+          onCVDataChange={handleCVDataChange}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+        />
       </div>
 
       {/* Loading overlay for saving */}

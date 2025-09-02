@@ -155,7 +155,7 @@ export default function MisDatosSection({ user }) {
   const handleFileDrop = (event) => {
     event.preventDefault()
     const file = event.dataTransfer.files[0]
-    if (file && (file.type === 'application/pdf' || file.type.includes('word') || file.name.endsWith('.docx'))) {
+    if (file && file.type === 'application/pdf') {
       console.log("Archivo arrastrado:", file.name)
       setUploadedFile(file)
     }
@@ -178,12 +178,6 @@ export default function MisDatosSection({ user }) {
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
       return (
         <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-        </svg>
-      )
-    } else if (file.type.includes('word') || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
-      return (
-        <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
           <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
         </svg>
       )
@@ -525,7 +519,7 @@ export default function MisDatosSection({ user }) {
             <label htmlFor="cv-upload" className="cursor-pointer block">
               <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 mb-2">
-                Arrastra un archivo hasta aquí o{" "}
+                Arrastra un archivo PDF hasta aquí o{" "}
                 <span className="text-blue-600 hover:text-blue-700 font-medium underline">
                   súbelo
                 </span>
@@ -533,7 +527,7 @@ export default function MisDatosSection({ user }) {
             </label>
             <input
               type="file"
-              accept=".pdf,.docx,.doc"
+              accept=".pdf"
               onChange={handleFileUpload}
               className="hidden"
               id="cv-upload"
@@ -617,7 +611,7 @@ export default function MisDatosSection({ user }) {
         )}
         
         <p className="text-sm text-gray-500 mt-4">
-          Los tipos de archivos permitidos son PDF y DOCX
+          Solo se permiten archivos PDF para la mejor calidad de extracción
         </p>
       </div>
 
