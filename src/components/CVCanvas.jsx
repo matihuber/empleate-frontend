@@ -13,6 +13,7 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange, onZoomIn, onZoomOut 
     { id: "experience", title: "Experiencia Laboral", type: "experience" },
     { id: "education", title: "Educación", type: "education" },
     { id: "skills", title: "Habilidades", type: "skills" },
+    { id: "languages", title: "Idiomas", type: "languages" },
     { id: "certifications", title: "Certificaciones", type: "certifications" },
     { id: "projects", title: "Proyectos", type: "projects" },
   ])
@@ -24,6 +25,7 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange, onZoomIn, onZoomOut 
     { id: "experience", title: "Experiencia Laboral", type: "experience" },
     { id: "education", title: "Educación", type: "education" },
     { id: "skills", title: "Habilidades", type: "skills" },
+    { id: "languages", title: "Idiomas", type: "languages" },
     { id: "certifications", title: "Certificaciones", type: "certifications" },
     { id: "projects", title: "Proyectos", type: "projects" },
   ]

@@ -168,7 +168,7 @@ export default function UserHome() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col bg-stone-50 relative h-full lg:ml-0">
           {/* Content */}
-          <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8 overflow-y-scroll pt-16 lg:pt-4">
+          <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8 overflow-y-scroll pt-16 lg:pt-4 bg-stone-50">
             {/* Renderizar secciones */}
             {activeSection === 'inicio' && <Inicio key="inicio" user={{
               firstName,

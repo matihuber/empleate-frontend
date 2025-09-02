@@ -173,16 +173,42 @@ export default function CVCreation() {
   // Función para transformar datos del backend al formato del frontend
   const transformBackendCVData = (backendData) => {
     console.log('🔍 CVCreation: Transformando datos del backend:', backendData)
+    console.log('🔍 CVCreation: Estructura del backend:', {
+      header: backendData.header,
+      summary: backendData.summary,
+      experience: backendData.experience,
+      education: backendData.education,
+      skills: backendData.skills,
+      languages: backendData.languages
+    })
     
-    // Transformar skills de objetos {name, level} a strings
-    const transformedSkills = backendData.skills?.hard?.map(skill => 
-      typeof skill === 'object' ? skill.name : skill
-    ) || []
+    // Transformar skills manteniendo el nivel de conocimiento
+    const transformedSkills = backendData.skills?.hard?.map(skill => {
+      if (typeof skill === 'object') {
+        return {
+          name: skill.name || skill,
+          level: skill.level || 'intermedio'
+        }
+      }
+      return {
+        name: skill,
+        level: 'intermedio'
+      }
+    }) || []
     
-    // Transformar languages de objetos {name, level} a strings
-    const transformedLanguages = backendData.languages?.map(lang => 
-      typeof lang === 'object' ? lang.name : lang
-    ) || []
+    // Transformar languages manteniendo el nivel
+    const transformedLanguages = backendData.languages?.map(lang => {
+      if (typeof lang === 'object') {
+        return {
+          name: lang.name || lang,
+          level: lang.level || 'intermedio'
+        }
+      }
+      return {
+        name: lang,
+        level: 'intermedio'
+      }
+    }) || []
     
     // Transformar experience
     const transformedExperience = backendData.experience?.map((exp, index) => ({
@@ -219,7 +245,12 @@ export default function CVCreation() {
       education: transformedEducation,
       skills: transformedSkills,
       languages: transformedLanguages,
-      certifications: backendData.certifications || [],
+      certifications: backendData.certifications?.map((cert, index) => ({
+        id: `cert-${index}`,
+        name: typeof cert === 'object' ? cert.name : cert,
+        issuer: typeof cert === 'object' ? cert.issuer : '',
+        date: typeof cert === 'object' ? cert.date : ''
+      })) || [],
       projects: backendData.projects || [],
     }
     

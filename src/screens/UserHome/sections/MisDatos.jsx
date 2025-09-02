@@ -90,6 +90,7 @@ export default function MisDatosSection({ user }) {
       try {
         const cvData = await userProfileService.getUserCV(user.sub)
         if (cvData) {
+          console.log('🔍 MisDatosSection: CV data from backend:', cvData)
           setCurrentCV(cvData)
           console.log('MisDatosSection: CV cargado exitosamente')
         }
@@ -106,6 +107,7 @@ export default function MisDatosSection({ user }) {
         try {
           const linkedinData = await userProfileService.getUserLinkedIn(user.sub)
           if (linkedinData) {
+            console.log('🔍 MisDatosSection: LinkedIn data from backend:', linkedinData)
             setCurrentLinkedIn(linkedinData)
             console.log('MisDatosSection: Perfil de LinkedIn cargado exitosamente')
           }
@@ -256,9 +258,10 @@ export default function MisDatosSection({ user }) {
       if (uploadedFile && uploadedFile.type !== 'linkedin' && result.fileUploads) {
         const cvUpload = result.fileUploads.find(upload => upload.file_type === 'cv')
         if (cvUpload) {
+          console.log('🔍 MisDatosSection: CV upload data from backend:', cvUpload)
           setCurrentCV({
             file_key: cvUpload.file_key,
-            filename: cvUpload.original_filename || 'cv-uploaded',
+            filename: cvUpload.filename || 'cv-uploaded',
             mime: cvUpload.mime,
             size: cvUpload.size,
             fileType: 'cv',
@@ -278,9 +281,10 @@ export default function MisDatosSection({ user }) {
         if (result.fileUploads) {
           const linkedinUpload = result.fileUploads.find(upload => upload.file_type === 'linkedin')
           if (linkedinUpload) {
+            console.log('🔍 MisDatosSection: LinkedIn upload data from backend:', linkedinUpload)
             setCurrentLinkedIn({
               file_key: linkedinUpload.file_key,
-              filename: linkedinUpload.original_filename || 'linkedin-profile',
+              filename: linkedinUpload.filename || 'linkedin-profile',
               mime: linkedinUpload.mime,
               size: linkedinUpload.size,
               fileType: 'linkedin',

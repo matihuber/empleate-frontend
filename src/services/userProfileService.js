@@ -146,9 +146,17 @@ class UserProfileService {
           console.log('UserProfileService: Subiendo archivo CV')
         }
         
-        const fileUpload = await this.uploadFile(uploadedFile.file || uploadedFile, fileType)
-        fileUploads.push(fileUpload)
-        console.log('UserProfileService: Archivo subido exitosamente')
+        // Use enhanced extraction for CVs and LinkedIn PDFs
+        if (fileType === 'cv' || fileType === 'linkedin') {
+          console.log('UserProfileService: Usando extracción mejorada para', fileType)
+          const fileUpload = await this.uploadWithEnhancedExtraction(uploadedFile.file || uploadedFile, fileType)
+          fileUploads.push(fileUpload)
+          console.log('UserProfileService: Archivo subido y extraído exitosamente con servicio mejorado')
+        } else {
+          const fileUpload = await this.uploadFile(uploadedFile.file || uploadedFile, fileType)
+          fileUploads.push(fileUpload)
+          console.log('UserProfileService: Archivo subido exitosamente')
+        }
       }
       
       if (userAvatar && userAvatar.needsUpload) {
@@ -262,6 +270,66 @@ class UserProfileService {
       return result
     } catch (error) {
       console.error('Error getting user LinkedIn profile:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Upload file with enhanced extraction (for CVs and LinkedIn PDFs)
+   */
+  async uploadWithEnhancedExtraction(file, fileType) {
+    try {
+      console.log('UserProfileService: Iniciando subida con extracción mejorada')
+      
+      // First upload the file
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('file_type', fileType)
+
+      const uploadResponse = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authService.accessToken}`
+        },
+        body: formData
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed! status: ${uploadResponse.status}`)
+      }
+
+      const uploadData = await uploadResponse.json()
+      console.log('UserProfileService: Archivo subido exitosamente')
+
+      // Then extract data using enhanced service
+      if (fileType === 'cv' || fileType === 'linkedin') {
+        const extractResponse = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/extract-enhanced`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authService.accessToken}`
+          },
+          body: JSON.stringify({
+            file_key: uploadData.file_key
+          })
+        })
+
+        if (!extractResponse.ok) {
+          throw new Error(`Enhanced extraction failed! status: ${extractResponse.status}`)
+        }
+
+        const extractData = await extractResponse.json()
+        console.log('UserProfileService: Extracción mejorada completada exitosamente')
+        
+        return {
+          ...uploadData,
+          extraction: extractData
+        }
+      }
+
+      return uploadData
+    } catch (error) {
+      console.error('Error in upload with enhanced extraction:', error)
       throw error
     }
   }

@@ -30,7 +30,10 @@ const CVSection = ({
         setEditData(cvData.summary)
         break
       case "skills":
-        setEditData(cvData.skills.join(", "))
+        setEditData(cvData.skills?.map(skill => typeof skill === 'object' ? skill.name : skill).join(", ") || "")
+        break
+      case "languages":
+        setEditData(cvData.languages || [])
         break
       case "experience":
         setEditData(cvData.experience || [])
@@ -64,7 +67,11 @@ const CVSection = ({
             .split(",")
             .map((skill) => skill.trim())
             .filter(Boolean)
+            .map(skill => ({ name: skill, level: 'intermedio' }))
         )
+        break
+      case "languages":
+        onUpdate(editData)
         break
       case "experience":
         onUpdate(editData)
@@ -154,6 +161,59 @@ const CVSection = ({
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        )
+      case "languages":
+        return (
+          <div className="space-y-4">
+            {editData.map((lang, index) => (
+              <div key={index} className="border border-gray-300 rounded p-4">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <input
+                    type="text"
+                    value={lang.name || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], name: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Idioma"
+                    className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <select
+                    value={lang.level || "intermedio"}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], level: e.target.value }
+                      setEditData(newData)
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="basico">Básico</option>
+                    <option value="intermedio">Intermedio</option>
+                    <option value="avanzado">Avanzado</option>
+                    <option value="nativo">Nativo</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => {
+                    const newData = editData.filter((_, i) => i !== index)
+                    setEditData(newData)
+                  }}
+                  className="text-red-600 hover:text-red-700 text-sm"
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => {
+                setEditData([...editData, { name: "", level: "intermedio" }])
+              }}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+            >
+              + Agregar idioma
+            </button>
+          </div>
         )
       case "experience":
         return (
@@ -462,19 +522,40 @@ const CVSection = ({
       case "skills":
         return (
           <div>
-            <div className="flex flex-wrap gap-2">
-              {cvData.skills?.map((skill, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 text-sm rounded-full"
-                  style={{
-                    backgroundColor: template.colors.secondary,
-                    color: template.colors.text
-                  }}
-                >
-                  {skill}
-                </span>
-              ))}
+            <div className="space-y-2">
+              {cvData.skills?.map((skill, index) => {
+                const skillName = typeof skill === 'object' ? skill.name : skill
+                const skillLevel = typeof skill === 'object' ? skill.level : 'intermedio'
+                const getLevelColor = (level) => {
+                  switch(level) {
+                    case 'basico': return 'bg-gray-200 text-gray-700'
+                    case 'intermedio': return 'bg-blue-200 text-blue-700'
+                    case 'avanzado': return 'bg-green-200 text-green-700'
+                    case 'experto': return 'bg-purple-200 text-purple-700'
+                    default: return 'bg-gray-200 text-gray-700'
+                  }
+                }
+                const getLevelStars = (level) => {
+                  switch(level) {
+                    case 'basico': return '★☆☆'
+                    case 'intermedio': return '★★☆'
+                    case 'avanzado': return '★★★'
+                    case 'experto': return '★★★'
+                    default: return '★★☆'
+                  }
+                }
+                return (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="font-medium">{skillName}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">{getLevelStars(skillLevel)}</span>
+                      <span className={`px-2 py-1 text-xs rounded-full ${getLevelColor(skillLevel)}`}>
+                        {skillLevel}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )
@@ -507,6 +588,23 @@ const CVSection = ({
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        )
+      case "languages":
+        return (
+          <div>
+            <div className="space-y-3">
+              {cvData.languages?.map((lang, index) => {
+                const langName = typeof lang === 'object' ? lang.name : lang
+                const langLevel = typeof lang === 'object' ? lang.level : 'intermedio'
+                return (
+                  <div key={index} className="flex justify-between items-center">
+                    <span className="font-medium">{langName}</span>
+                    <span className="text-sm text-gray-600">{langLevel}</span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )
