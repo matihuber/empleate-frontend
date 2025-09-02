@@ -9,6 +9,8 @@ import {
   BookOpen, 
   Settings,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react"
 import AuthContext from "../../contexts/AuthContext"
 import apiInterceptor from "../../services/apiInterceptor"
@@ -19,6 +21,7 @@ import CVHistory from "./sections/CVHistory"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout, handleSessionExpired, sessionExpired } = useContext(AuthContext)
   const navigate = useNavigate()
   
@@ -65,6 +68,8 @@ export default function UserHome() {
 
   const handleMenuClick = (sectionId) => {
     setActiveSection(sectionId)
+    // Cerrar sidebar en móviles después de hacer clic
+    setSidebarOpen(false)
   }
 
   const handleLogout = () => {
@@ -74,7 +79,7 @@ export default function UserHome() {
 
   return (
     <div 
-      className="w-screen h-screen p-4 md:p-6 lg:p-8"
+      className="w-screen h-screen p-2 sm:p-4 md:p-6 lg:p-8"
       style={{
         background: `
           linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%),
@@ -84,10 +89,30 @@ export default function UserHome() {
       }}
     >
       {/* Card principal que contiene todo */}
-      <div className="w-full h-full bg-white rounded-2xl shadow-lg overflow-hidden flex">
+      <div className="w-full h-full bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex relative">
+        
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 transition-colors"
+        >
+          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+
+        {/* Mobile Overlay */}
+        {sidebarOpen && (
+          <div 
+            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
         
         {/* Sidebar */}
-        <div className="w-64 bg-stone-50 flex flex-col border-r border-gray-200 h-full">
+        <div className={`
+          bg-stone-50 flex flex-col border-r border-gray-200 h-full transition-transform duration-300 ease-in-out
+          lg:w-64 lg:relative lg:translate-x-0
+          ${sidebarOpen ? 'w-64 fixed left-0 top-0 z-50 translate-x-0' : 'w-64 fixed left-0 top-0 z-50 -translate-x-full'}
+        `}>
           {/* Logo */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center space-x-2">
@@ -141,9 +166,9 @@ export default function UserHome() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col bg-stone-50 relative h-full">
+        <div className="flex-1 flex flex-col bg-stone-50 relative h-full lg:ml-0">
           {/* Content */}
-          <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-scroll">
+          <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8 overflow-y-scroll pt-16 lg:pt-4">
             {/* Renderizar secciones */}
             {activeSection === 'inicio' && <Inicio key="inicio" user={{
               firstName,

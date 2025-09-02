@@ -133,13 +133,13 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange, onZoomIn, onZoomOut 
 
   return (
     <div 
-      className="h-full overflow-auto bg-gray-100 p-8"
+      className="h-full overflow-auto bg-gray-100 p-2 sm:p-4 md:p-6 lg:p-8"
       onWheel={handleWheel}
     >
       <div className="flex justify-center">
         <div
           ref={canvasRef}
-          className="bg-white shadow-lg rounded-lg overflow-hidden transition-transform duration-200"
+          className="bg-white shadow-lg rounded-lg overflow-hidden transition-transform duration-200 w-full max-w-4xl"
           style={{
             transform: `scale(${zoom})`,
             transformOrigin: "top center",
@@ -150,7 +150,7 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange, onZoomIn, onZoomOut 
         >
           <div
             data-cv-content
-            className="p-8 min-h-full"
+            className="p-4 sm:p-6 md:p-8 min-h-full"
             style={{
               backgroundColor: template.colors.background,
               color: template.colors.text,
@@ -182,14 +182,14 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange, onZoomIn, onZoomOut 
             
             {/* Add Section Button */}
             {getAvailableSectionsToAdd().length > 0 && (
-              <div className="mt-6 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-                <p className="text-gray-500 mb-3">Agregar nueva sección:</p>
-                <div className="flex flex-wrap gap-2 justify-center">
+              <div className="mt-4 sm:mt-6 p-3 sm:p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                <p className="text-gray-500 mb-2 sm:mb-3 text-sm sm:text-base">Agregar nueva sección:</p>
+                <div className="flex flex-wrap gap-1 sm:gap-2 justify-center">
                   {getAvailableSectionsToAdd().map((section) => (
                     <button
                       key={section.id}
                       onClick={() => handleAddSection(section.type)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                      className="px-2 sm:px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm hover:bg-blue-200 transition-colors"
                     >
                       + {section.title}
                     </button>
