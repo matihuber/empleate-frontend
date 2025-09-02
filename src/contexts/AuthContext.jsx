@@ -27,7 +27,8 @@ const initialState = {
   accessToken: null,
   refreshToken: null,
   error: null,
-  isLoading: false
+  isLoading: false,
+  sessionExpired: false
 };
 
 // Acciones del reducer
@@ -39,7 +40,8 @@ const AUTH_ACTIONS = {
   SET_LOGIN_TYPE: 'SET_LOGIN_TYPE',
   SET_ERROR: 'SET_ERROR',
   LOGOUT: 'LOGOUT',
-  CLEAR_ERROR: 'CLEAR_ERROR'
+  CLEAR_ERROR: 'CLEAR_ERROR',
+  SET_SESSION_EXPIRED: 'SET_SESSION_EXPIRED'
 };
 
 // Reducer para manejar el estado
@@ -106,6 +108,17 @@ function authReducer(state, action) {
         ...state,
         error: null,
         authState: state.isAuthenticated ? AUTH_STATES.AUTHENTICATED : AUTH_STATES.UNAUTHENTICATED
+      };
+    
+    case AUTH_ACTIONS.SET_SESSION_EXPIRED:
+      return {
+        ...state,
+        sessionExpired: action.payload,
+        isAuthenticated: false,
+        user: null,
+        accessToken: null,
+        refreshToken: null,
+        authState: AUTH_STATES.UNAUTHENTICATED
       };
     
     default:
@@ -341,6 +354,12 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
   }, []);
 
+  // Función para manejar sesión expirada
+  const handleSessionExpired = useCallback(() => {
+    console.log('AuthContext: Sesión expirada detectada');
+    dispatch({ type: AUTH_ACTIONS.SET_SESSION_EXPIRED, payload: true });
+  }, []);
+
   // Setters para callbacks OAuth
   const setUser = useCallback((user) => dispatch({ type: AUTH_ACTIONS.SET_USER, payload: user }), []);
   const setTokens = useCallback((accessToken, refreshToken) => dispatch({ 
@@ -366,6 +385,7 @@ export const AuthProvider = ({ children }) => {
     requestPasswordReset,
     logout,
     clearError,
+    handleSessionExpired,
     
     // Setters para callbacks OAuth
     setUser,
@@ -373,7 +393,7 @@ export const AuthProvider = ({ children }) => {
     
     // Helpers
     isTokenExpired
-  }), [state, loginBasic, loginGoogle, loginLinkedIn, loginMicrosoft, register, requestPasswordReset, logout, clearError, setUser, setTokens]);
+  }), [state, loginBasic, loginGoogle, loginLinkedIn, loginMicrosoft, register, requestPasswordReset, logout, clearError, handleSessionExpired, setUser, setTokens]);
 
   return (
     <AuthContext.Provider value={contextValue}>

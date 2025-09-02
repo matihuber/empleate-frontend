@@ -2,26 +2,18 @@ import { Bell, Edit, Linkedin, FileText, User, Camera } from "lucide-react"
 import { useEffect, useState } from "react"
 import authService from "../../../services/authService"
 import apiInterceptor from "../../../services/apiInterceptor"
-import { SessionExpired } from "../../../components"
+
 
 export default function Inicio({ user }) {
   const [homeData, setHomeData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [sessionExpired, setSessionExpired] = useState(false)
-
   useEffect(() => {
-    // Configurar el interceptor para manejar sesión expirada
-    apiInterceptor.setOnSessionExpired(() => {
-      setSessionExpired(true);
-      setLoading(false);
-    });
 
     const fetchHomeData = async () => {
       try {
         setLoading(true)
         setError(null)
-        setSessionExpired(false)
         
         const token = authService.getAccessToken()
         if (!token) {
@@ -78,9 +70,7 @@ export default function Inicio({ user }) {
     )
   }
 
-  if (sessionExpired) {
-    return <SessionExpired onRetry={() => window.location.reload()} />;
-  }
+
 
   if (error) {
     return (

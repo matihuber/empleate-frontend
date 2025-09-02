@@ -9,14 +9,13 @@ import cvPrepService from '../../../services/cvPrepService'
 import cvGenerationService from '../../../services/cvGenerationService'
 import CVCanvasEditor from '../../../components/CVCanvasEditor'
 import CVTemplateSelector from '../../../components/CVTemplateSelector'
-import { SessionExpired } from '../../../components'
+
 
 export default function CVCreation() {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [templates, setTemplates] = useState([])
   const [loadingTemplates, setLoadingTemplates] = useState(true)
   const [currentStep, setCurrentStep] = useState('selection') // 'selection', 'personalization', 'skills', 'generating', 'editor'
-  const [sessionExpired, setSessionExpired] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedCV, setGeneratedCV] = useState(null)
   const [error, setError] = useState(null)
@@ -30,13 +29,6 @@ export default function CVCreation() {
     aspectos: '',
     nivel: 'Medio'
   })
-
-  // Configurar el interceptor para manejar sesión expirada
-  useEffect(() => {
-    apiInterceptor.setOnSessionExpired(() => {
-      setSessionExpired(true);
-    });
-  }, []);
 
   // Mapeo de templates del backend a IDs locales
   const mapBackendToLocalTemplate = (backendTemplate) => {
@@ -88,10 +80,7 @@ export default function CVCreation() {
     loadTemplates()
   }, [])
 
-  // Si la sesión expiró, mostrar el componente de sesión expirada
-  if (sessionExpired) {
-    return <SessionExpired />;
-  }
+
 
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template)

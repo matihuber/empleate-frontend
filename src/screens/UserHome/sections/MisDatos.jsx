@@ -7,7 +7,7 @@ import LinkedInImportModal from "../../../components/LinkedInImportModal"
 import userProfileService from "../../../services/userProfileService"
 import imageCacheService from "../../../services/imageCacheService"
 import apiInterceptor from "../../../services/apiInterceptor"
-import { SessionExpired } from "../../../components"
+
 
 export default function MisDatosSection({ user }) {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -18,24 +18,17 @@ export default function MisDatosSection({ user }) {
   const [currentLinkedIn, setCurrentLinkedIn] = useState(null)  // Perfil de LinkedIn actual del usuario
   const [uploadedFile, setUploadedFile] = useState(null)
   const [showLinkedInModal, setShowLinkedInModal] = useState(false)
-  const [sessionExpired, setSessionExpired] = useState(false)
+
   
   // Estados para cambios pendientes
   const [pendingChanges, setPendingChanges] = useState({})
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
 
-  // Si la sesión expiró, mostrar el componente de sesión expirada
-  if (sessionExpired) {
-    return <SessionExpired />;
-  }
+
 
   // Cargar imagen del usuario cuando se monta el componente
   useEffect(() => {
-    // Configurar el interceptor para manejar sesión expirada
-    apiInterceptor.setOnSessionExpired(() => {
-      setSessionExpired(true);
-    });
 
     console.log('MisDatosSection: Cargando datos del usuario')
     

@@ -19,18 +19,25 @@ import CVHistory from "./sections/CVHistory"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
-  const { user, logout } = useContext(AuthContext)
+  const { user, logout, handleSessionExpired, sessionExpired } = useContext(AuthContext)
   const navigate = useNavigate()
   
   // Configurar el interceptor de API para manejar expiración de sesión
   useEffect(() => {
     apiInterceptor.setNavigate(navigate)
     apiInterceptor.setOnSessionExpired(() => {
-      console.log('UserHome: Sesión expirada, redirigiendo al login')
-      logout()
-      navigate('/login?message=session_expired')
+      console.log('UserHome: Sesión expirada, ejecutando logout')
+      handleSessionExpired()
     })
-  }, [navigate, logout])
+  }, [navigate, handleSessionExpired])
+
+  // Redirigir al login si la sesión expiró
+  useEffect(() => {
+    if (sessionExpired) {
+      console.log('UserHome: Redirigiendo al login por sesión expirada')
+      navigate('/login?message=session_expired')
+    }
+  }, [sessionExpired, navigate])
   
   // Si no hay usuario, mostrar loading o redirigir
   if (!user) {
@@ -167,7 +174,7 @@ export default function UserHome() {
               email: user.email,
               profileImage: null,
               sub: user.sub  // Agregar el sub del usuario para autenticación
-            }} />}
+            }} onNavigateToSection={setActiveSection} />}
 
             {/* Otras secciones pendientes */}
             {!['inicio', 'mis-datos', 'crear-cv', 'historial-cvs'].includes(activeSection) && (

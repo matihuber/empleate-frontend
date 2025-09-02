@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react'
 import { cvStorageService } from '../../../services/cvStorageService'
 import CVCanvasEditor from '../../../components/CVCanvasEditor'
 import { getTemplateStyles } from '../../../lib/templates'
+import { Trash2, X, AlertTriangle } from 'lucide-react'
 
-const CVHistory = () => {
+const CVHistory = ({ onNavigateToSection }) => {
   const [cvs, setCvs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedCV, setSelectedCV] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [cvToDelete, setCvToDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Cargar CVs al montar el componente
   useEffect(() => {
@@ -40,24 +44,38 @@ const CVHistory = () => {
     setIsEditing(true)
   }
 
-  const handleDeleteCV = async (cvId, cvName) => {
-    if (!confirm(`¿Estás seguro de que querés eliminar "${cvName}"?`)) {
-      return
-    }
+  const handleDeleteCV = (cv) => {
+    console.log('🔍 CVHistory: CV object structure:', cv)
+    setCvToDelete(cv)
+    setShowDeleteModal(true)
+  }
 
+  const confirmDeleteCV = async () => {
+    if (!cvToDelete) return
+
+    setIsDeleting(true)
     try {
-      console.log('🔍 CVHistory: Eliminando CV:', cvId)
-      await cvStorageService.deleteCV(cvId)
+      console.log('🔍 CVHistory: Eliminando CV:', cvToDelete.cv_version_id)
+      await cvStorageService.deleteCV(cvToDelete.cv_version_id)
       
       // Recargar la lista
       await loadCVs()
       
-      alert('✅ CV eliminado exitosamente')
+      // Cerrar modal
+      setShowDeleteModal(false)
+      setCvToDelete(null)
       
     } catch (error) {
       console.error('❌ CVHistory: Error eliminando CV:', error)
-      alert('❌ Error eliminando CV: ' + error.message)
+      setError('Error eliminando el CV')
+    } finally {
+      setIsDeleting(false)
     }
+  }
+
+  const cancelDeleteCV = () => {
+    setShowDeleteModal(false)
+    setCvToDelete(null)
   }
 
   const handleBackToList = () => {
@@ -170,7 +188,7 @@ const CVHistory = () => {
                 Crea tu primer CV para que aparezca aquí
               </p>
               <button
-                onClick={() => window.location.href = '/user-home?section=cv-creation'}
+                onClick={() => onNavigateToSection('crear-cv')}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Crear mi primer CV
@@ -235,7 +253,7 @@ const CVHistory = () => {
                       Ver CV
                     </button>
                     <button
-                      onClick={() => handleDeleteCV(cv.cv_version_id, cv.name)}
+                      onClick={() => handleDeleteCV(cv)}
                       className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 transition-colors"
                       title="Eliminar CV"
                     >
@@ -248,6 +266,83 @@ const CVHistory = () => {
               ))}
             </>
           )}
+        </div>
+      )}
+
+      {/* Modal de confirmación para eliminar CV */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 backdrop-brightness-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative">
+            {/* Botón cerrar */}
+            <button
+              onClick={cancelDeleteCV}
+              disabled={isDeleting}
+              className={`absolute top-4 right-4 p-2 rounded-full transition-colors ${
+                isDeleting 
+                  ? 'cursor-not-allowed' 
+                  : 'hover:bg-gray-100'
+              }`}
+            >
+              <X className={`w-5 h-5 ${isDeleting ? 'text-gray-300' : 'text-gray-500'}`} />
+            </button>
+
+            {/* Icono de advertencia */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+              </div>
+            </div>
+
+            {/* Título */}
+            <h3 className="text-xl font-bold text-gray-800 text-center mb-4">
+              ¿Eliminar CV?
+            </h3>
+
+            {/* Mensaje */}
+            <p className="text-gray-600 text-center mb-8">
+              ¿Estás seguro de que querés eliminar <strong>"{cvToDelete?.name}"</strong>?
+              <br />
+              <span className="text-sm text-gray-500 mt-2 block">
+                Esta acción no se puede deshacer.
+              </span>
+            </p>
+
+            {/* Botones */}
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelDeleteCV}
+                disabled={isDeleting}
+                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+                  isDeleting 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                }`}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteCV}
+                disabled={isDeleting}
+                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 ${
+                  isDeleting 
+                    ? 'bg-red-400 text-white cursor-not-allowed' 
+                    : 'bg-red-600 text-white hover:bg-red-700'
+                }`}
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Eliminar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
