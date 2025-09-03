@@ -1,18 +1,24 @@
-import { useEffect } from 'react'
+import { useEffect, useContext } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AlertCircle, LogIn } from 'lucide-react'
+import AuthContext from '../contexts/AuthContext'
 
 export default function SessionExpired() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const message = searchParams.get('message')
+  const { clearError, clearSessionExpired } = useContext(AuthContext)
 
   useEffect(() => {
     // Si no hay mensaje de sesión expirada, redirigir al home
     if (message !== 'session_expired') {
       navigate('/')
     }
-  }, [message, navigate])
+    
+    // Limpiar cualquier error previo y el estado de sesión expirada
+    clearError()
+    clearSessionExpired()
+  }, [message, navigate, clearError, clearSessionExpired])
 
   if (message !== 'session_expired') {
     return null
@@ -38,7 +44,11 @@ export default function SessionExpired() {
         
         {/* Botón de login */}
         <button
-          onClick={() => navigate('/login')}
+          onClick={() => {
+            // Limpiar estado de sesión expirada y redirigir al login
+            clearSessionExpired()
+            navigate('/login', { replace: true })
+          }}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center space-x-2"
         >
           <LogIn className="w-5 h-5" />
@@ -47,7 +57,11 @@ export default function SessionExpired() {
         
         {/* Botón de volver al home */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => {
+            // Limpiar estado de sesión expirada y redirigir al home público
+            clearSessionExpired()
+            navigate('/', { replace: true })
+          }}
           className="w-full mt-4 text-gray-600 hover:text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors"
         >
           Volver al Inicio

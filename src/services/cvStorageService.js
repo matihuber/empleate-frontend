@@ -4,8 +4,7 @@ class CVStorageService {
   constructor() {
     // Forzar la URL correcta ya que la variable de entorno está mal configurada
     this.baseURL = 'http://localhost:8000/api/v1'
-    console.log('🔍 CVStorageService: baseURL configurado:', this.baseURL)
-    console.log('🔍 CVStorageService: VITE_API_BASE_URL original:', import.meta.env.VITE_API_BASE_URL)
+    // Service initialized
   }
 
   /**
@@ -14,7 +13,7 @@ class CVStorageService {
   async saveCV(cvData, cvName, templateId) {
     try {
       const url = `${this.baseURL}/cv/save`
-      console.log('🔍 CVStorageService: URL construida:', url)
+      // URL constructed
       
       // Debug: verificar si la URL es correcta
       if (!url.includes('/api/v1')) {
@@ -24,13 +23,7 @@ class CVStorageService {
       }
       const token = authService.accessToken
       
-      console.log('🔍 CVStorageService: Guardando CV...')
-      console.log('🔍 CVStorageService: baseURL:', this.baseURL)
-      console.log('🔍 CVStorageService: URL:', url)
-      console.log('🔍 CVStorageService: Nombre:', cvName)
-      console.log('🔍 CVStorageService: Template:', templateId)
-      console.log('🔍 CVStorageService: Token disponible:', !!token)
-      console.log('🔍 CVStorageService: cvData:', cvData)
+      // Saving CV
       
       const requestBody = {
         name: cvName,
@@ -38,7 +31,7 @@ class CVStorageService {
         content_json: cvData,
         is_draft: false
       }
-      console.log('🔍 CVStorageService: Request body:', requestBody)
+      // Request prepared
       
       const response = await fetch(url, {
         method: 'POST',
@@ -49,8 +42,7 @@ class CVStorageService {
         body: JSON.stringify(requestBody)
       })
 
-      console.log('🔍 CVStorageService: Response status:', response.status)
-      console.log('🔍 CVStorageService: Response headers:', response.headers)
+      // Response received
       
       if (!response.ok) {
         const errorText = await response.text()

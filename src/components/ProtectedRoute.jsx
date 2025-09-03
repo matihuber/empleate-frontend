@@ -1,9 +1,18 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useContext } from 'react'
+import AuthContext from '../contexts/AuthContext'
 
 export default function ProtectedRoute({ children, requireAuth = true }) {
-  const { isAuthenticated, authState } = useAuth()
+  const authContext = useContext(AuthContext)
   const location = useLocation()
+
+  // Verificar si el contexto está disponible
+  if (!authContext) {
+    console.error('ProtectedRoute: AuthContext no está disponible')
+    return <Navigate to="/login" replace />
+  }
+
+  const { isAuthenticated, authState } = authContext
 
   // Si la ruta requiere autenticación y el usuario no está autenticado
   if (requireAuth && !isAuthenticated) {

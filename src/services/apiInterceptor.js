@@ -33,11 +33,11 @@ class ApiInterceptor {
         return response; // No lanzar error, dejar que el componente maneje la UI
       }
       
-      // Fallback: redirigir al login
+      // Fallback: redirigir directamente al modal de sesión expirada
       if (this.navigate) {
-        this.navigate('/login?message=session_expired');
+        this.navigate('/session-expired?message=session_expired');
       } else {
-        window.location.href = '/login?message=session_expired';
+        window.location.href = '/session-expired?message=session_expired';
       }
       
       throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');

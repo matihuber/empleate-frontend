@@ -30,19 +30,13 @@ export default function MisDatosSection({ user }) {
   // Cargar imagen del usuario cuando se monta el componente
   useEffect(() => {
 
-    console.log('MisDatosSection: Cargando datos del usuario')
-    
-    // Limpiar cache del usuario para empezar limpio (solo en desarrollo)
-    // imageCacheService.clearUserCache(user.sub)
+    // Load user data
     
     const loadUserAvatar = async () => {
       try {
-        // Primero intentar obtener del cache
+        // Try to get from cache first
         const cachedAvatar = imageCacheService.getImage(user.sub, 'profile')
-        // console.log('MisDatosSection: Cached avatar:', cachedAvatar)
         if (cachedAvatar && cachedAvatar.imageUrl) {
-          console.log('MisDatosSection: Foto de perfil cargada desde cache')
-          // Marcar que NO necesita ser subido (ya existe en el servidor)
           setUserAvatar({
             ...cachedAvatar,
             needsUpload: false
@@ -50,34 +44,24 @@ export default function MisDatosSection({ user }) {
           return
         }
 
-        console.log('MisDatosSection: Cargando foto de perfil desde backend')
-        // Obtener la imagen del usuario desde el backend
+        // Load from backend
         const avatarData = await userProfileService.getUserAvatar(user.sub)
         if (avatarData && avatarData.imageUrl) {
-          // Guardar en cache para futuras cargas
           imageCacheService.setImage(user.sub, 'profile', avatarData)
-          // Marcar que NO necesita ser subido (ya existe en el servidor)
           setUserAvatar({
             ...avatarData,
             needsUpload: false
           })
-          console.log('MisDatosSection: Foto de perfil cargada desde backend')
         } else {
-          console.log('MisDatosSection: No se encontró foto de perfil')
-          // Asegurar que el estado sea null cuando no hay avatar
           setUserAvatar(null)
         }
       } catch (error) {
-        console.log('MisDatosSection: Error al cargar foto de perfil')
-        // Si no hay imagen, mantener el estado por defecto
         setUserAvatar(null)
       }
     }
 
     if (user && user.sub) {
       loadUserAvatar()
-    } else {
-              console.log('MisDatosSection: Usuario no válido para cargar foto de perfil')
     }
   }, [user?.sub]) // Solo ejecutar cuando cambie user.sub, no todo el objeto user
 
@@ -90,12 +74,10 @@ export default function MisDatosSection({ user }) {
       try {
         const cvData = await userProfileService.getUserCV(user.sub)
         if (cvData) {
-          console.log('🔍 MisDatosSection: CV data from backend:', cvData)
           setCurrentCV(cvData)
-          console.log('MisDatosSection: CV cargado exitosamente')
         }
       } catch (error) {
-        console.log('MisDatosSection: No se encontró CV cargado (esto es normal si no has subido un CV)')
+        // CV not found - this is normal
       }
     }
 
@@ -107,12 +89,10 @@ export default function MisDatosSection({ user }) {
         try {
           const linkedinData = await userProfileService.getUserLinkedIn(user.sub)
           if (linkedinData) {
-            console.log('🔍 MisDatosSection: LinkedIn data from backend:', linkedinData)
             setCurrentLinkedIn(linkedinData)
-            console.log('MisDatosSection: Perfil de LinkedIn cargado exitosamente')
           }
         } catch (error) {
-          console.log('MisDatosSection: No se encontró perfil de LinkedIn (esto es normal si no has importado tu perfil)')
+          // LinkedIn profile not found - this is normal
         }
       }
       
@@ -121,8 +101,6 @@ export default function MisDatosSection({ user }) {
   }, [user?.sub]) // Solo ejecutar cuando cambie user.sub, no todo el objeto user
 
   const handleFieldChange = (field, newValue) => {
-    console.log(`Actualizando ${field}:`, newValue)
-    // Guardar cambio pendiente
     setPendingChanges(prev => ({
       ...prev,
       [field]: newValue
@@ -135,7 +113,7 @@ export default function MisDatosSection({ user }) {
   }
 
   const handlePasswordChangeConfirm = () => {
-    console.log("Enviar email para cambiar contraseña")
+    // Send password change email
     // Aquí iría la lógica para enviar el email
     setModalStep('success')
   }
@@ -148,7 +126,7 @@ export default function MisDatosSection({ user }) {
   const handleFileUpload = (event) => {
     const file = event.target.files[0]
     if (file) {
-      console.log("Archivo cargado:", file.name)
+      // File loaded
       setUploadedFile(file)
       // Aquí iría la lógica para procesar el archivo
     }
@@ -158,7 +136,7 @@ export default function MisDatosSection({ user }) {
     event.preventDefault()
     const file = event.dataTransfer.files[0]
     if (file && file.type === 'application/pdf') {
-      console.log("Archivo arrastrado:", file.name)
+      // File dropped
       setUploadedFile(file)
     }
   }
@@ -194,7 +172,7 @@ export default function MisDatosSection({ user }) {
 
   // Nueva función para guardar el avatar editado
   const handleAvatarSave = (avatarData) => {
-    console.log("Guardando avatar:", avatarData)
+    // Saving avatar
     // Marcar que SÍ necesita ser subido (es una nueva imagen)
     setUserAvatar({
       ...avatarData,
@@ -209,7 +187,7 @@ export default function MisDatosSection({ user }) {
   }
 
   const handleLinkedInSave = (data) => {
-    console.log("Archivo de LinkedIn cargado:", data.file.name, "Tipo:", data.importType)
+    // LinkedIn file loaded
     
     // Marcar que hay un archivo de LinkedIn pendiente de subir
     setUploadedFile({
@@ -230,7 +208,7 @@ export default function MisDatosSection({ user }) {
 
   // Función para guardar todos los cambios pendientes
   const handleSaveChanges = async () => {
-            console.log('MisDatos: Guardando cambios')
+            // Saving changes
     
     if (Object.keys(pendingChanges).length === 0 && !(uploadedFile && (uploadedFile.file || uploadedFile instanceof File)) && !userAvatar) {
       setSaveMessage('No hay cambios para guardar')
@@ -248,7 +226,7 @@ export default function MisDatosSection({ user }) {
         userAvatar
       })
 
-      console.log('Resultado del guardado:', result)
+      // Save result received
 
       // Limpiar cambios pendientes
       setPendingChanges({})
@@ -258,7 +236,7 @@ export default function MisDatosSection({ user }) {
       if (uploadedFile && uploadedFile.type !== 'linkedin' && result.fileUploads) {
         const cvUpload = result.fileUploads.find(upload => upload.file_type === 'cv')
         if (cvUpload) {
-          console.log('🔍 MisDatosSection: CV upload data from backend:', cvUpload)
+                      // CV upload data received
           setCurrentCV({
             file_key: cvUpload.file_key,
             filename: cvUpload.filename || 'cv-uploaded',
@@ -269,7 +247,7 @@ export default function MisDatosSection({ user }) {
             presigned_url: cvUpload.presigned_url
           })
           setSaveMessage('CV subido exitosamente!')
-          console.log('CV actualizado exitosamente')
+                      // CV updated successfully
         }
       }
       
@@ -281,7 +259,7 @@ export default function MisDatosSection({ user }) {
         if (result.fileUploads) {
           const linkedinUpload = result.fileUploads.find(upload => upload.file_type === 'linkedin')
           if (linkedinUpload) {
-            console.log('🔍 MisDatosSection: LinkedIn upload data from backend:', linkedinUpload)
+            // LinkedIn upload data received
             setCurrentLinkedIn({
               file_key: linkedinUpload.file_key,
               filename: linkedinUpload.filename || 'linkedin-profile',
@@ -291,7 +269,7 @@ export default function MisDatosSection({ user }) {
               uploadedAt: new Date().toISOString(),
               presigned_url: linkedinUpload.presigned_url
             })
-            console.log('Perfil de LinkedIn actualizado exitosamente')
+            // LinkedIn profile updated successfully
           }
         }
       }
@@ -309,7 +287,7 @@ export default function MisDatosSection({ user }) {
             cropSettings: userAvatar.cropSettings || {},
             needsUpload: false  // Ya no necesita ser subido
           })
-          console.log('Foto de perfil actualizada exitosamente')
+          // Profile picture updated successfully
         }
       }
       
@@ -335,17 +313,7 @@ export default function MisDatosSection({ user }) {
                            (userAvatar && userAvatar.needsUpload)
 
   // Debug: Log del estado para diagnosticar
-  console.log('MisDatos Debug:', {
-    pendingChanges: Object.keys(pendingChanges).length,
-    uploadedFile: uploadedFile ? {
-      hasFile: !!(uploadedFile.file || uploadedFile instanceof File),
-      isFile: uploadedFile instanceof File,
-      hasFileProp: !!uploadedFile.file,
-      type: typeof uploadedFile
-    } : null,
-    userAvatar: userAvatar ? { needsUpload: userAvatar.needsUpload } : null,
-    hasPendingChanges
-  })
+  // Component state debug (removed for production)
 
   return (
     <div>

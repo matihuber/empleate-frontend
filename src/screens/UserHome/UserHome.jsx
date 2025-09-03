@@ -22,7 +22,7 @@ import CVHistory from "./sections/CVHistory"
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user, logout, handleSessionExpired, sessionExpired } = useContext(AuthContext)
+  const { user, logout, handleSessionExpired, clearSessionExpired, sessionExpired } = useContext(AuthContext)
   const navigate = useNavigate()
   
   // Configurar el interceptor de API para manejar expiración de sesión
@@ -39,8 +39,10 @@ export default function UserHome() {
     if (sessionExpired) {
       console.log('UserHome: Redirigiendo al login por sesión expirada')
       navigate('/session-expired?message=session_expired')
+      // Limpiar el estado de sesión expirada para evitar bucles
+      clearSessionExpired()
     }
-  }, [sessionExpired, navigate])
+  }, [sessionExpired, navigate, clearSessionExpired])
   
   // Si no hay usuario, mostrar loading o redirigir
   if (!user) {

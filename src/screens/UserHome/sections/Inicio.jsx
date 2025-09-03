@@ -20,6 +20,8 @@ export default function Inicio({ user }) {
           throw new Error('No hay token de acceso')
         }
 
+        // Load home data
+
         const response = await apiInterceptor.fetchWithInterceptor('http://localhost:8000/api/v1/home', {
           method: 'GET',
           headers: {
@@ -124,8 +126,14 @@ export default function Inicio({ user }) {
                   <Bell className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" />
                 </div>
                 <div>
-                  <p className="text-xs lg:text-sm text-gray-500 mb-1">{activity.date}</p>
-                  <p className="text-sm lg:text-base text-gray-800 font-medium">{activity.message}</p>
+                  <p className="text-xs lg:text-sm text-gray-500 mb-1">
+                    {new Date(activity.created_at).toLocaleDateString('es-ES', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    })}
+                  </p>
+                  <p className="text-sm lg:text-base text-gray-800 font-medium">{activity.description}</p>
                 </div>
               </div>
             ))
@@ -151,7 +159,7 @@ export default function Inicio({ user }) {
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
                     <IconComponent className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
                   </div>
-                                     <p className="text-sm lg:text-base text-gray-800 font-medium">{suggestion.text}</p>
+                  <p className="text-sm lg:text-base text-gray-800 font-medium">{suggestion.suggestion}</p>
                 </div>
               )
             })

@@ -358,6 +358,18 @@ export const AuthProvider = ({ children }) => {
   const handleSessionExpired = useCallback(() => {
     console.log('AuthContext: Sesión expirada detectada');
     dispatch({ type: AUTH_ACTIONS.SET_SESSION_EXPIRED, payload: true });
+    
+    // Limpiar automáticamente el estado después de 5 segundos para evitar bucles
+    setTimeout(() => {
+      console.log('AuthContext: Limpiando automáticamente el estado de sesión expirada');
+      dispatch({ type: AUTH_ACTIONS.SET_SESSION_EXPIRED, payload: false });
+    }, 5000);
+  }, []);
+
+  // Función para limpiar el estado de sesión expirada
+  const clearSessionExpired = useCallback(() => {
+    console.log('AuthContext: Limpiando estado de sesión expirada');
+    dispatch({ type: AUTH_ACTIONS.SET_SESSION_EXPIRED, payload: false });
   }, []);
 
   // Setters para callbacks OAuth
@@ -386,6 +398,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     clearError,
     handleSessionExpired,
+    clearSessionExpired,
     
     // Setters para callbacks OAuth
     setUser,
@@ -393,7 +406,7 @@ export const AuthProvider = ({ children }) => {
     
     // Helpers
     isTokenExpired
-  }), [state, loginBasic, loginGoogle, loginLinkedIn, loginMicrosoft, register, requestPasswordReset, logout, clearError, handleSessionExpired, setUser, setTokens]);
+  }), [state, loginBasic, loginGoogle, loginLinkedIn, loginMicrosoft, register, requestPasswordReset, logout, clearError, handleSessionExpired, clearSessionExpired, setUser, setTokens]);
 
   return (
     <AuthContext.Provider value={contextValue}>
