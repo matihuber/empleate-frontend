@@ -30,7 +30,7 @@ const CVSection = ({
         setEditData(cvData.summary)
         break
       case "skills":
-        setEditData(cvData.skills?.map(skill => typeof skill === 'object' ? skill.name : skill).join(", ") || "")
+        setEditData(cvData.skills || [])
         break
       case "languages":
         setEditData(cvData.languages || [])
@@ -62,13 +62,7 @@ const CVSection = ({
         onUpdate(editData)
         break
       case "skills":
-        onUpdate(
-          editData
-            .split(",")
-            .map((skill) => skill.trim())
-            .filter(Boolean)
-            .map(skill => ({ name: skill, level: 'intermedio' }))
-        )
+        onUpdate(editData)
         break
       case "languages":
         onUpdate(editData)
@@ -105,6 +99,24 @@ const CVSection = ({
       setEditData(newData)
       setItemToDelete(null)
     }
+  }
+
+  // Función para formatear el nivel de idioma para mostrar
+  const formatLanguageLevel = (level) => {
+    const levelMap = {
+      'A1': 'A1 - Básico',
+      'A2': 'A2 - Básico alto',
+      'B1': 'B1 - Conversacional',
+      'B2': 'B2 - Intermedio alto',
+      'C1': 'C1 - Avanzado',
+      'C2': 'C2 - Fluido',
+      'nativo': 'Nativo / bilingüe',
+      // Mapear niveles antiguos
+      'basico': 'A1 - Básico',
+      'intermedio': 'B1 - Conversacional',
+      'avanzado': 'C1 - Avanzado'
+    }
+    return levelMap[level] || level
   }
 
   const renderEditableContent = () => {
@@ -154,13 +166,53 @@ const CVSection = ({
         )
       case "skills":
         return (
-          <textarea
-            value={editData}
-            onChange={(e) => setEditData(e.target.value)}
-            placeholder="Habilidades separadas por comas..."
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="space-y-4">
+            {editData.map((skill, index) => (
+              <div key={index} className="border border-gray-300 rounded-lg p-4 bg-white">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <input
+                    type="text"
+                    value={skill.name || ""}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], name: e.target.value }
+                      setEditData(newData)
+                    }}
+                    placeholder="Nombre de la habilidad"
+                    className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <select
+                    value={skill.level || "intermedio"}
+                    onChange={(e) => {
+                      const newData = [...editData]
+                      newData[index] = { ...newData[index], level: e.target.value }
+                      setEditData(newData)
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="basico">Básico</option>
+                    <option value="intermedio">Intermedio</option>
+                    <option value="avanzado">Avanzado</option>
+                    <option value="experto">Experto</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => handleDeleteItem(index, `la habilidad ${skill.name || 'seleccionada'}`)}
+                  className="text-red-600 hover:text-red-700 text-sm"
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => {
+                setEditData([...editData, { name: "", level: "intermedio" }])
+              }}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+            >
+              + Agregar habilidad
+            </button>
+          </div>
         )
       case "languages":
         return (
@@ -180,7 +232,7 @@ const CVSection = ({
                     className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <select
-                    value={lang.level || "intermedio"}
+                    value={lang.level || "B1"}
                     onChange={(e) => {
                       const newData = [...editData]
                       newData[index] = { ...newData[index], level: e.target.value }
@@ -188,10 +240,13 @@ const CVSection = ({
                     }}
                     className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="basico">Básico</option>
-                    <option value="intermedio">Intermedio</option>
-                    <option value="avanzado">Avanzado</option>
-                    <option value="nativo">Nativo</option>
+                    <option value="A1">A1 - Básico</option>
+                    <option value="A2">A2 - Básico alto</option>
+                    <option value="B1">B1 - Conversacional</option>
+                    <option value="B2">B2 - Intermedio alto</option>
+                    <option value="C1">C1 - Avanzado</option>
+                    <option value="C2">C2 - Fluido</option>
+                    <option value="nativo">Nativo / bilingüe</option>
                   </select>
                 </div>
                 <button
@@ -205,14 +260,14 @@ const CVSection = ({
                 </button>
               </div>
             ))}
-            <button
-              onClick={() => {
-                setEditData([...editData, { name: "", level: "intermedio" }])
-              }}
-              className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
-            >
-              + Agregar idioma
-            </button>
+                              <button
+                    onClick={() => {
+                      setEditData([...editData, { name: "", level: "B1" }])
+                    }}
+                    className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    + Agregar idioma
+                  </button>
           </div>
         )
       case "experience":
@@ -253,16 +308,38 @@ const CVSection = ({
                     placeholder="Fecha inicio"
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <input
-                    value={exp.endDate || ""}
-                    onChange={(e) => {
-                      const newData = [...editData]
-                      newData[index] = { ...newData[index], endDate: e.target.value }
-                      setEditData(newData)
-                    }}
-                    placeholder="Fecha fin"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <input
+                      value={exp.endDate || ""}
+                      onChange={(e) => {
+                        const newData = [...editData]
+                        newData[index] = { ...newData[index], endDate: e.target.value }
+                        setEditData(newData)
+                      }}
+                      placeholder="Fecha fin"
+                      disabled={exp.current}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        exp.current ? 'bg-gray-100 text-gray-500' : ''
+                      }`}
+                    />
+                    <label className="flex items-center space-x-1 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={exp.current || false}
+                        onChange={(e) => {
+                          const newData = [...editData]
+                          newData[index] = { 
+                            ...newData[index], 
+                            current: e.target.checked,
+                            endDate: e.target.checked ? 'Presente' : newData[index].endDate
+                          }
+                          setEditData(newData)
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-gray-600">Actual</span>
+                    </label>
+                  </div>
                 </div>
                 <div className="flex gap-4">
                   <textarea
@@ -522,37 +599,25 @@ const CVSection = ({
       case "skills":
         return (
           <div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {cvData.skills?.map((skill, index) => {
                 const skillName = typeof skill === 'object' ? skill.name : skill
                 const skillLevel = typeof skill === 'object' ? skill.level : 'intermedio'
                 const getLevelColor = (level) => {
                   switch(level) {
-                    case 'basico': return 'bg-gray-200 text-gray-700'
-                    case 'intermedio': return 'bg-blue-200 text-blue-700'
-                    case 'avanzado': return 'bg-green-200 text-green-700'
-                    case 'experto': return 'bg-purple-200 text-purple-700'
-                    default: return 'bg-gray-200 text-gray-700'
-                  }
-                }
-                const getLevelStars = (level) => {
-                  switch(level) {
-                    case 'basico': return '★☆☆'
-                    case 'intermedio': return '★★☆'
-                    case 'avanzado': return '★★★'
-                    case 'experto': return '★★★'
-                    default: return '★★☆'
+                    case 'basico': return 'bg-gray-100 text-gray-700 border-gray-200'
+                    case 'intermedio': return 'bg-blue-100 text-blue-700 border-blue-200'
+                    case 'avanzado': return 'bg-green-100 text-green-700 border-green-200'
+                    case 'experto': return 'bg-purple-100 text-purple-700 border-purple-200'
+                    default: return 'bg-gray-100 text-gray-700 border-gray-200'
                   }
                 }
                 return (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="font-medium">{skillName}</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{getLevelStars(skillLevel)}</span>
-                      <span className={`px-2 py-1 text-xs rounded-full ${getLevelColor(skillLevel)}`}>
-                        {skillLevel}
-                      </span>
-                    </div>
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <span className="font-medium text-gray-900">{skillName}</span>
+                    <span className={`px-3 py-1 text-sm font-medium rounded-full border ${getLevelColor(skillLevel)}`}>
+                      {skillLevel}
+                    </span>
                   </div>
                 )
               })}
@@ -597,11 +662,11 @@ const CVSection = ({
             <div className="space-y-3">
               {cvData.languages?.map((lang, index) => {
                 const langName = typeof lang === 'object' ? lang.name : lang
-                const langLevel = typeof lang === 'object' ? lang.level : 'intermedio'
+                const langLevel = typeof lang === 'object' ? lang.level : 'B1'
                 return (
                   <div key={index} className="flex justify-between items-center">
                     <span className="font-medium">{langName}</span>
-                    <span className="text-sm text-gray-600">{langLevel}</span>
+                    <span className="text-sm text-gray-600">{formatLanguageLevel(langLevel)}</span>
                   </div>
                 )
               })}

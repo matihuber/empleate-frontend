@@ -196,17 +196,34 @@ export default function CVCreation() {
       }
     }) || []
     
-    // Transformar languages manteniendo el nivel
+    // Función para mapear niveles antiguos a CEFR
+    const mapLanguageLevel = (oldLevel) => {
+      const levelMap = {
+        'basico': 'A1',
+        'intermedio': 'B1', 
+        'avanzado': 'C1',
+        'nativo': 'nativo',
+        'C2': 'C2', // Ya está en formato CEFR
+        'B2': 'B2', // Ya está en formato CEFR
+        'A1': 'A1', // Ya está en formato CEFR
+        'A2': 'A2', // Ya está en formato CEFR
+        'B1': 'B1', // Ya está en formato CEFR
+        'C1': 'C1'  // Ya está en formato CEFR
+      }
+      return levelMap[oldLevel] || 'B1' // Default a B1 si no se encuentra
+    }
+
+    // Transformar languages mapeando niveles a CEFR
     const transformedLanguages = backendData.languages?.map(lang => {
       if (typeof lang === 'object') {
         return {
           name: lang.name || lang,
-          level: lang.level || 'intermedio'
+          level: mapLanguageLevel(lang.level) || 'B1'
         }
       }
       return {
         name: lang,
-        level: 'intermedio'
+        level: 'B1'
       }
     }) || []
     
@@ -216,8 +233,8 @@ export default function CVCreation() {
       company: exp.company || 'Empresa',
       position: exp.role || 'Cargo',
       startDate: exp.start_date || '2020',
-      endDate: exp.end_date || '2023',
-      current: exp.end_date === 'present' || exp.end_date === null,
+      endDate: exp.end_date || 'Presente', // Cambiar de '2023' a 'Presente'
+      current: exp.end_date === 'present' || exp.end_date === null || !exp.end_date,
       description: exp.description || 'Descripción del cargo...',
     })) || []
     

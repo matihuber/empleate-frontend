@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { cvStorageService } from '../../../services/cvStorageService'
 import CVCanvasEditor from '../../../components/CVCanvasEditor'
-import PDFExportModal from '../../../components/PDFExportModal'
+
 import { getTemplateStyles } from '../../../lib/templates'
 import { Trash2, X, AlertTriangle } from 'lucide-react'
 
@@ -14,7 +14,7 @@ const CVHistory = ({ onNavigateToSection }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [cvToDelete, setCvToDelete] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [pdfModal, setPdfModal] = useState({ isOpen: false, status: 'idle', message: '', progress: 0 })
+
 
   // Cargar CVs al montar el componente
   useEffect(() => {
@@ -125,16 +125,11 @@ const CVHistory = ({ onNavigateToSection }) => {
           }}
           onExport={async (cvData, onProgress) => {
             try {
-              // Abrir modal de loading
-              setPdfModal({ isOpen: true, status: 'loading', message: 'Generando tu CV en formato PDF...', progress: 0 })
-              
               const { pdfExportService } = await import('../../../services/pdfExportService')
               await pdfExportService.exportToPDF(cvData, selectedCV.name, selectedCV.template_id, onProgress)
-              
-              // Mostrar éxito
-              setPdfModal({ isOpen: true, status: 'success', message: '¡Tu CV se ha exportado exitosamente!', progress: 100 })
             } catch (error) {
-              setPdfModal({ isOpen: true, status: 'error', message: 'Error exportando PDF: ' + error.message, progress: 0 })
+              console.error('Error exportando PDF:', error)
+              throw error // Re-lanzar el error para que CVEditor lo maneje
             }
           }}
           onBack={handleBackToList}
@@ -357,14 +352,7 @@ const CVHistory = ({ onNavigateToSection }) => {
         </div>
       )}
 
-      {/* PDF Export Modal */}
-      <PDFExportModal
-        isOpen={pdfModal.isOpen}
-        onClose={closePdfModal}
-        status={pdfModal.status}
-        message={pdfModal.message}
-        progress={pdfModal.progress}
-      />
+
     </div>
   )
 }
