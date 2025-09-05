@@ -16,8 +16,8 @@ export default function ProtectedRoute({ children, requireAuth = true }) {
 
   // Si la ruta requiere autenticación y el usuario no está autenticado
   if (requireAuth && !isAuthenticated) {
-    // Redirigir al login y guardar la ubicación actual para volver después
-    return <Navigate to="/login" state={{ from: location }} replace />
+    // Redirigir a la home principal en lugar del login
+    return <Navigate to="/" replace />
   }
 
   // Si la ruta NO requiere autenticación y el usuario SÍ está autenticado

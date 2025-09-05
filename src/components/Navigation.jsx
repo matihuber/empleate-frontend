@@ -1,16 +1,40 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { User, LogOut, FileText, Home } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useState, useRef, useEffect } from 'react'
 
 export default function Navigation() {
   const { isAuthenticated, user, logout, isLoading } = useAuth()
+  const navigate = useNavigate()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  // Cerrar dropdown cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const handleLogout = async () => {
     try {
       await logout()
+      setIsDropdownOpen(false)
     } catch (error) {
       console.error('Error en logout:', error)
     }
+  }
+
+  const handleGoToProfile = () => {
+    navigate('/user-home')
+    setIsDropdownOpen(false)
   }
 
   return (
@@ -33,50 +57,45 @@ export default function Navigation() {
 
         {/* Navegación del usuario autenticado */}
         {isAuthenticated ? (
-          <div className="flex items-center space-x-4">
-            {/* Menú de navegación */}
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link 
-                to="/" 
-                className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
-              >
-                <Home className="w-4 h-4" />
-                <span>Inicio</span>
-              </Link>
-              <Link 
-                to="/my-data" 
-                className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                <span>Mis Datos</span>
-              </Link>
-              <Link 
-                to="/cv-prep" 
-                className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                <span>CV</span>
-              </Link>
-            </nav>
-
-            {/* Usuario y logout */}
-            <div className="flex items-center space-x-3">
-              <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
-                <span>Hola,</span>
-                <span className="font-medium text-gray-800">
-                  {user?.name ? user.name.split(' ')[0] : user?.email?.split('@')[0] || 'Usuario'}
-                </span>
+          <div className="relative" ref={dropdownRef}>
+            {/* Botón del perfil */}
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+            >
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
               </div>
-              
-              <button
-                onClick={handleLogout}
-                disabled={isLoading}
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden md:inline">Cerrar sesión</span>
-              </button>
-            </div>
+            </button>
+
+            {/* Dropdown menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-800">
+                    {user?.name ? user.name.split(' ')[0] : user?.email?.split('@')[0] || 'Usuario'}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+                
+                <button
+                  onClick={handleGoToProfile}
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Ir a mi perfil</span>
+                </button>
+                
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoading}
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Cerrar sesión</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           /* Botón de login para usuarios no autenticados */

@@ -2,6 +2,7 @@ import { Bell, Edit, Linkedin, FileText, User, Camera } from "lucide-react"
 import { useEffect, useState } from "react"
 import authService from "../../../services/authService"
 import apiInterceptor from "../../../services/apiInterceptor"
+import notificationService from "../../../services/notificationService"
 
 
 export default function Inicio({ user }) {
@@ -120,12 +121,12 @@ export default function Inicio({ user }) {
         </h2>
         <div className="space-y-3 lg:space-y-4">
           {homeData?.recent_activity && homeData.recent_activity.length > 0 ? (
-            homeData.recent_activity.map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3 lg:space-x-4 p-3 lg:p-4 hover:bg-gray-100 rounded-lg">
+            homeData.recent_activity.slice(0, 3).map((activity, index) => (
+              <div key={index} className="flex items-start space-x-3 lg:space-x-4 p-3 lg:p-4 hover:bg-gray-100 rounded-lg group">
                 <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <Bell className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-xs lg:text-sm text-gray-500 mb-1">
                     {new Date(activity.created_at).toLocaleDateString('es-ES', {
                       day: '2-digit',
@@ -135,11 +136,40 @@ export default function Inicio({ user }) {
                   </p>
                   <p className="text-sm lg:text-base text-gray-800 font-medium">{activity.description}</p>
                 </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={async () => {
+                      try {
+                        // Marcar como leída en el backend
+                        await notificationService.markAsRead(activity.id)
+                        
+                        // Actualizar estado local
+                        const updatedActivities = homeData.recent_activity.filter((_, i) => i !== index)
+                        setHomeData(prev => ({
+                          ...prev,
+                          recent_activity: updatedActivities
+                        }))
+                      } catch (error) {
+                        console.error('Error marking notification as read:', error)
+                        // Fallback: solo actualizar estado local
+                        const updatedActivities = homeData.recent_activity.filter((_, i) => i !== index)
+                        setHomeData(prev => ({
+                          ...prev,
+                          recent_activity: updatedActivities
+                        }))
+                      }
+                    }}
+                    className="px-3 py-1 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full border border-green-200 transition-colors"
+                    title="Marcar como leída"
+                  >
+                    Marcar como leída
+                  </button>
+                </div>
               </div>
             ))
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <p>No hay actividad reciente</p>
+              <p>No tienes notificaciones recientes</p>
             </div>
           )}
         </div>

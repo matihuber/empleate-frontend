@@ -34,11 +34,11 @@ export default function UserHome() {
     })
   }, [navigate, handleSessionExpired])
 
-  // Redirigir al login si la sesión expiró
+  // Redirigir a la home principal si la sesión expiró
   useEffect(() => {
     if (sessionExpired) {
-      console.log('UserHome: Redirigiendo al login por sesión expirada')
-      navigate('/session-expired?message=session_expired')
+      console.log('UserHome: Redirigiendo a la home principal por sesión expirada')
+      navigate('/')
       // Limpiar el estado de sesión expirada para evitar bucles
       clearSessionExpired()
     }
@@ -104,7 +104,7 @@ export default function UserHome() {
         {/* Mobile Overlay */}
         {sidebarOpen && (
           <div 
-            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="lg:hidden fixed inset-0 backdrop-brightness-70 z-40"
             onClick={() => setSidebarOpen(false)}
           />
         )}

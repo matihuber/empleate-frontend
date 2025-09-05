@@ -131,42 +131,52 @@ class UserProfileService {
   async saveAllChanges(changes) {
     try {
       console.log('UserProfileService: Iniciando guardado de cambios')
-      const { pendingChanges, uploadedFile, userAvatar } = changes
+      const { pendingChanges, uploadedCVFile, uploadedLinkedInFile, userAvatar } = changes
       
-      // Upload files first if any
-      let fileUploads = []
+      // Upload files in parallel for better performance
+      const uploadPromises = []
       
-      if (uploadedFile) {
-        // Determinar el tipo de archivo basado en la estructura
-        let fileType = 'cv' // por defecto
-        if (uploadedFile.type === 'linkedin') {
-          fileType = 'linkedin'
-          console.log('UserProfileService: Subiendo archivo de LinkedIn:', uploadedFile.importType)
-        } else {
-          console.log('UserProfileService: Subiendo archivo CV')
-        }
-        
-        // Use enhanced extraction for CVs and LinkedIn PDFs
-        if (fileType === 'cv' || fileType === 'linkedin') {
-          console.log('UserProfileService: Usando extracción mejorada para', fileType)
-          const fileUpload = await this.uploadWithEnhancedExtraction(uploadedFile.file || uploadedFile, fileType)
-          fileUploads.push(fileUpload)
-          console.log('UserProfileService: Archivo subido y extraído exitosamente con servicio mejorado')
-        } else {
-          const fileUpload = await this.uploadFile(uploadedFile.file || uploadedFile, fileType)
-          fileUploads.push(fileUpload)
-          console.log('UserProfileService: Archivo subido exitosamente')
-        }
+      // Prepare CV upload promise
+      if (uploadedCVFile) {
+        console.log('UserProfileService: Preparando subida de CV')
+        uploadPromises.push(
+          this.uploadWithEnhancedExtraction(uploadedCVFile.file || uploadedCVFile, 'cv')
+            .then(result => {
+              console.log('UserProfileService: CV subido y extraído exitosamente')
+              return result
+            })
+        )
       }
       
+      // Prepare LinkedIn upload promise
+      if (uploadedLinkedInFile) {
+        console.log('UserProfileService: Preparando subida de LinkedIn:', uploadedLinkedInFile.importType)
+        uploadPromises.push(
+          this.uploadWithEnhancedExtraction(uploadedLinkedInFile.file || uploadedLinkedInFile, 'linkedin')
+            .then(result => {
+              console.log('UserProfileService: LinkedIn subido y extraído exitosamente')
+              return result
+            })
+        )
+      }
+      
+      // Prepare avatar upload promise
       if (userAvatar && userAvatar.needsUpload) {
-        console.log('UserProfileService: Subiendo nueva foto de perfil')
-        const photoUpload = await this.uploadFile(userAvatar, 'photo')
-        fileUploads.push(photoUpload)
-        console.log('UserProfileService: Avatar subido exitosamente')
+        console.log('UserProfileService: Preparando subida de avatar')
+        uploadPromises.push(
+          this.uploadFile(userAvatar, 'photo')
+            .then(result => {
+              console.log('UserProfileService: Avatar subido exitosamente')
+              return result
+            })
+        )
       } else if (userAvatar && !userAvatar.needsUpload) {
         console.log('UserProfileService: Avatar ya existe, no necesita ser subido')
       }
+      
+      // Execute all uploads in parallel
+      console.log('UserProfileService: Ejecutando subidas en paralelo...')
+      const fileUploads = await Promise.all(uploadPromises)
       
       // Update profile data if any
       if (Object.keys(pendingChanges).length > 0) {

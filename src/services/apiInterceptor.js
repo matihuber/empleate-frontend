@@ -18,9 +18,9 @@ class ApiInterceptor {
       console.log('API Interceptor: Token expirado o inválido, ejecutando logout forzado');
       
       // Limpiar localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+      localStorage.removeItem('empleate_access_token');
+      localStorage.removeItem('empleate_refresh_token');
+      localStorage.removeItem('empleate_user');
       
       // Limpiar cache de imágenes
       if (window.imageCacheService) {
@@ -49,7 +49,28 @@ class ApiInterceptor {
   // Método para usar en fetch
   async fetchWithInterceptor(url, options = {}) {
     try {
-      const response = await fetch(url, options);
+      // Obtener el token de autenticación del localStorage
+      const accessToken = localStorage.getItem('empleate_access_token');
+      
+      // Preparar headers con autenticación
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+      
+      // Agregar token de autenticación si existe
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      
+      // Crear opciones con headers actualizados
+      const requestOptions = {
+        ...options,
+        headers
+      };
+      
+      const response = await fetch(url, requestOptions);
+      
       return await this.handleResponse(response, options);
     } catch (error) {
       if (error.message.includes('Sesión expirada')) {

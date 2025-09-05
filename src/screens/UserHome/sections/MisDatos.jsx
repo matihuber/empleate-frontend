@@ -16,7 +16,8 @@ export default function MisDatosSection({ user }) {
   const [userAvatar, setUserAvatar] = useState(null)
   const [currentCV, setCurrentCV] = useState(null)  // CV actual del usuario
   const [currentLinkedIn, setCurrentLinkedIn] = useState(null)  // Perfil de LinkedIn actual del usuario
-  const [uploadedFile, setUploadedFile] = useState(null)
+  const [uploadedCVFile, setUploadedCVFile] = useState(null)
+  const [uploadedLinkedInFile, setUploadedLinkedInFile] = useState(null)
   const [showLinkedInModal, setShowLinkedInModal] = useState(false)
 
   
@@ -126,8 +127,11 @@ export default function MisDatosSection({ user }) {
   const handleFileUpload = (event) => {
     const file = event.target.files[0]
     if (file) {
-      // File loaded
-      setUploadedFile(file)
+      // File loaded - solo para CV
+      setUploadedCVFile({
+        file: file,
+        type: 'cv'
+      })
       // Aquí iría la lógica para procesar el archivo
     }
   }
@@ -136,8 +140,11 @@ export default function MisDatosSection({ user }) {
     event.preventDefault()
     const file = event.dataTransfer.files[0]
     if (file && file.type === 'application/pdf') {
-      // File dropped
-      setUploadedFile(file)
+      // File dropped - solo para CV
+      setUploadedCVFile({
+        file: file,
+        type: 'cv'
+      })
     }
   }
 
@@ -190,7 +197,7 @@ export default function MisDatosSection({ user }) {
     // LinkedIn file loaded
     
     // Marcar que hay un archivo de LinkedIn pendiente de subir
-    setUploadedFile({
+    setUploadedLinkedInFile({
       file: data.file,
       type: 'linkedin',
       importType: data.importType
@@ -210,7 +217,10 @@ export default function MisDatosSection({ user }) {
   const handleSaveChanges = async () => {
             // Saving changes
     
-    if (Object.keys(pendingChanges).length === 0 && !(uploadedFile && (uploadedFile.file || uploadedFile instanceof File)) && !userAvatar) {
+    if (Object.keys(pendingChanges).length === 0 && 
+        !(uploadedCVFile && (uploadedCVFile.file || uploadedCVFile instanceof File)) && 
+        !(uploadedLinkedInFile && (uploadedLinkedInFile.file || uploadedLinkedInFile instanceof File)) && 
+        !userAvatar) {
       setSaveMessage('No hay cambios para guardar')
       return
     }
@@ -222,7 +232,8 @@ export default function MisDatosSection({ user }) {
       // Llamar al servicio para guardar todos los cambios
       const result = await userProfileService.saveAllChanges({
         pendingChanges,
-        uploadedFile: uploadedFile && (uploadedFile.file || uploadedFile instanceof File) ? uploadedFile : null,
+        uploadedCVFile: uploadedCVFile && (uploadedCVFile.file || uploadedCVFile instanceof File) ? uploadedCVFile : null,
+        uploadedLinkedInFile: uploadedLinkedInFile && (uploadedLinkedInFile.file || uploadedLinkedInFile instanceof File) ? uploadedLinkedInFile : null,
         userAvatar
       })
 
@@ -230,47 +241,42 @@ export default function MisDatosSection({ user }) {
 
       // Limpiar cambios pendientes
       setPendingChanges({})
-      setUploadedFile(null)
-      
       // Si se subió un archivo CV, mostrar mensaje de éxito y actualizar estado
-      if (uploadedFile && uploadedFile.type !== 'linkedin' && result.fileUploads) {
+      if (uploadedCVFile && result.fileUploads) {
         const cvUpload = result.fileUploads.find(upload => upload.file_type === 'cv')
         if (cvUpload) {
-                      // CV upload data received
+          // CV upload data received
           setCurrentCV({
             file_key: cvUpload.file_key,
-            filename: cvUpload.filename || 'cv-uploaded',
+            filename: cvUpload.filename || (uploadedCVFile.file ? uploadedCVFile.file.name : 'cv-uploaded'),
             mime: cvUpload.mime,
-            size: cvUpload.size,
+            size: cvUpload.size || (uploadedCVFile.file ? uploadedCVFile.file.size : null),
             fileType: 'cv',
             uploadedAt: new Date().toISOString(),
             presigned_url: cvUpload.presigned_url
           })
           setSaveMessage('CV subido exitosamente!')
-                      // CV updated successfully
+          setUploadedCVFile(null) // Limpiar el archivo pendiente
         }
       }
       
       // Si se subió un archivo de LinkedIn, mostrar mensaje de éxito y actualizar estado
-      if (uploadedFile && uploadedFile.type === 'linkedin') {
-        setSaveMessage(`Perfil de LinkedIn (${uploadedFile.importType.toUpperCase()}) importado exitosamente!`)
-        
-        // Actualizar el estado con la información del backend
-        if (result.fileUploads) {
-          const linkedinUpload = result.fileUploads.find(upload => upload.file_type === 'linkedin')
-          if (linkedinUpload) {
-            // LinkedIn upload data received
-            setCurrentLinkedIn({
-              file_key: linkedinUpload.file_key,
-              filename: linkedinUpload.filename || 'linkedin-profile',
-              mime: linkedinUpload.mime,
-              size: linkedinUpload.size,
-              fileType: 'linkedin',
-              uploadedAt: new Date().toISOString(),
-              presigned_url: linkedinUpload.presigned_url
-            })
-            // LinkedIn profile updated successfully
-          }
+      if (uploadedLinkedInFile && result.fileUploads) {
+        const linkedinUpload = result.fileUploads.find(upload => upload.file_type === 'linkedin')
+        if (linkedinUpload) {
+          setSaveMessage(`Perfil de LinkedIn (${uploadedLinkedInFile.importType.toUpperCase()}) importado exitosamente!`)
+          
+          // LinkedIn upload data received
+          setCurrentLinkedIn({
+            file_key: linkedinUpload.file_key,
+            filename: linkedinUpload.filename || (uploadedLinkedInFile.file ? uploadedLinkedInFile.file.name : 'linkedin-profile'),
+            mime: linkedinUpload.mime,
+            size: linkedinUpload.size || (uploadedLinkedInFile.file ? uploadedLinkedInFile.file.size : null),
+            fileType: 'linkedin',
+            uploadedAt: new Date().toISOString(),
+            presigned_url: linkedinUpload.presigned_url
+          })
+          setUploadedLinkedInFile(null) // Limpiar el archivo pendiente
         }
       }
       
@@ -309,11 +315,10 @@ export default function MisDatosSection({ user }) {
 
   // Verificar si hay cambios pendientes
   const hasPendingChanges = Object.keys(pendingChanges).length > 0 || 
-                           (uploadedFile && (uploadedFile.file || uploadedFile instanceof File)) || 
+                           (uploadedCVFile && (uploadedCVFile.file || uploadedCVFile instanceof File)) || 
+                           (uploadedLinkedInFile && (uploadedLinkedInFile.file || uploadedLinkedInFile instanceof File)) || 
                            (userAvatar && userAvatar.needsUpload)
 
-  // Debug: Log del estado para diagnosticar
-  // Component state debug (removed for production)
 
   return (
     <div>
@@ -481,8 +486,73 @@ export default function MisDatosSection({ user }) {
           Carga tu CV
         </h2>
         
-        {!uploadedFile && !currentCV ? (
-          // Área de carga cuando no hay archivo ni CV actual
+        {/* CV actual o pendiente */}
+        {(currentCV || uploadedCVFile) && (
+          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              {/* Ícono del archivo según tipo */}
+              {uploadedCVFile ? (
+                uploadedCVFile.file ? 
+                  getFileIcon(uploadedCVFile.file) : 
+                  getFileIcon(uploadedCVFile)
+              ) : (
+                currentCV && currentCV.filename && currentCV.mime ? 
+                  getFileIcon({ name: currentCV.filename, type: currentCV.mime }) : 
+                  null
+              )}
+              
+              {/* Información del archivo */}
+              <div>
+                <p className="text-gray-800 font-medium truncate max-w-xs">
+                  {uploadedCVFile ? (
+                    uploadedCVFile.file ? uploadedCVFile.file.name : uploadedCVFile.name
+                  ) : (
+                    currentCV?.filename || 'Nombre no disponible'
+                  )}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {uploadedCVFile ? (
+                    uploadedCVFile.file ? 
+                      `${(uploadedCVFile.file.size / (1024 * 1024)).toFixed(2)} MB` : 
+                      uploadedCVFile.size ? `${(uploadedCVFile.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'
+                  ) : (
+                    currentCV?.size ? `${(currentCV.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'
+                  )}
+                </p>
+                <p className={`text-xs font-medium ${uploadedCVFile ? 'text-blue-600' : 'text-green-600'}`}>
+                  {uploadedCVFile ? 'Nuevo archivo - Pendiente de guardar' : 'CV actual guardado'}
+                </p>
+              </div>
+            </div>
+
+            {/* Botón cambiar CV o eliminar */}
+            <button
+              onClick={() => {
+                if (uploadedCVFile) {
+                  // Si hay archivo pendiente, eliminarlo
+                  setUploadedCVFile(null)
+                } else {
+                  // Si hay CV actual, activar input para cambiar
+                  const fileInput = document.getElementById('cv-upload-hidden')
+                  if (fileInput) {
+                    fileInput.click()
+                  }
+                }
+              }}
+              className={`p-2 rounded-lg transition-colors ${
+                uploadedCVFile 
+                  ? 'text-red-600 hover:text-red-700 hover:bg-red-50' 
+                  : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+              }`}
+              title={uploadedCVFile ? 'Eliminar archivo' : 'Cambiar CV'}
+            >
+              {uploadedCVFile ? <Trash2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+            </button>
+          </div>
+        )}
+        
+        {/* Área de carga cuando no hay CV */}
+        {!currentCV && !uploadedCVFile && (
           <div
             onDrop={handleFileDrop}
             onDragOver={handleDragOver}
@@ -505,81 +575,6 @@ export default function MisDatosSection({ user }) {
               id="cv-upload"
             />
           </div>
-        ) : uploadedFile ? (
-          // Mostrar archivo nuevo cargado (pendiente de guardar)
-          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Ícono del archivo según tipo */}
-              {uploadedFile && uploadedFile.file ? 
-                getFileIcon(uploadedFile.file) : 
-                getFileIcon(uploadedFile)
-              }
-              
-              {/* Información del archivo */}
-              <div>
-                <p className="text-gray-800 font-medium truncate max-w-xs">
-                  {uploadedFile.file ? uploadedFile.file.name : uploadedFile.name}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {uploadedFile.file ? 
-                    `${(uploadedFile.file.size / (1024 * 1024)).toFixed(2)} MB` : 
-                    uploadedFile.size ? `${(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'
-                  }
-                </p>
-                <p className="text-xs text-blue-600 font-medium">
-                  {uploadedFile.type === 'linkedin' ? 
-                    `Perfil de LinkedIn (${uploadedFile.importType.toUpperCase()}) - Pendiente de guardar` : 
-                    'Nuevo archivo - Pendiente de guardar'
-                  }
-                </p>
-              </div>
-            </div>
-
-            {/* Botón eliminar */}
-            <button
-              onClick={removeFile}
-              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-              title="Eliminar archivo"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </div>
-        ) : (
-          // Mostrar CV actual guardado
-          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Ícono del archivo según tipo */}
-              {currentCV && currentCV.filename && currentCV.mime ? 
-                getFileIcon({ name: currentCV.filename, type: currentCV.mime }) : 
-                null
-              }
-              
-              {/* Información del archivo */}
-              <div>
-                <p className="text-gray-800 font-medium truncate max-w-xs">
-                  {currentCV?.filename || 'Nombre no disponible'}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {currentCV?.size ? `${(currentCV.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'}
-                </p>
-                <p className="text-xs text-green-600 font-medium">
-                  CV actual guardado
-                </p>
-              </div>
-            </div>
-
-            {/* Botón cambiar CV */}
-            <button
-              onClick={() => {
-                setCurrentCV(null)  // Ocultar CV actual
-                setUploadedFile(null)  // Limpiar archivo pendiente
-              }}
-              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Cambiar CV"
-            >
-              <Upload className="w-5 h-5" />
-            </button>
-          </div>
         )}
         
         <p className="text-sm text-gray-500 mt-4">
@@ -593,77 +588,67 @@ export default function MisDatosSection({ user }) {
           Perfil de LinkedIn
         </h2>
         
-        {currentLinkedIn ? (
-          // Mostrar perfil de LinkedIn actual guardado
-          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
+        {/* Perfil de LinkedIn actual o pendiente */}
+        {(currentLinkedIn || uploadedLinkedInFile) && (
+          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
               {/* Ícono del archivo según tipo */}
-              {getFileIcon({ name: currentLinkedIn.filename, type: currentLinkedIn.mime })}
+              {uploadedLinkedInFile ? (
+                getFileIcon(uploadedLinkedInFile.file)
+              ) : (
+                getFileIcon({ name: currentLinkedIn.filename, type: currentLinkedIn.mime })
+              )}
               
               {/* Información del archivo */}
               <div>
                 <p className="text-gray-800 font-medium truncate max-w-xs">
-                  {currentLinkedIn.filename}
+                  {uploadedLinkedInFile ? (
+                    uploadedLinkedInFile.file.name
+                  ) : (
+                    currentLinkedIn.filename
+                  )}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {currentLinkedIn.size ? `${(currentLinkedIn.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'}
+                  {uploadedLinkedInFile ? (
+                    `${(uploadedLinkedInFile.file.size / (1024 * 1024)).toFixed(2)} MB`
+                  ) : (
+                    currentLinkedIn.size ? `${(currentLinkedIn.size / (1024 * 1024)).toFixed(2)} MB` : 'Tamaño no disponible'
+                  )}
                 </p>
-                <p className="text-xs text-green-600 font-medium">
-                  Perfil de LinkedIn actual guardado
+                <p className={`text-xs font-medium ${uploadedLinkedInFile ? 'text-blue-600' : 'text-green-600'}`}>
+                  {uploadedLinkedInFile ? 
+                    `Perfil de LinkedIn (${uploadedLinkedInFile.importType.toUpperCase()}) - Pendiente de guardar` : 
+                    'Perfil de LinkedIn actual guardado'
+                  }
                 </p>
               </div>
             </div>
 
-            {/* Botón cambiar perfil */}
+            {/* Botón cambiar perfil o eliminar */}
             <button
               onClick={() => {
-                setCurrentLinkedIn(null)  // Ocultar perfil actual
-                setUploadedFile(null)  // Limpiar archivo pendiente
-              }}
-              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Cambiar perfil de LinkedIn"
-            >
-              <Upload className="w-5 h-5" />
-            </button>
-          </div>
-        ) : uploadedFile && uploadedFile.type === 'linkedin' ? (
-          // Mostrar archivo nuevo cargado (pendiente de guardar)
-          <div className="bg-white border-2 border-gray-300 rounded-2xl p-6 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Ícono del archivo según tipo */}
-              {getFileIcon(uploadedFile.file)}
-              
-              {/* Información del archivo */}
-              <div>
-                <p className="text-gray-800 font-medium truncate max-w-xs">
-                  {uploadedFile.file.name}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {`${(uploadedFile.file.size / (1024 * 1024)).toFixed(2)} MB`}
-                </p>
-                <p className="text-xs text-blue-600 font-medium">
-                  Perfil de LinkedIn ({uploadedFile.importType.toUpperCase()}) - Pendiente de guardar
-                </p>
-              </div>
-            </div>
-
-            {/* Botón eliminar */}
-            <button
-              onClick={() => {
-                setUploadedFile(null)
-                // Restaurar el perfil actual si existía
-                if (currentLinkedIn) {
-                  setCurrentLinkedIn(currentLinkedIn)
+                if (uploadedLinkedInFile) {
+                  // Si hay archivo pendiente, eliminarlo
+                  setUploadedLinkedInFile(null)
+                } else {
+                  // Si hay perfil actual, abrir modal para cambiar
+                  setShowLinkedInModal(true)
                 }
               }}
-              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-              title="Eliminar archivo"
+              className={`p-2 rounded-lg transition-colors ${
+                uploadedLinkedInFile 
+                  ? 'text-red-600 hover:text-red-700 hover:bg-red-50' 
+                  : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+              }`}
+              title={uploadedLinkedInFile ? 'Eliminar archivo' : 'Cambiar perfil de LinkedIn'}
             >
-              <Trash2 className="w-5 h-5" />
+              {uploadedLinkedInFile ? <Trash2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
             </button>
           </div>
-        ) : (
-          // Mostrar botón de importar cuando no hay perfil
+        )}
+        
+        {/* Botón de importar cuando no hay perfil */}
+        {!currentLinkedIn && !uploadedLinkedInFile && (
           <LoginButton
             variant="primary"
             icon={Linkedin}
@@ -674,6 +659,15 @@ export default function MisDatosSection({ user }) {
           </LoginButton>
         )}
       </div>
+
+      {/* Input de archivo oculto para CV - siempre disponible */}
+      <input
+        type="file"
+        accept=".pdf"
+        onChange={handleFileUpload}
+        className="hidden"
+        id="cv-upload-hidden"
+      />
 
       {/* Botón Guardar Cambios */}
       <div className="mt-8 pt-6 border-t border-gray-200">
