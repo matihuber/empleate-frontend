@@ -121,8 +121,6 @@ export default function CVCreation() {
 
   const handleSkillsContinue = async () => {
     try {
-      console.log('🔍 CVCreation: Habilidades:', skills)
-      
       // Generar CV automáticamente
       await generateCV()
     } catch (error) {
@@ -137,7 +135,12 @@ export default function CVCreation() {
       setError(null)
       setCurrentStep('generating')
       
-      console.log('🚀 CVCreation: Generando CV...')
+      // Primero guardar los datos de prefill (incluye web scraping si hay URL)
+      const prefillData = {
+        ...personalizationData,
+        skills: skills
+      }
+      await cvPrepService.savePrefill(prefillData)
       
       // Preparar datos para generación
       const generationData = {
@@ -150,13 +153,8 @@ export default function CVCreation() {
         personalization_level: personalizationData.nivel.toLowerCase()
       }
       
-      console.log('🔍 CVCreation: Datos de generación:', generationData)
-      
       // Llamar al servicio de generación
       const result = await cvGenerationService.generateCV(generationData)
-      
-      console.log('✅ CVCreation: CV generado exitosamente:', result)
-      console.log('🔍 CVCreation: Estructura del CV:', JSON.stringify(result, null, 2))
       
       setGeneratedCV(result)
       setCurrentStep('editor')
