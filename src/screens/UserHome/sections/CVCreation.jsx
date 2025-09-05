@@ -29,6 +29,31 @@ export default function CVCreation() {
     aspectos: '',
     nivel: 'Medio'
   })
+  const [linkError, setLinkError] = useState('')
+
+  // TEMPORAL: Función de validación de LinkedIn comentada
+  // const validateLinkedInUrl = (url) => {
+  //   if (!url) {
+  //     setLinkError('')
+  //     return true
+  //   }
+  //   
+  //   try {
+  //     const urlObj = new URL(url)
+  //     const domain = urlObj.hostname.toLowerCase()
+  //     
+  //     if (domain.includes('linkedin.com')) {
+  //       setLinkError('')
+  //       return true
+  //     } else {
+  //       setLinkError('Debe ser una URL de LinkedIn')
+  //       return false
+  //     }
+  //   } catch (error) {
+  //     setLinkError('URL inválida')
+  //     return false
+  //   }
+  // }
 
   // Mapeo de templates del backend a IDs locales
   const mapBackendToLocalTemplate = (backendTemplate) => {
@@ -108,6 +133,12 @@ export default function CVCreation() {
   const handlePersonalizationContinue = async () => {
     try {
       console.log('🔍 CVCreation: Datos de personalización:', personalizationData)
+      
+      // TEMPORAL: Validación de LinkedIn comentada
+      // if (personalizationData.link && !validateLinkedInUrl(personalizationData.link)) {
+      //   console.log('❌ CVCreation: URL no es de LinkedIn')
+      //   return // No continuar si la URL no es válida
+      // }
       
       // NO llamar al backend - guardar solo localmente
       console.log('✅ CVCreation: Datos de personalización guardados localmente')
@@ -426,19 +457,27 @@ export default function CVCreation() {
                 </div>
               </div>
 
-              {/* Link a la oferta laboral */}
-              <div>
+              {/* TEMPORAL: Link a la oferta laboral comentado */}
+              {/* <div>
                 <label className="block text-base font-medium text-gray-700 mb-2">
-                  Link a la oferta laboral <span className="text-gray-500">(recomendado)</span>
+                  Link a la oferta laboral de LinkedIn <span className="text-gray-500">(recomendado)</span>
                 </label>
                 <input
                   type="url"
-                  placeholder="Pegá aquí el enlace"
+                  placeholder="Pegá aquí el enlace de LinkedIn"
                   value={personalizationData.link}
-                  onChange={(e) => setPersonalizationData(prev => ({ ...prev, link: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50"
+                  onChange={(e) => {
+                    setPersonalizationData(prev => ({ ...prev, link: e.target.value }))
+                    validateLinkedInUrl(e.target.value)
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50 ${
+                    linkError ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 />
-              </div>
+                {linkError && (
+                  <p className="mt-2 text-sm text-red-600">{linkError}</p>
+                )}
+              </div> */}
 
               {/* Aspectos que querés destacar */}
               <div>

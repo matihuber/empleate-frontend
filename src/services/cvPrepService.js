@@ -47,6 +47,7 @@ class CVPrepService {
       const url = `${this.baseURL}/cv/prefill`
       console.log('🔍 CVPrepService: Guardando datos de prefill...')
       console.log('🔍 CVPrepService: Datos:', prefillData)
+      console.log('🔍 CVPrepService: Link original:', prefillData.link)
 
       // Convert frontend data format to backend format
       const backendData = {
@@ -60,6 +61,10 @@ class CVPrepService {
           level: this.mapSkillLevel(skill.level)
         }))
       }
+      
+      console.log('🔍 CVPrepService: Datos convertidos para backend:', backendData)
+      console.log('🔍 CVPrepService: job_posting_url final:', backendData.job_posting_url)
+      
 
       const response = await apiInterceptor.fetchWithInterceptor(url, {
         method: 'POST',
