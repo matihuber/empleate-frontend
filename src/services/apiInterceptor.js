@@ -54,9 +54,13 @@ class ApiInterceptor {
       
       // Preparar headers con autenticación
       const headers = {
-        'Content-Type': 'application/json',
         ...options.headers
       };
+      
+      // Solo agregar Content-Type por defecto si no se especifica uno
+      if (!headers['Content-Type'] && !headers['content-type']) {
+        headers['Content-Type'] = 'application/json';
+      }
       
       // Agregar token de autenticación si existe
       if (accessToken) {
@@ -68,6 +72,12 @@ class ApiInterceptor {
         ...options,
         headers
       };
+      
+      // Si es FormData, no agregar Content-Type para que el navegador lo establezca automáticamente
+      if (options.body instanceof FormData) {
+        delete requestOptions.headers['Content-Type'];
+        delete requestOptions.headers['content-type'];
+      }
       
       const response = await fetch(url, requestOptions);
       

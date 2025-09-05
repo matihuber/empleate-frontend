@@ -13,7 +13,7 @@ const LoginButton = forwardRef(
     ref,
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      "inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 
     const variants = {
       primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",

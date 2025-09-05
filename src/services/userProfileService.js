@@ -96,7 +96,6 @@ class UserProfileService {
       formData.append('file', actualFile)
       formData.append('file_type', fileType)
 
-              console.log('UserProfileService: FormData preparado correctamente')
 
       const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/upload`, {
         method: 'POST',
@@ -295,6 +294,7 @@ class UserProfileService {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('file_type', fileType)
+
 
       const uploadResponse = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/my-data/upload`, {
         method: 'POST',

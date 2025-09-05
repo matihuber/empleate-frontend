@@ -40,7 +40,6 @@ class AuthService {
   // Función helper para hacer peticiones HTTP
   async makeRequest(url, options = {}) {
     try {
-      console.log('AuthService: Haciendo petición a:', url, 'con opciones:', options)
       const response = await fetch(url, {
         ...options,
         headers: this.getHeaders(options.includeAuth !== false),
@@ -65,8 +64,10 @@ class AuthService {
           throw new Error(errorData.detail || 'Datos incorrectos');
         } else if (response.status === 401) {
           // No autorizado
-          console.log('AuthService: Error 401 - Credenciales incorrectas')
           throw new Error('Credenciales incorrectas. Verifica tu email y contraseña.');
+        } else if (response.status === 409) {
+          // Conflicto - usuario ya existe
+          throw new Error(errorData.detail || 'Ya existe una cuenta con este email. Por favor, usa un email diferente.');
         } else if (response.status === 500) {
           // Error del servidor
           throw new Error('Error del servidor. Intenta más tarde.');
@@ -77,7 +78,6 @@ class AuthService {
       }
 
       const responseData = await response.json();
-      console.log('AuthService: Respuesta exitosa:', responseData)
       return responseData;
     } catch (error) {
       console.error('AuthService request error:', error);
@@ -88,7 +88,6 @@ class AuthService {
   // Login básico con email y password
   async loginBasic(email, password) {
     try {
-      console.log('AuthService: Iniciando login con:', { email, password: '***' })
       const response = await this.makeRequest(ENDPOINTS.LOGIN, {
         method: 'POST',
         body: JSON.stringify({
@@ -100,7 +99,6 @@ class AuthService {
         includeAuth: false
       });
 
-      console.log('AuthService: Respuesta del backend:', response)
       // Guardar tokens y datos del usuario
       this.setTokens(response.access_token, response.refresh_token);
       this.setUser(response.user);
@@ -176,27 +174,24 @@ class AuthService {
         user: response.user
       };
     } catch (error) {
-      throw new Error(`Error en registro: ${error.message}`);
+      throw new Error(`${error.message}`);
     }
   }
 
   // Logout
   async logout() {
     try {
-      console.log('AuthService: Iniciando logout, refreshToken:', this.refreshToken ? 'existe' : 'no existe');
       
       if (this.refreshToken) {
         const logoutBody = {
           refresh_token: this.refreshToken
         };
-        console.log('AuthService: Enviando logout con body:', logoutBody);
         
         await this.makeRequest(ENDPOINTS.LOGOUT, {
           method: 'POST',
           body: JSON.stringify(logoutBody)
         });
         
-        console.log('AuthService: Logout exitoso en el servidor');
       } else {
         console.warn('AuthService: No hay refreshToken para enviar al logout');
       }

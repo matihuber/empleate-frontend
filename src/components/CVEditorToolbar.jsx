@@ -124,7 +124,7 @@ const CVEditorToolbar = ({
           <div className="relative group">
             <button
               onClick={onSave}
-              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center shadow-sm hover:shadow-md"
+              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center shadow-sm hover:shadow-md cursor-pointer disabled:cursor-not-allowed"
               disabled={isSaving || isExporting}
             >
               {isSaving ? (
@@ -143,7 +143,7 @@ const CVEditorToolbar = ({
           <div className="relative group">
             <button
               onClick={onExportPDF}
-              className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center shadow-sm hover:shadow-md"
+              className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center shadow-sm hover:shadow-md cursor-pointer disabled:cursor-not-allowed"
               disabled={isSaving || isExporting}
             >
               {isExporting ? (
