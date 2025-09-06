@@ -11,7 +11,7 @@ export default function Login() {
   
   const navigate = useNavigate()
   const location = useLocation()
-  const { loginBasic, loginGoogle, loginLinkedIn, loginMicrosoft, isLoading, error, clearError } = useAuth()
+  const { loginBasic, loginGoogle, loginLinkedIn, loginMicrosoft, isLoading, error, clearError, isAuthenticated, authState } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showMoreOptions, setShowMoreOptions] = useState(false)
   const [formData, setFormData] = useState({
@@ -23,7 +23,6 @@ export default function Login() {
 
   // Limpiar errores cuando cambie el error del contexto
   useEffect(() => {
-
     if (error) {
       // Si es un error de credenciales incorrectas, mostrar en ambos campos
       if (error.includes('incorrectas') || error.includes('credenciales') || error.includes('401')) {
@@ -37,18 +36,20 @@ export default function Login() {
         const newErrors = { general: error }
         setErrors(newErrors)
       }
-    } else {
-      // Si no hay error, limpiar errores
-      setErrors({})
     }
+    // NO limpiar errores automáticamente cuando error es null
+    // Los errores se limpiarán cuando el usuario interactúe con los campos
   }, [error])
 
-  // Limpiar errores al desmontar
+  // NO limpiar errores automáticamente - se limpiarán cuando el usuario interactúe
+
+  // Redirigir cuando el usuario se autentique exitosamente
   useEffect(() => {
-    return () => {
-      clearError()
+    if (isAuthenticated && authState === 'authenticated' && !error) {
+      const from = location.state?.from?.pathname || '/user-home'
+      navigate(from, { replace: true })
     }
-  }, [clearError])
+  }, [isAuthenticated, authState, error, navigate, location.state])
 
   // Mostrar mensaje de éxito si viene del registro
   useEffect(() => {
@@ -109,20 +110,15 @@ export default function Login() {
     }
 
     try {
-      console.log('Iniciando login...')
       // Limpiar errores previos
       setErrors({})
       
-      // Llamar al login del AuthContext
+      // Llamar al login del AuthContext y esperar a que termine
       await loginBasic(formData.email, formData.password)
       
-      console.log('Login completado, redirigiendo a la página de destino')
-      // Si llegamos aquí, el login fue exitoso (no se lanzó excepción)
-      // Redirigir a la página de origen o a la home del usuario por defecto
-      const from = location.state?.from?.pathname || '/user-home'
-      navigate(from, { replace: true })
+      // NO redirigir aquí - el useEffect se encargará de la redirección
+      // cuando el estado cambie a autenticado
     } catch (error) {
-      console.log('Error capturado en handleSubmit:', error)
       // No redirigir, solo mostrar el error
       setErrors({ general: error.message })
     }

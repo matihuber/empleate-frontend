@@ -68,15 +68,16 @@ function authReducer(state, action) {
         ...state,
         accessToken: action.payload.accessToken,
         refreshToken: action.payload.refreshToken,
-        error: null,
-        // Si tenemos tokens y usuario, establecer como autenticado
-        isAuthenticated: !!(action.payload.accessToken && state.user)
+        error: null
+        // NO establecer isAuthenticated automáticamente aquí
+        // Se establecerá explícitamente con SET_AUTH_STATE
       };
     
     case AUTH_ACTIONS.SET_AUTH_STATE:
       return {
         ...state,
-        authState: action.payload
+        authState: action.payload,
+        isAuthenticated: action.payload === AUTH_STATES.AUTHENTICATED
       };
     
     case AUTH_ACTIONS.SET_LOGIN_TYPE:
@@ -206,30 +207,26 @@ export const AuthProvider = ({ children }) => {
   // Función para login básico
   const loginBasic = useCallback(async (email, password) => {
     try {
-      console.log('AuthContext: Iniciando login básico')
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
       dispatch({ type: AUTH_ACTIONS.SET_LOGIN_TYPE, payload: LOGIN_TYPES.BASIC });
       
       // Llamada real al backend a través de authService
       const response = await authService.loginBasic(email, password);
       
-      console.log('AuthContext: Login exitoso, respuesta:', response)
-      
       // Establecer tokens en el servicio de autenticación
       authService.setTokens(response.accessToken, response.refreshToken)
       authService.setUser(response.user)
       
-      // Actualizar estado con la respuesta real
+      // Actualizar estado con la respuesta real - SOLO si el login fue exitoso
       dispatch({ type: AUTH_ACTIONS.SET_TOKENS, payload: {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken
       }});
-      console.log('AuthContext: Tokens establecidos')
       
       dispatch({ type: AUTH_ACTIONS.SET_USER, payload: response.user });
-      console.log('AuthContext: Usuario establecido')
       
-      console.log('AuthContext: Estado final - isAuthenticated:', !!response.user, 'user:', response.user)
+      // Establecer como autenticado SOLO al final, cuando todo esté confirmado
+      dispatch({ type: AUTH_ACTIONS.SET_AUTH_STATE, payload: AUTH_STATES.AUTHENTICATED });
       
     } catch (error) {
       // Asegurar que el estado de autenticación se mantenga como no autenticado
