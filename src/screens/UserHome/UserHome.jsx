@@ -18,6 +18,7 @@ import Inicio from "./sections/Inicio"
 import MisDatos from "./sections/MisDatos"
 import CVCreation from "./sections/CVCreation"
 import CVHistory from "./sections/CVHistory"
+import SalaryEstimator from "../SalaryEstimator"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
@@ -202,9 +203,10 @@ export default function UserHome() {
               profileImage: null,
               sub: user.sub  // Agregar el sub del usuario para autenticación
             }} onNavigateToSection={setActiveSection} />}
+            {activeSection === 'estimador-sueldo' && <SalaryEstimator key="estimador-sueldo" />}
 
             {/* Otras secciones pendientes */}
-            {!['inicio', 'mis-datos', 'crear-cv', 'historial-cvs'].includes(activeSection) && (
+            {!['inicio', 'mis-datos', 'crear-cv', 'historial-cvs', 'estimador-sueldo'].includes(activeSection) && (
               <div className="text-center py-20">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   {menuItems.find(item => item.id === activeSection)?.label}
