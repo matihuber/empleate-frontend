@@ -18,6 +18,9 @@ const SalaryEstimator = () => {
     regiones: [],
     seniorities: []
   });
+
+  const [customPosition, setCustomPosition] = useState('');
+  const [showCustomPosition, setShowCustomPosition] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
@@ -28,45 +31,102 @@ const SalaryEstimator = () => {
     loadOptions();
   }, []);
 
+  // Mapeo de posiciones por rubro basado en el análisis del CSV
+  const positionsByRubro = {
+    'Tecnología': [
+      'Developer',
+      'Software Engineer',
+      'Cloud Engineer',
+      'SysAdmin / DevOps / SRE',
+      'Technical Leader',
+      'BI Analyst / Data Analyst',
+      'QA / Tester',
+      'Data Engineer',
+      'Data Scientist',
+      'Architect',
+      'UX Designer',
+      'Infosec',
+      'Scrum Master',
+      'DBA (Database Administrator)',
+      'Technical Support',
+      'Manager',
+      'Director',
+      'CTO',
+      'Product Manager',
+      'Project Manager',
+      'Frontend Developer',
+      'Backend Developer',
+      'Full Stack Developer',
+      'Mobile Developer',
+      'Game Developer',
+      'Machine Learning Engineer',
+      'AI Engineer',
+      'Blockchain Developer',
+      'Security Engineer',
+      'Site Reliability Engineer (SRE)',
+      'Solutions Architect',
+      'Technical Writer',
+      'QA Lead',
+      'DevOps Lead',
+      'Engineering Manager',
+      'VP of Engineering'
+    ],
+    'Finanzas': [
+      'Business Analyst',
+      'Finance',
+      'CFO',
+      'Financial Analyst',
+      'Controller',
+      'Accounting Manager',
+      'Treasury Manager',
+      'Risk Manager',
+      'Investment Analyst',
+      'Credit Analyst',
+      'Auditor',
+      'Tax Specialist',
+      'Budget Analyst',
+      'Financial Planning Analyst',
+      'Compliance Officer',
+      'Finance Director',
+      'VP of Finance'
+    ],
+    'Administración de empresas': [
+      'Manager / Director',
+      'Recruiter',
+      'Consultant',
+      'VP / C-Level',
+      'Sales / Pre-Sales',
+      'CEO',
+      'COO',
+      'CMO',
+      'CHRO',
+      'Operations Manager',
+      'General Manager',
+      'Business Development Manager',
+      'Strategy Manager',
+      'Project Manager',
+      'Program Manager',
+      'Product Manager',
+      'Marketing Manager',
+      'HR Manager',
+      'Operations Director',
+      'Business Development Director'
+    ]
+  };
+
   const loadOptions = async () => {
     try {
-      // Por ahora usamos opciones hardcodeadas basadas en el dataset
-      // En el futuro se pueden cargar dinámicamente desde la API
+      const rubros = [
+        'Tecnología',
+        'Finanzas',
+        'Administración de empresas'
+      ];
+      
+      console.log('Cargando rubros:', rubros, 'Timestamp:', new Date().toISOString());
+      
       setOptions({
-        rubros: [
-          'Tecnología',
-          'Finanzas',
-          'Salud',
-          'Educación',
-          'Marketing',
-          'Recursos Humanos',
-          'Ventas',
-          'Operaciones',
-          'Consultoría',
-          'Otros'
-        ],
-        posiciones: [
-          'Developer',
-          'QA / Tester',
-          'Manager / Director',
-          'Infosec',
-          'UX Designer',
-          'DevOps',
-          'Data Scientist',
-          'Product Manager',
-          'Scrum Master',
-          'Cloud Engineer',
-          'Frontend Developer',
-          'Backend Developer',
-          'Full Stack Developer',
-          'Mobile Developer',
-          'SysAdmin',
-          'DBA',
-          'Analista',
-          'Consultor',
-          'Arquitecto de Software',
-          'Tech Lead'
-        ],
+        rubros: rubros,
+        posiciones: [], // Se llenará dinámicamente
         regiones: [
           'Ciudad Autónoma de Buenos Aires',
           'Buenos Aires',
@@ -96,11 +156,7 @@ const SalaryEstimator = () => {
         seniorities: [
           'Junior',
           'Semi-Senior',
-          'Senior',
-          'Lead',
-          'Principal',
-          'Staff',
-          'Architect'
+          'Senior'
         ]
       });
     } catch (error) {
@@ -109,11 +165,56 @@ const SalaryEstimator = () => {
   };
 
   const handleInputChange = (field, value) => {
+    if (field === 'rubro') {
+      // Cuando cambia el rubro, actualizar las posiciones disponibles
+      const newPositions = positionsByRubro[value] || [];
+      setOptions(prev => ({
+        ...prev,
+        posiciones: [...newPositions, 'Otro']
+      }));
+      
+      // Limpiar la posición seleccionada
+      setFormData(prev => ({
+        ...prev,
+        rubro: value,
+        posicion: '',
+        region: prev.region,
+        seniority: prev.seniority
+      }));
+      
+      // Resetear campos relacionados
+      setShowCustomPosition(false);
+      setCustomPosition('');
+    } else if (field === 'posicion') {
+      if (value === 'Otro') {
+        setShowCustomPosition(true);
+        setFormData(prev => ({
+          ...prev,
+          posicion: ''
+        }));
+      } else {
+        setShowCustomPosition(false);
+        setCustomPosition('');
+        setFormData(prev => ({
+          ...prev,
+          posicion: value
+        }));
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+    setError(null);
+  };
+
+  const handleCustomPositionChange = (value) => {
+    setCustomPosition(value);
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      posicion: value
     }));
-    setError(null);
   };
 
   const handleSubmit = async (e) => {
@@ -121,6 +222,11 @@ const SalaryEstimator = () => {
     
     if (!formData.rubro || !formData.posicion || !formData.region || !formData.seniority) {
       setError('Por favor completa todos los campos');
+      return;
+    }
+
+    if (showCustomPosition && !customPosition.trim()) {
+      setError('Por favor ingresa el nombre de la posición');
       return;
     }
 
@@ -179,12 +285,25 @@ const SalaryEstimator = () => {
                 value={formData.posicion}
                 onChange={(e) => handleInputChange('posicion', e.target.value)}
                 className="form-select"
+                disabled={!formData.rubro}
               >
-                <option value="">Seleccionar</option>
+                <option value="">{formData.rubro ? 'Seleccionar' : 'Primero selecciona un rubro'}</option>
                 {options.posiciones.map(posicion => (
                   <option key={posicion} value={posicion}>{posicion}</option>
                 ))}
               </select>
+              
+              {showCustomPosition && (
+                <div className="custom-position-field">
+                  <input
+                    type="text"
+                    placeholder="Ingresa el nombre de la posición"
+                    value={customPosition}
+                    onChange={(e) => handleCustomPositionChange(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="form-group">
