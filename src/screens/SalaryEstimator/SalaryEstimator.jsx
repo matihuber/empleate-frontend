@@ -152,84 +152,83 @@ const SalaryEstimator = () => {
     <div className="salary-estimator">
       <div className="salary-estimator-header">
         <h1>Estimador de sueldo</h1>
-        <p>Obtén una estimación de salario basada en datos reales del mercado argentino</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="salary-form">
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="rubro">Rubro</label>
-            <select
-              id="rubro"
-              value={formData.rubro}
-              onChange={(e) => handleInputChange('rubro', e.target.value)}
-              className="form-select"
-            >
-              <option value="">Seleccionar</option>
-              {options.rubros.map(rubro => (
-                <option key={rubro} value={rubro}>{rubro}</option>
-              ))}
-            </select>
+      <div className="salary-form-container">
+        <form onSubmit={handleSubmit} className="salary-form">
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="rubro">Rubro</label>
+              <select
+                id="rubro"
+                value={formData.rubro}
+                onChange={(e) => handleInputChange('rubro', e.target.value)}
+                className="form-select"
+              >
+                <option value="">Seleccionar</option>
+                {options.rubros.map(rubro => (
+                  <option key={rubro} value={rubro}>{rubro}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="posicion">Posición</label>
+              <select
+                id="posicion"
+                value={formData.posicion}
+                onChange={(e) => handleInputChange('posicion', e.target.value)}
+                className="form-select"
+              >
+                <option value="">Seleccionar</option>
+                {options.posiciones.map(posicion => (
+                  <option key={posicion} value={posicion}>{posicion}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="region">Región</label>
+              <select
+                id="region"
+                value={formData.region}
+                onChange={(e) => handleInputChange('region', e.target.value)}
+                className="form-select"
+              >
+                <option value="">Seleccionar</option>
+                {options.regiones.map(region => (
+                  <option key={region} value={region}>{region}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="seniority">Seniority</label>
+              <select
+                id="seniority"
+                value={formData.seniority}
+                onChange={(e) => handleInputChange('seniority', e.target.value)}
+                className="form-select"
+              >
+                <option value="">Seleccionar</option>
+                {options.seniorities.map(seniority => (
+                  <option key={seniority} value={seniority}>{seniority}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="posicion">Posición</label>
-            <select
-              id="posicion"
-              value={formData.posicion}
-              onChange={(e) => handleInputChange('posicion', e.target.value)}
-              className="form-select"
+          <div className="form-actions">
+            <button 
+              type="submit" 
+              className="btn-estimate"
+              disabled={loading}
             >
-              <option value="">Seleccionar</option>
-              {options.posiciones.map(posicion => (
-                <option key={posicion} value={posicion}>{posicion}</option>
-              ))}
-            </select>
+              {loading ? 'Estimando...' : 'Estimar'}
+            </button>
           </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="region">Región</label>
-            <select
-              id="region"
-              value={formData.region}
-              onChange={(e) => handleInputChange('region', e.target.value)}
-              className="form-select"
-            >
-              <option value="">Seleccionar</option>
-              {options.regiones.map(region => (
-                <option key={region} value={region}>{region}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="seniority">Seniority</label>
-            <select
-              id="seniority"
-              value={formData.seniority}
-              onChange={(e) => handleInputChange('seniority', e.target.value)}
-              className="form-select"
-            >
-              <option value="">Seleccionar</option>
-              {options.seniorities.map(seniority => (
-                <option key={seniority} value={seniority}>{seniority}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="form-actions">
-          <button 
-            type="submit" 
-            className="btn-estimate"
-            disabled={loading}
-          >
-            {loading ? 'Estimando...' : 'Estimar'}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
 
       {error && (
         <div className="error-message">
@@ -241,33 +240,25 @@ const SalaryEstimator = () => {
         <div className="results-section">
           <div className="results-cards">
             <div className="result-card ml-card">
-              <div className="card-header">
-                <h3>Según encuesta de SysArmy</h3>
-                <div className="card-icon">📊</div>
-              </div>
               <div className="card-content">
                 <div className="salary-amount">
                   {formatCurrency(results.ml_estimate_ars)}
                 </div>
                 <div className="salary-period">/mes</div>
-                <div className="card-meta">
-                  <small>Modelo ML entrenado con datos reales</small>
+                <div className="card-source">
+                  Según encuesta de SysArmy
                 </div>
               </div>
             </div>
 
             <div className="result-card gpt-card">
-              <div className="card-header">
-                <h3>Según estimación de ChatGPT</h3>
-                <div className="card-icon">🤖</div>
-              </div>
               <div className="card-content">
                 <div className="salary-amount">
                   {formatCurrency(results.gpt_estimate_ars)}
                 </div>
                 <div className="salary-period">/mes</div>
-                <div className="card-meta">
-                  <small>Análisis con búsqueda web actualizada</small>
+                <div className="card-source">
+                  Según estimación de ChatGPT
                 </div>
               </div>
             </div>

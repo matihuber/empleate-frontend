@@ -1,24 +1,56 @@
-import { apiClient } from './apiClient';
+// Configuración de la API
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_VERSION = '/api/v1';
+
+// URLs de los endpoints
+const ENDPOINTS = {
+  ESTIMATE: `${API_BASE_URL}${API_VERSION}/salary/estimate`,
+  HEALTH: `${API_BASE_URL}${API_VERSION}/salary/health`,
+  MODEL_INFO: `${API_BASE_URL}${API_VERSION}/salary/model/info`,
+  TRAIN_INITIAL: `${API_BASE_URL}${API_VERSION}/salary/train-initial`
+};
 
 class SalaryEstimationService {
   constructor() {
-    this.baseURL = '/api/v1/salary';
+    this.baseURL = `${API_BASE_URL}${API_VERSION}/salary`;
   }
 
   async estimateSalary(formData) {
     try {
-      const response = await apiClient.post(`${this.baseURL}/estimate`, formData);
-      return response.data;
+      const response = await fetch(ENDPOINTS.ESTIMATE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al estimar el salario');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error estimating salary:', error);
-      throw new Error(error.response?.data?.detail || 'Error al estimar el salario');
+      throw new Error(error.message || 'Error al estimar el salario');
     }
   }
 
   async getHealthStatus() {
     try {
-      const response = await apiClient.get(`${this.baseURL}/health`);
-      return response.data;
+      const response = await fetch(ENDPOINTS.HEALTH, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al verificar el estado del servicio');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error getting health status:', error);
       throw new Error('Error al verificar el estado del servicio');
@@ -27,8 +59,18 @@ class SalaryEstimationService {
 
   async getModelInfo() {
     try {
-      const response = await apiClient.get(`${this.baseURL}/model/info`);
-      return response.data;
+      const response = await fetch(ENDPOINTS.MODEL_INFO, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener información del modelo');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error getting model info:', error);
       throw new Error('Error al obtener información del modelo');
@@ -37,11 +79,22 @@ class SalaryEstimationService {
 
   async trainInitialModel() {
     try {
-      const response = await apiClient.post(`${this.baseURL}/train-initial`);
-      return response.data;
+      const response = await fetch(ENDPOINTS.TRAIN_INITIAL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al entrenar el modelo inicial');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error training initial model:', error);
-      throw new Error('Error al entrenar el modelo inicial');
+      throw new Error(error.message || 'Error al entrenar el modelo inicial');
     }
   }
 }
