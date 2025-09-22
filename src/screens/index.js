@@ -9,3 +9,4 @@ export { default as AuthCallback } from './AuthCallback';
 
 // Pantallas protegidas
 export { default as UserHome } from './UserHome';
+export { default as SalaryEstimator } from './SalaryEstimator';
