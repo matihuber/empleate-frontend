@@ -85,17 +85,18 @@ export default function CVCreation() {
       try {
         setLoadingTemplates(true)
         const templatesData = await templateService.getTemplates()
-        // Mapear cada template del backend a un ID local
-        const mappedTemplates = templatesData.map(mapBackendToLocalTemplate)
-        setTemplates(mappedTemplates)
-        console.log('Templates cargados y mapeados:', mappedTemplates)
+        console.log('Templates del backend:', templatesData)
+        
+        // Usar directamente los templates del backend
+        setTemplates(templatesData)
+        console.log('Templates cargados del backend:', templatesData)
       } catch (error) {
         console.error('Error cargando templates:', error)
-        // En caso de error, usar templates por defecto
+        // En caso de error, usar templates por defecto con IDs que coincidan con el backend
         setTemplates([
-          { id: 'default-1', name: 'Template 1', description: 'Template por defecto', localId: 'moderno' },
-          { id: 'default-2', name: 'Template 2', description: 'Template por defecto', localId: 'clasico' },
-          { id: 'default-3', name: 'Template 3', description: 'Template por defecto', localId: 'minimalista' }
+          { id: 'moderno', name: 'Moderno', description: 'Template limpio y profesional con diseño moderno', category: 'modern' },
+          { id: 'clasico', name: 'Clásico', description: 'Template tradicional y conservador para entornos corporativos', category: 'classic' },
+          { id: 'creativo', name: 'Creativo', description: 'Template innovador con diseño moderno y llamativo', category: 'creative' }
         ])
       } finally {
         setLoadingTemplates(false)
@@ -390,10 +391,10 @@ export default function CVCreation() {
             {/* Nuevo Selector de Templates */}
             <CVTemplateSelector
               selectedTemplate={selectedTemplate}
-              onTemplateSelect={(templateId) => {
-                console.log('🔍 CVCreation: onTemplateSelect llamado con:', templateId)
-                // Usar directamente el template local
-                handleTemplateSelect({ id: templateId })
+              templates={templates}
+              onTemplateSelect={(template) => {
+                console.log('🔍 CVCreation: onTemplateSelect llamado con:', template)
+                handleTemplateSelect(template)
               }}
             />
 
