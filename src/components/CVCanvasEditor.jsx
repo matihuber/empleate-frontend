@@ -24,6 +24,11 @@ const CVCanvasEditor = ({ cvData, template, onSave, onExport, onBack }) => {
     projects: [],
   }
   
+  // Asegurar que el nombre del CV se preserve
+  if (cvData && cvData.name) {
+    transformedCVData.name = cvData.name
+  }
+  
   console.log('✅ CVCanvasEditor: Datos finales para el editor:', transformedCVData)
 
   return (

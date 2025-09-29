@@ -176,9 +176,21 @@ class PDFExportService {
         const info = cvData.personalInfo
         text += '=== INFORMACIÓN PERSONAL ===\n'
         if (info.name) text += `Nombre: ${info.name}\n`
+        if (info.fullName) text += `Nombre: ${info.fullName}\n`
+        if (info.title) text += `Título: ${info.title}\n`
         if (info.email) text += `Email: ${info.email}\n`
         if (info.phone) text += `Teléfono: ${info.phone}\n`
         if (info.location) text += `Ubicación: ${info.location}\n`
+        
+        // Links profesionales
+        if (info.links && Array.isArray(info.links) && info.links.length > 0) {
+          text += 'Enlaces profesionales:\n'
+          info.links.forEach(link => {
+            if (link.type && link.url) {
+              text += `• ${link.type}: ${link.url}\n`
+            }
+          })
+        }
         text += '\n'
       }
       

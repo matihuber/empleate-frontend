@@ -276,9 +276,13 @@ export default function CVCreation() {
       year: edu.end_date || '2023',
     })) || []
     
+    // Generar nombre dinámico basado en el nombre del usuario
+    const userName = backendData.header?.full_name || 'Usuario'
+    const cvName = `${userName} - CV ${new Date().toLocaleDateString('es-ES', { month: '2-digit', day: '2-digit' })}`
+    
     const transformedData = {
       id: 'cv-1',
-      name: 'Mi CV Personalizado',
+      name: cvName,
       template: 'moderno',
       personalInfo: {
         fullName: backendData.header?.full_name || 'Tu Nombre',
