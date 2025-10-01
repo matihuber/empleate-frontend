@@ -47,15 +47,34 @@ class PDFExportService {
       // Simular progreso
       if (onProgress) onProgress(50)
       
-      // Crear un elemento temporal para renderizar el HTML
-      const tempDiv = document.createElement('div')
-      tempDiv.innerHTML = htmlContent
-      tempDiv.style.position = 'absolute'
-      tempDiv.style.left = '-9999px'
-      tempDiv.style.top = '-9999px'
-      tempDiv.style.width = '210mm' // A4 width
-      tempDiv.style.backgroundColor = 'white'
-      document.body.appendChild(tempDiv)
+      // Usar iframe para aislar completamente el contenido del layout principal
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'fixed'
+      iframe.style.left = '-9999px'
+      iframe.style.top = '-9999px'
+      iframe.style.width = '210mm'
+      iframe.style.height = '297mm'
+      iframe.style.border = 'none'
+      iframe.style.visibility = 'hidden'
+      iframe.style.pointerEvents = 'none'
+      iframe.style.zIndex = '-9999'
+      
+      document.body.appendChild(iframe)
+      
+      // Esperar a que el iframe esté listo
+      await new Promise((resolve) => {
+        iframe.onload = resolve
+        iframe.src = 'about:blank'
+      })
+      
+      // Escribir el HTML en el iframe
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+      iframeDoc.open()
+      iframeDoc.write(htmlContent)
+      iframeDoc.close()
+      
+      // Esperar un momento para que se renderice
+      await new Promise(resolve => setTimeout(resolve, 100))
       
       // Simular progreso
       if (onProgress) onProgress(70)
@@ -67,8 +86,8 @@ class PDFExportService {
       // Simular progreso
       if (onProgress) onProgress(80)
       
-      // Convertir a canvas
-      const canvas = await html2canvas(tempDiv, {
+      // Convertir a canvas usando el iframe
+      const canvas = await html2canvas(iframe.contentDocument.body, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -145,8 +164,8 @@ class PDFExportService {
       // Simular progreso
       if (onProgress) onProgress(95)
 
-      // Limpiar elemento temporal
-      document.body.removeChild(tempDiv)
+      // Limpiar iframe temporal
+      document.body.removeChild(iframe)
       
       // Descargar PDF con nombre válido
       const sanitizedFileName = fileName.replace(/[<>:"/\\|?*]/g, '_')
