@@ -111,10 +111,14 @@ const CVHistory = ({ onNavigateToSection }) => {
           template={{ id: selectedCV.template_id }}
           onSave={async (cvData) => {
             try {
+              // Usar el nombre que el usuario editó, o el original si no hay cambios
+              const cvName = cvData.name || selectedCV.name
+              console.log('🔍 CVHistory: Guardando con nombre:', cvName)
+              
               // Guardar como nueva versión
               await cvStorageService.saveCV(
                 cvData, 
-                `${selectedCV.name} - Editado`, 
+                cvName, 
                 selectedCV.template_id
               )
               console.log('✅ CV guardado exitosamente')

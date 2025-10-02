@@ -19,12 +19,17 @@ const CVSection = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showDeleteItemModal, setShowDeleteItemModal] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [newLink, setNewLink] = useState({ type: '', url: '' })
+  const [linkError, setLinkError] = useState('')
 
   const startEditing = () => {
     // Initialize edit data based on section type
     switch (type) {
       case "personal":
-        setEditData({ ...cvData.personalInfo })
+        setEditData({ 
+          ...cvData.personalInfo, 
+          links: cvData.personalInfo?.links || [] 
+        })
         break
       case "summary":
         setEditData(cvData.summary)
@@ -86,6 +91,49 @@ const CVSection = ({
   const cancelEditing = () => {
     setIsEditing(false)
     setEditData({})
+    setNewLink({ type: '', url: '' })
+    setLinkError('')
+  }
+
+  // Validación de URL
+  const isValidUrl = (string) => {
+    try {
+      new URL(string)
+      return true
+    } catch (_) {
+      return false
+    }
+  }
+
+  // Manejar agregar link
+  const handleAddLink = () => {
+    setLinkError('')
+    
+    if (!newLink.type || !newLink.url) {
+      setLinkError('Por favor completa ambos campos')
+      return
+    }
+
+    if (!isValidUrl(newLink.url)) {
+      setLinkError('Por favor ingresa una URL válida (ej: https://...)')
+      return
+    }
+
+    const currentLinks = editData.links || []
+    if (currentLinks.length >= 3) {
+      setLinkError('Máximo 3 enlaces permitidos')
+      return
+    }
+
+    // Verificar que no exista ya un link del mismo tipo
+    if (currentLinks.some(link => link.type === newLink.type)) {
+      setLinkError('Ya existe un enlace de este tipo')
+      return
+    }
+
+    const updatedLinks = [...currentLinks, { ...newLink }]
+    setEditData({ ...editData, links: updatedLinks })
+    setNewLink({ type: '', url: '' })
   }
 
   const handleDeleteItem = (index, itemName) => {
@@ -132,6 +180,12 @@ const CVSection = ({
               placeholder="Nombre completo"
               className="w-full px-3 py-2 text-2xl font-bold border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <input
+              value={editData.title || ""}
+              onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+              placeholder="Título profesional"
+              className="w-full px-3 py-2 text-xl border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
             <div className="grid grid-cols-2 gap-4">
               <input
                 value={editData.email || ""}
@@ -152,6 +206,79 @@ const CVSection = ({
               placeholder="Ubicación"
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            
+            {/* Sistema de Links */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-gray-700">Enlaces profesionales</h4>
+              
+              {/* Lista de links existentes */}
+              {editData.links && editData.links.length > 0 && (
+                <div className="space-y-2">
+                  {editData.links.map((link, index) => (
+                    <div key={index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
+                      <span className="text-sm font-medium text-gray-600 min-w-0 flex-shrink-0">
+                        {link.type}:
+                      </span>
+                      <a 
+                        href={link.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:text-blue-800 truncate"
+                      >
+                        {link.url}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newLinks = [...editData.links]
+                          newLinks.splice(index, 1)
+                          setEditData({ ...editData, links: newLinks })
+                        }}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Agregar nuevo link */}
+              {(!editData.links || editData.links.length < 3) && (
+                <div className="space-y-2">
+                  <div className="flex space-x-2">
+                    <select
+                      value={newLink.type || ""}
+                      onChange={(e) => setNewLink({ ...newLink, type: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    >
+                      <option value="">Seleccionar tipo</option>
+                      <option value="LinkedIn">LinkedIn</option>
+                      <option value="GitHub">GitHub</option>
+                      <option value="Portfolio">Portfolio</option>
+                    </select>
+                    <input
+                      type="url"
+                      value={newLink.url || ""}
+                      onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
+                      placeholder="https://..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddLink}
+                      disabled={!newLink.type || !newLink.url}
+                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                  {linkError && (
+                    <p className="text-red-500 text-xs">{linkError}</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )
       case "summary":
@@ -557,6 +684,24 @@ const CVSection = ({
               <span>{cvData.personalInfo?.phone || "Teléfono"}</span>
               <span>{cvData.personalInfo?.location || "Ubicación"}</span>
             </div>
+            
+            {/* Links profesionales */}
+            {cvData.personalInfo?.links && cvData.personalInfo.links.length > 0 && (
+              <div className="flex justify-center flex-wrap gap-3 text-sm mt-2">
+                {cvData.personalInfo.links.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                    style={{ color: template.colors.primary }}
+                  >
+                    {link.type}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         )
       case "summary":

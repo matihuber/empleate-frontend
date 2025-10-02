@@ -97,6 +97,9 @@ const CVCanvas = ({ cvData, template, zoom, onCVDataChange, onZoomIn, onZoomOut 
       case "skills":
         updatedCVData.skills = data
         break
+      case "languages":
+        updatedCVData.languages = data
+        break
       case "certifications":
         updatedCVData.certifications = data
         break

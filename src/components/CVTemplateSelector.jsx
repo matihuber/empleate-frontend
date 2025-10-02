@@ -1,5 +1,4 @@
 import React from 'react'
-import { CV_TEMPLATES } from '../lib/templates'
 
 // Función para determinar el mejor color de texto basándose en el color de fondo
 const getContrastColor = (hexColor) => {
@@ -16,7 +15,35 @@ const getContrastColor = (hexColor) => {
   return luminance > 0.5 ? '#000000' : '#ffffff'
 }
 
-const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect }) => {
+// Función para obtener colores por defecto basados en la categoría del template
+const getDefaultColors = (category) => {
+  const colorMap = {
+    modern: {
+      primary: '#2563eb',
+      secondary: '#64748b',
+      background: '#ffffff',
+      text: '#1e293b',
+      accent: '#f59e0b'
+    },
+    classic: {
+      primary: '#374151',
+      secondary: '#6b7280',
+      background: '#ffffff',
+      text: '#111827',
+      accent: '#dc2626'
+    },
+    creative: {
+      primary: '#7c3aed',
+      secondary: '#10b981',
+      background: '#ffffff',
+      text: '#1f2937',
+      accent: '#f97316'
+    }
+  }
+  return colorMap[category] || colorMap.modern
+}
+
+const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect, templates = [] }) => {
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -25,88 +52,93 @@ const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect }) => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-        {Object.values(CV_TEMPLATES).map((template) => (
-          <div
-            key={template.id}
-            className={`relative cursor-pointer transition-all duration-200 ${
-              selectedTemplate?.id === template.id
-                ? 'scale-105'
-                : 'hover:scale-105'
-            }`}
-            style={{
-              border: selectedTemplate?.id === template.id ? '4px solid #2563eb' : 'none',
-              borderRadius: '12px'
-            }}
-            data-selected={selectedTemplate === template.id}
-            data-template-id={template.id}
-            data-selected-template={selectedTemplate}
-            onClick={() => {
-              console.log('🔍 CVTemplateSelector: Click en template:', template)
-              console.log('🔍 CVTemplateSelector: Template ID:', template.id)
-              console.log('🔍 CVTemplateSelector: selectedTemplate actual:', selectedTemplate)
-              onTemplateSelect(template.id)
-            }}
-          >
-            {/* Template Preview */}
-            <div className={`bg-white rounded-lg overflow-hidden transition-all duration-200 ${
-              selectedTemplate?.id === template.id 
-                ? 'shadow-blue-200' 
-                : 'shadow-sm hover:shadow-md'
-            }`}>
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-semibold text-gray-900">{template.name}</h3>
-                <p className="text-sm text-gray-600">{template.description}</p>
-              </div>
-              
-              {/* Mini CV Preview */}
-              <div className="p-4">
-                <div
-                  className="w-full h-32 rounded border-2"
-                  style={{
-                    backgroundColor: template.colors.background,
-                    borderColor: template.colors.secondary,
-                  }}
-                >
-                  {/* Header Preview */}
+        {templates.map((template) => {
+          // Obtener colores del template o usar colores por defecto
+          const colors = template.theme_config?.colors || getDefaultColors(template.category)
+          
+          return (
+            <div
+              key={template.id}
+              className={`relative cursor-pointer transition-all duration-200 ${
+                selectedTemplate?.id === template.id
+                  ? 'scale-105'
+                  : 'hover:scale-105'
+              }`}
+              style={{
+                border: selectedTemplate?.id === template.id ? '4px solid #2563eb' : 'none',
+                borderRadius: '12px'
+              }}
+              data-selected={selectedTemplate === template.id}
+              data-template-id={template.id}
+              data-selected-template={selectedTemplate}
+              onClick={() => {
+                console.log('🔍 CVTemplateSelector: Click en template:', template)
+                console.log('🔍 CVTemplateSelector: Template ID:', template.id)
+                console.log('🔍 CVTemplateSelector: selectedTemplate actual:', selectedTemplate)
+                onTemplateSelect(template)
+              }}
+            >
+              {/* Template Preview */}
+              <div className={`bg-white rounded-lg overflow-hidden transition-all duration-200 ${
+                selectedTemplate?.id === template.id 
+                  ? 'shadow-blue-200' 
+                  : 'shadow-sm hover:shadow-md'
+              }`}>
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                  <p className="text-sm text-gray-600">{template.description}</p>
+                </div>
+                
+                {/* Mini CV Preview */}
+                <div className="p-4">
                   <div
-                    className="h-8 rounded-t flex items-center justify-center text-xs font-bold"
+                    className="w-full h-32 rounded border-2"
                     style={{
-                      backgroundColor: template.colors.primary,
-                      color: getContrastColor(template.colors.primary),
+                      backgroundColor: colors.background,
+                      borderColor: colors.secondary,
                     }}
                   >
-                    {template.name.toUpperCase()}
-                  </div>
-                  
-                  {/* Content Preview */}
-                  <div className="p-2 space-y-1">
+                    {/* Header Preview */}
                     <div
-                      className="h-2 rounded"
-                      style={{ backgroundColor: template.colors.primary }}
-                    ></div>
-                    <div
-                      className="h-2 rounded w-3/4"
-                      style={{ backgroundColor: template.colors.secondary }}
-                    ></div>
-                    <div
-                      className="h-2 rounded w-1/2"
-                      style={{ backgroundColor: template.colors.accent || template.colors.secondary }}
-                    ></div>
+                      className="h-8 rounded-t flex items-center justify-center text-xs font-bold"
+                      style={{
+                        backgroundColor: colors.primary,
+                        color: getContrastColor(colors.primary),
+                      }}
+                    >
+                      {template.name.toUpperCase()}
+                    </div>
+                    
+                    {/* Content Preview */}
+                    <div className="p-2 space-y-1">
+                      <div
+                        className="h-2 rounded"
+                        style={{ backgroundColor: colors.primary }}
+                      ></div>
+                      <div
+                        className="h-2 rounded w-3/4"
+                        style={{ backgroundColor: colors.secondary }}
+                      ></div>
+                      <div
+                        className="h-2 rounded w-1/2"
+                        style={{ backgroundColor: colors.accent || colors.secondary }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Selection Indicator */}
-            {selectedTemplate?.id === template.id && (
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
-          </div>
-        ))}
+              {/* Selection Indicator */}
+              {selectedTemplate?.id === template.id && (
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Template Features */}
