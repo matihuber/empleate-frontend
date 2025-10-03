@@ -11,7 +11,7 @@ const ENDPOINTS = {
   GOOGLE_LOGIN: `${API_BASE_URL}${API_VERSION}/auth/google`,
   LINKEDIN_LOGIN: `${API_BASE_URL}${API_VERSION}/auth/linkedin`,
   MICROSOFT_LOGIN: `${API_BASE_URL}${API_VERSION}/auth/microsoft`,
-  USER_INFO: `${API_BASE_URL}${API_VERSION}/auth/user-info`,
+  USER_INFO: `${API_BASE_URL}${API_VERSION}/auth/me`,
   PASSWORD_RESET: `${API_BASE_URL}${API_VERSION}/auth/password-reset`,
   VERIFY_EMAIL: `${API_BASE_URL}${API_VERSION}/auth/verify-email`
 };
@@ -117,14 +117,12 @@ class AuthService {
   // Login con Google OAuth
   async loginGoogle() {
     try {
-      // Obtener el código de autorización de Google
+      // Usar el nuevo endpoint unificado
       const googleAuthUrl = `${API_BASE_URL}${API_VERSION}/auth/google/authorize`;
       
       // Redirigir al usuario a Google OAuth
       window.location.href = googleAuthUrl;
       
-      // Nota: El flujo completo se maneja en el backend
-      // El usuario será redirigido de vuelta con un código
       return { success: true, message: 'Redirigiendo a Google...' };
     } catch (error) {
       throw new Error(`Error en login con Google: ${error.message}`);
@@ -134,6 +132,7 @@ class AuthService {
   // Login con LinkedIn OAuth
   async loginLinkedIn() {
     try {
+      // Usar el nuevo endpoint unificado
       const linkedinAuthUrl = `${API_BASE_URL}${API_VERSION}/auth/linkedin/authorize`;
       
       // Redirigir al usuario a LinkedIn OAuth
@@ -148,6 +147,7 @@ class AuthService {
   // Login con Microsoft OAuth
   async loginMicrosoft() {
     try {
+      // Usar el nuevo endpoint unificado
       const microsoftAuthUrl = `${API_BASE_URL}${API_VERSION}/auth/microsoft/authorize`;
       
       // Redirigir al usuario a Microsoft OAuth

@@ -20,18 +20,56 @@ export default function AuthCallback() {
         const state = searchParams.get('state');
         const error = searchParams.get('error');
         const provider = searchParams.get('provider') || 'unknown';
+        const success = searchParams.get('success');
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        
+        // Debug: mostrar todos los parámetros recibidos
+        console.log('🔍 AuthCallback - URL completa:', window.location.href);
+        console.log('🔍 AuthCallback - Parámetros recibidos:', {
+          code: code ? code.substring(0, 10) + '...' : null,
+          state,
+          error,
+          provider,
+          success,
+          accessToken: accessToken ? accessToken.substring(0, 20) + '...' : null,
+          refreshToken: refreshToken ? refreshToken.substring(0, 20) + '...' : null
+        });
+        console.log('🔍 AuthCallback - Todos los searchParams:', Object.fromEntries(searchParams.entries()));
 
         // Si hay error en la URL
         if (error) {
           throw new Error(`Error de autenticación: ${error}`);
         }
 
-        // Si no hay código de autorización
-        if (!code) {
-          throw new Error('No se recibió código de autorización');
+        // Si el callback fue exitoso y tenemos tokens directamente
+        if (success === 'true' && accessToken && refreshToken) {
+          console.log('✅ Recibidos tokens directamente del backend');
+          console.log('🔑 Access token:', accessToken.substring(0, 20) + '...');
+          console.log('🔄 Refresh token:', refreshToken.substring(0, 20) + '...');
+          
+          // Guardar tokens y datos del usuario
+          authService.setTokens(accessToken, refreshToken);
+          
+          // Obtener información del usuario
+          const user = await authService.getUserInfo();
+          authService.setUser(user);
+          
+          setStatus('success');
+          
+          // Redirigir al usuario a la página principal
+          setTimeout(() => {
+            navigate('/user-home');
+          }, 2000);
+          return;
         }
 
-        // Procesar el callback según el proveedor
+        // Si no hay código de autorización ni tokens, mostrar error
+        if (!code && !accessToken) {
+          throw new Error('No se recibió código de autorización ni tokens');
+        }
+
+        // Procesar el callback según el proveedor (método legacy)
         let response;
         switch (provider) {
           case 'google':

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Linkedin, Eye, EyeOff } from "lucide-react"
-import { FaApple, FaMicrosoft, FaGoogle } from "react-icons/fa"
+import { FaMicrosoft, FaGoogle } from "react-icons/fa"
 import AuthLayout from "../../components/AuthLayout"
 import LoginInput from "../../components/LoginInput"
 import LoginButton from "../../components/LoginButton"
@@ -138,9 +138,6 @@ export default function Login() {
     setShowMoreOptions(!showMoreOptions)
   }
 
-  const handleAppleLogin = () => {
-    console.log("Apple login")
-  }
 
   const handleMicrosoftLogin = async () => {
     try {
@@ -180,14 +177,7 @@ export default function Login() {
                 Ver otras opciones
               </LoginButton>
             ) : (
-              <div className="grid grid-cols-3 gap-3">
-                <LoginButton
-                  variant="secondary"
-                  icon={FaApple}
-                  onClick={handleAppleLogin}
-                  className="flex-1 justify-center"
-                >
-                </LoginButton>
+              <div className="grid grid-cols-2 gap-3">
                 <LoginButton
                   variant="secondary"
                   icon={FaMicrosoft}
