@@ -19,6 +19,7 @@ import MisDatos from "./sections/MisDatos"
 import CVCreation from "./sections/CVCreation"
 import CVHistory from "./sections/CVHistory"
 import SalaryEstimator from "../SalaryEstimator"
+import CourseRecommender from "../CourseRecommender/CourseRecommender"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
@@ -44,6 +45,15 @@ export default function UserHome() {
       clearSessionExpired()
     }
   }, [sessionExpired, navigate, clearSessionExpired])
+
+  // Manejar parámetros de URL para cambiar sección
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const section = urlParams.get('section')
+    if (section && menuItems.some(item => item.id === section)) {
+      setActiveSection(section)
+    }
+  }, [])
   
   // Si no hay usuario, mostrar loading o redirigir
   if (!user) {
@@ -204,9 +214,10 @@ export default function UserHome() {
               sub: user.sub  // Agregar el sub del usuario para autenticación
             }} onNavigateToSection={setActiveSection} />}
             {activeSection === 'estimador-sueldo' && <SalaryEstimator key="estimador-sueldo" />}
+            {activeSection === 'recomendador-cursos' && <CourseRecommender key="recomendador-cursos" />}
 
             {/* Otras secciones pendientes */}
-            {!['inicio', 'mis-datos', 'crear-cv', 'historial-cvs', 'estimador-sueldo'].includes(activeSection) && (
+            {!['inicio', 'mis-datos', 'crear-cv', 'historial-cvs', 'estimador-sueldo', 'recomendador-cursos'].includes(activeSection) && (
               <div className="text-center py-20">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   {menuItems.find(item => item.id === activeSection)?.label}
