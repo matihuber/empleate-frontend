@@ -144,16 +144,16 @@ class CourseRecommendationService {
    * Formatea el precio para mostrar
    */
   formatPrice(priceUsd, priceArs, isFree, currency = 'USD') {
-    if (isFree) {
-      return 'Gratis'
+    if (isFree || priceUsd === 0 || priceUsd === null) {
+      return 'Gratuito'
     }
 
     if (currency === 'USD' && priceUsd) {
-      return `$${priceUsd.toFixed(2)} USD`
+      return `${priceUsd.toFixed(2)} USD`
     }
 
     if (priceArs) {
-      return `$${priceArs.toLocaleString('es-AR')} ARS`
+      return `${priceArs.toLocaleString('es-AR')} ARS`
     }
 
     return 'Precio no disponible'
@@ -211,53 +211,6 @@ class CourseRecommendationService {
     }
   }
 
-  /**
-   * Obtiene el historial de requests de recomendaciones
-   */
-  async getRequestHistory() {
-    try {
-      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/request-history`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Error obteniendo historial de requests:', error)
-      throw error
-    }
-  }
-
-  /**
-   * Obtiene el historial completo de cursos recomendados
-   */
-  async getCourseHistory() {
-    try {
-      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/history`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Error obteniendo historial de cursos:', error)
-      throw error
-    }
-  }
 }
 
 const courseRecommendationService = new CourseRecommendationService()

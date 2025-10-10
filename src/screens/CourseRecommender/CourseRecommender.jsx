@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, ExternalLink, Clock, Star, Users, DollarSign, RefreshCw, AlertCircle, CheckCircle, Settings } from 'lucide-react'
+import { BookOpen, ExternalLink, Star, RefreshCw, AlertCircle, CheckCircle, Settings } from 'lucide-react'
 import courseRecommendationService from '../../services/courseRecommendationService'
 
 export default function CourseRecommender() {
@@ -29,10 +29,17 @@ export default function CourseRecommender() {
     }
   }
 
+
   const generateRecommendations = async () => {
     try {
       setLoading(true)
       setError(null)
+      
+      // Si ya hay cursos, limpiar la lista para mostrar que se están generando nuevos
+      if (recommendations.length > 0) {
+        setRecommendations([])
+        setHasData(false)
+      }
       
       const response = await courseRecommendationService.generateRecommendations()
       setRecommendations(response.recommendations || [])
@@ -86,12 +93,12 @@ export default function CourseRecommender() {
             <button
               onClick={generateRecommendations}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 inline-flex items-center"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center text-sm"
             >
               {loading ? (
-                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
               ) : (
-                <RefreshCw className="w-5 h-5 mr-2" />
+                <RefreshCw className="w-4 h-4 mr-2" />
               )}
               {loading ? 'Generando...' : 'Generar recomendaciones'}
             </button>
@@ -223,6 +230,7 @@ export default function CourseRecommender() {
           </div>
         )}
 
+
         {/* Recommendations */}
         {recommendations.length > 0 ? (
           <div className="space-y-6">
@@ -284,11 +292,6 @@ function CourseCard({ course, index, onOpenCourse, onDelete }) {
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${courseRecommendationService.getPlatformColor(course.platform)}`}>
                 {course.platform_display_name}
               </span>
-              {course.is_free && (
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Gratis
-                </span>
-              )}
             </div>
             
             <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -312,32 +315,13 @@ function CourseCard({ course, index, onOpenCourse, onDelete }) {
         </div>
 
         {/* Course Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-          {course.price_usd && (
-            <div className="flex items-center text-gray-600">
-              <DollarSign className="w-4 h-4 mr-1" />
-              <span className="text-sm">
-                {courseRecommendationService.formatPrice(course.price_usd, course.price_ars, course.is_free, course.currency)}
-              </span>
-            </div>
-          )}
-          
-          {course.duration_hours && (
-            <div className="flex items-center text-gray-600">
-              <Clock className="w-4 h-4 mr-1" />
-              <span className="text-sm">
-                {courseRecommendationService.formatDuration(course.duration_hours)}
-              </span>
-            </div>
-          )}
-          
+        <div className="flex gap-4 mb-4">
           {course.rating && (
             <div className="flex items-center text-gray-600">
               <Star className="w-4 h-4 mr-1 fill-yellow-400 text-yellow-400" />
               <span className="text-sm">{course.rating.toFixed(1)}</span>
             </div>
           )}
-          
         </div>
 
         {/* Skill Gap Addressed */}
