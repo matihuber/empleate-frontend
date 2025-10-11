@@ -93,29 +93,6 @@ class CourseRecommendationService {
     }
   }
 
-  /**
-   * Elimina una recomendación específica
-   */
-  async deleteRecommendation(recommendationId) {
-    try {
-      const response = await apiInterceptor.fetchWithInterceptor(`${this.baseURL}/recommendations/${recommendationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Error eliminando recomendación:', error)
-      throw error
-    }
-  }
 
   /**
    * Verifica el estado del servicio

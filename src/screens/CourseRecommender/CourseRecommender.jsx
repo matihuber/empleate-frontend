@@ -61,15 +61,6 @@ export default function CourseRecommender() {
     }
   }
 
-  const handleDeleteRecommendation = async (recommendationId) => {
-    try {
-      await courseRecommendationService.deleteRecommendation(recommendationId)
-      setRecommendations(prev => prev.filter(rec => rec.id !== recommendationId))
-    } catch (error) {
-      console.error('Error eliminando recomendación:', error)
-      setError('No se pudo eliminar la recomendación')
-    }
-  }
 
   const openCourse = (url) => {
     window.open(url, '_blank', 'noopener,noreferrer')
@@ -244,7 +235,6 @@ export default function CourseRecommender() {
                 course={course}
                 index={index}
                 onOpenCourse={openCourse}
-                onDelete={handleDeleteRecommendation}
               />
             ))}
           </div>
@@ -277,13 +267,13 @@ export default function CourseRecommender() {
   )
 }
 
-function CourseCard({ course, index, onOpenCourse, onDelete }) {
+function CourseCard({ course, index, onOpenCourse }) {
   const [showDetails, setShowDetails] = useState(false)
 
   return (
     <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
       <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -304,14 +294,6 @@ function CourseCard({ course, index, onOpenCourse, onDelete }) {
               </p>
             )}
           </div>
-          
-          <button
-            onClick={() => onDelete(course.id)}
-            className="text-gray-400 hover:text-red-600 transition-colors"
-            title="Eliminar recomendación"
-          >
-            ×
-          </button>
         </div>
 
         {/* Course Stats */}
