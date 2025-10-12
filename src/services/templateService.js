@@ -87,6 +87,38 @@ class TemplateService {
       throw error
     }
   }
+
+  /**
+   * Check if a template is basic (available for FREE users) or advanced (PRO+ only)
+   */
+  isBasicTemplate(template) {
+    // Templates básicos disponibles para usuarios FREE
+    const basicTemplateIds = ['moderno', 'clasico', 'basico'];
+    
+    // Si el template tiene un campo 'tier' o 'subscription_required', usarlo
+    if (template.tier) {
+      return template.tier === 'basic' || template.tier === 'free';
+    }
+    
+    if (template.subscription_required) {
+      return !template.subscription_required;
+    }
+    
+    // Fallback: usar IDs conocidos
+    return basicTemplateIds.includes(template.id);
+  }
+
+  /**
+   * Filter templates based on user subscription tier
+   */
+  filterTemplatesByTier(templates, userTier) {
+    if (userTier === 'free') {
+      return templates.filter(template => this.isBasicTemplate(template));
+    }
+    
+    // PRO y PREMIUM pueden acceder a todos los templates
+    return templates;
+  }
 }
 
 // Export singleton instance

@@ -20,6 +20,7 @@ import CVCreation from "./sections/CVCreation"
 import CVHistory from "./sections/CVHistory"
 import SalaryEstimator from "../SalaryEstimator"
 import CourseRecommender from "../CourseRecommender/CourseRecommender"
+import SubscriptionInfo from "../../components/SubscriptionInfo"
 
 export default function UserHome() {
   const [activeSection, setActiveSection] = useState('inicio')
@@ -164,6 +165,11 @@ export default function UserHome() {
                 )
               })}
             </ul>
+            
+            {/* Información de suscripción */}
+            <div className="px-3 mt-4">
+              <SubscriptionInfo showDetails={true} />
+            </div>
           </nav>
 
           {/* Logout */}

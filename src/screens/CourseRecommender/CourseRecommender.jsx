@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, ExternalLink, Star, RefreshCw, AlertCircle, CheckCircle, Settings } from 'lucide-react'
 import courseRecommendationService from '../../services/courseRecommendationService'
+import { useSubscriptionRestrictions } from '../../hooks/useSubscriptionRestrictions'
+import SubscriptionRestrictionModal from '../../components/SubscriptionRestrictionModal'
 
 export default function CourseRecommender() {
   const navigate = useNavigate()
@@ -10,6 +12,14 @@ export default function CourseRecommender() {
   const [skillAnalysis, setSkillAnalysis] = useState(null)
   const [error, setError] = useState(null)
   const [hasData, setHasData] = useState(false)
+
+  // Hook para restricciones de suscripción
+  const {
+    executeWithSubscriptionCheck,
+    isRestrictionModalOpen,
+    restrictedFeature,
+    closeRestrictionModal
+  } = useSubscriptionRestrictions()
 
   useEffect(() => {
     // Cargar recomendaciones existentes si las hay
@@ -31,7 +41,8 @@ export default function CourseRecommender() {
 
 
   const generateRecommendations = async () => {
-    try {
+    // Verificar acceso a recomendaciones de cursos con restricciones de suscripción
+    await executeWithSubscriptionCheck('course_recommendations', async () => {
       setLoading(true)
       setError(null)
       
@@ -41,24 +52,26 @@ export default function CourseRecommender() {
         setHasData(false)
       }
       
-      const response = await courseRecommendationService.generateRecommendations()
-      setRecommendations(response.recommendations || [])
-      setSkillAnalysis(response.skill_analysis)
-      setHasData(true)
-    } catch (error) {
-      console.error('Error generando recomendaciones:', error)
-      
-      // Manejar error de suscripción específicamente
-      if (error.code === 'SUBSCRIPTION_REQUIRED') {
-        setError('SUBSCRIPTION_REQUIRED')
-      } else if (error.message && error.message.includes('No se encontraron datos del usuario')) {
-        setError('NO_USER_DATA')
-      } else {
-        setError(error.message)
+      try {
+        const response = await courseRecommendationService.generateRecommendations()
+        setRecommendations(response.recommendations || [])
+        setSkillAnalysis(response.skill_analysis)
+        setHasData(true)
+      } catch (error) {
+        console.error('Error generando recomendaciones:', error)
+        
+        // Manejar error de suscripción específicamente
+        if (error.code === 'SUBSCRIPTION_REQUIRED') {
+          setError('SUBSCRIPTION_REQUIRED')
+        } else if (error.message && error.message.includes('No se encontraron datos del usuario')) {
+          setError('NO_USER_DATA')
+        } else {
+          setError(error.message)
+        }
+      } finally {
+        setLoading(false)
       }
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
 
@@ -263,6 +276,15 @@ export default function CourseRecommender() {
           </div>
         )}
       </div>
+
+      {/* Modal de restricción de suscripción */}
+      <SubscriptionRestrictionModal
+        isOpen={isRestrictionModalOpen}
+        onClose={closeRestrictionModal}
+        feature={restrictedFeature}
+        title="Funcionalidad no disponible"
+        showUpgradeButton={true}
+      />
     </div>
   )
 }

@@ -9,6 +9,8 @@ import cvPrepService from '../../../services/cvPrepService'
 import cvGenerationService from '../../../services/cvGenerationService'
 import CVCanvasEditor from '../../../components/CVCanvasEditor'
 import CVTemplateSelector from '../../../components/CVTemplateSelector'
+import { useSubscriptionRestrictions } from '../../../hooks/useSubscriptionRestrictions'
+import SubscriptionRestrictionModal from '../../../components/SubscriptionRestrictionModal'
 
 
 export default function CVCreation() {
@@ -19,6 +21,16 @@ export default function CVCreation() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedCV, setGeneratedCV] = useState(null)
   const [error, setError] = useState(null)
+
+  // Hook para restricciones de suscripción
+  const {
+    executeWithSubscriptionCheck,
+    checkCVCreation,
+    isRestrictionModalOpen,
+    restrictedFeature,
+    closeRestrictionModal,
+    getCVLimits
+  } = useSubscriptionRestrictions()
 
   // Estados para las habilidades técnicas
   const [skills, setSkills] = useState([])
@@ -108,8 +120,19 @@ export default function CVCreation() {
 
 
 
-  const handleTemplateSelect = (template) => {
-    setSelectedTemplate(template)
+  const handleTemplateSelect = async (template) => {
+    // Verificar si el template es avanzado y requiere suscripción PRO
+    const isAdvancedTemplate = !templateService.isBasicTemplate(template);
+    
+    if (isAdvancedTemplate) {
+      // Verificar acceso con restricciones de suscripción
+      await executeWithSubscriptionCheck('templates', () => {
+        setSelectedTemplate(template)
+      })
+    } else {
+      // Template básico, permitir selección
+      setSelectedTemplate(template)
+    }
   }
 
   const handleContinue = async () => {
@@ -153,6 +176,12 @@ export default function CVCreation() {
 
   const handleSkillsContinue = async () => {
     try {
+      // Verificar si puede crear CV antes de generar
+      const canCreate = await checkCVCreation()
+      if (!canCreate) {
+        return // El modal de restricción se mostrará automáticamente
+      }
+      
       // Generar CV automáticamente
       await generateCV()
     } catch (error) {
@@ -876,7 +905,7 @@ export default function CVCreation() {
             notification.parentNode.removeChild(notification)
           }
         }, 3000)
-      }
+        }
       
     } catch (error) {
       console.error('❌ CVCreation: Error exportando CV:', error)
@@ -914,6 +943,15 @@ export default function CVCreation() {
   return (
     <div>
       {renderCurrentStep()}
+      
+      {/* Modal de restricción de suscripción */}
+      <SubscriptionRestrictionModal
+        isOpen={isRestrictionModalOpen}
+        onClose={closeRestrictionModal}
+        feature={restrictedFeature}
+        title="Funcionalidad no disponible"
+        showUpgradeButton={true}
+      />
     </div>
   )
 }

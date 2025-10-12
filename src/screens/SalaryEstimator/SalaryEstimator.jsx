@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { salaryEstimationService } from '../../services/salaryEstimationService';
+import { useSubscriptionRestrictions } from '../../hooks/useSubscriptionRestrictions';
+import SubscriptionRestrictionModal from '../../components/SubscriptionRestrictionModal';
 import './SalaryEstimator.css';
 
 const SalaryEstimator = () => {
@@ -25,6 +27,14 @@ const SalaryEstimator = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+
+  // Hook para restricciones de suscripción
+  const {
+    executeWithSubscriptionCheck,
+    isRestrictionModalOpen,
+    restrictedFeature,
+    closeRestrictionModal
+  } = useSubscriptionRestrictions();
 
   // Cargar opciones del dataset
   useEffect(() => {
@@ -230,19 +240,22 @@ const SalaryEstimator = () => {
       return;
     }
 
-    setLoading(true);
-    setError(null);
-    setResults(null);
+    // Verificar acceso a estimación salarial con restricciones de suscripción
+    await executeWithSubscriptionCheck('salary_estimation', async () => {
+      setLoading(true);
+      setError(null);
+      setResults(null);
 
-    try {
-      const response = await salaryEstimationService.estimateSalary(formData);
-      setResults(response);
-    } catch (error) {
-      console.error('Error estimando salario:', error);
-      setError('Error al estimar el salario. Por favor intenta nuevamente.');
-    } finally {
-      setLoading(false);
-    }
+      try {
+        const response = await salaryEstimationService.estimateSalary(formData);
+        setResults(response);
+      } catch (error) {
+        console.error('Error estimando salario:', error);
+        setError('Error al estimar el salario. Por favor intenta nuevamente.');
+      } finally {
+        setLoading(false);
+      }
+    });
   };
 
   const formatCurrency = (amount) => {
@@ -412,6 +425,15 @@ const SalaryEstimator = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de restricción de suscripción */}
+      <SubscriptionRestrictionModal
+        isOpen={isRestrictionModalOpen}
+        onClose={closeRestrictionModal}
+        feature={restrictedFeature}
+        title="Funcionalidad no disponible"
+        showUpgradeButton={true}
+      />
     </div>
   );
 };

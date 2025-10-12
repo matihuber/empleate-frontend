@@ -7,6 +7,8 @@ import LinkedInImportModal from "../../../components/LinkedInImportModal"
 import userProfileService from "../../../services/userProfileService"
 import imageCacheService from "../../../services/imageCacheService"
 import apiInterceptor from "../../../services/apiInterceptor"
+import { useSubscriptionRestrictions } from "../../../hooks/useSubscriptionRestrictions"
+import SubscriptionRestrictionModal from "../../../components/SubscriptionRestrictionModal"
 
 
 export default function MisDatosSection({ user }) {
@@ -20,6 +22,13 @@ export default function MisDatosSection({ user }) {
   const [uploadedLinkedInFile, setUploadedLinkedInFile] = useState(null)
   const [showLinkedInModal, setShowLinkedInModal] = useState(false)
 
+  // Hook para restricciones de suscripción
+  const {
+    executeWithSubscriptionCheck,
+    isRestrictionModalOpen,
+    restrictedFeature,
+    closeRestrictionModal
+  } = useSubscriptionRestrictions()
   
   // Estados para cambios pendientes
   const [pendingChanges, setPendingChanges] = useState({})
@@ -190,7 +199,10 @@ export default function MisDatosSection({ user }) {
   }
 
   const handleLinkedInImport = () => {
-    setShowLinkedInModal(true)
+    // Verificar acceso a importación de LinkedIn con restricciones de suscripción
+    executeWithSubscriptionCheck('import_linkedin', () => {
+      setShowLinkedInModal(true)
+    })
   }
 
   const handleLinkedInSave = (data) => {
@@ -704,6 +716,14 @@ export default function MisDatosSection({ user }) {
           )}
         </div>
       </div>
+      {/* Modal de restricción de suscripción */}
+      <SubscriptionRestrictionModal
+        isOpen={isRestrictionModalOpen}
+        onClose={closeRestrictionModal}
+        feature={restrictedFeature}
+        title="Funcionalidad no disponible"
+        showUpgradeButton={true}
+      />
     </div>
   )
 }
