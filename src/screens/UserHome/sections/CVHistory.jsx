@@ -236,7 +236,7 @@ const CVHistory = ({ onNavigateToSection }) => {
                   {/* Template */}
                   <div className="col-span-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {cv.template_id}
+                      {cv.template_name || cv.template_id}
                     </span>
                   </div>
 
