@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { salaryEstimationService } from '../../services/salaryEstimationService';
 import { useSubscriptionRestrictions } from '../../hooks/useSubscriptionRestrictions';
 import SubscriptionRestrictionModal from '../../components/SubscriptionRestrictionModal';
+import { useSubscription } from '../../contexts/SubscriptionContext';
 import './SalaryEstimator.css';
 
 const SalaryEstimator = () => {
@@ -33,8 +34,13 @@ const SalaryEstimator = () => {
     executeWithSubscriptionCheck,
     isRestrictionModalOpen,
     restrictedFeature,
+    setRestrictedFeature,
+    setIsRestrictionModalOpen,
     closeRestrictionModal
   } = useSubscriptionRestrictions();
+
+  // Hook para información de suscripción
+  const { subscriptionInfo } = useSubscription();
 
   // Cargar opciones del dataset
   useEffect(() => {
@@ -240,22 +246,30 @@ const SalaryEstimator = () => {
       return;
     }
 
-    // Verificar acceso a estimación salarial con restricciones de suscripción
-    await executeWithSubscriptionCheck('salary_estimation', async () => {
-      setLoading(true);
-      setError(null);
-      setResults(null);
+    // Verificar acceso usando información local de suscripción
+    const canAccessSalaryEstimation = subscriptionInfo?.limits?.can_access_salary_estimation || false;
+    
+    if (!canAccessSalaryEstimation) {
+      // Mostrar modal de restricción
+      setRestrictedFeature('salary_estimation');
+      setIsRestrictionModalOpen(true);
+      return;
+    }
 
-      try {
-        const response = await salaryEstimationService.estimateSalary(formData);
-        setResults(response);
-      } catch (error) {
-        console.error('Error estimando salario:', error);
-        setError('Error al estimar el salario. Por favor intenta nuevamente.');
-      } finally {
-        setLoading(false);
-      }
-    });
+    // Proceder con la estimación salarial
+    setLoading(true);
+    setError(null);
+    setResults(null);
+
+    try {
+      const response = await salaryEstimationService.estimateSalary(formData);
+      setResults(response);
+    } catch (error) {
+      console.error('Error estimando salario:', error);
+      setError('Error al estimar el salario. Por favor intenta nuevamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatCurrency = (amount) => {

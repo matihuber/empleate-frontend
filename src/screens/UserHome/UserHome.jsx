@@ -168,7 +168,7 @@ export default function UserHome() {
             
             {/* Información de suscripción */}
             <div className="px-3 mt-4">
-              <SubscriptionInfo showDetails={true} />
+              {/* <SubscriptionInfo showDetails={true} /> */}
             </div>
           </nav>
 

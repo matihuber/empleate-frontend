@@ -9,6 +9,7 @@ import imageCacheService from "../../../services/imageCacheService"
 import apiInterceptor from "../../../services/apiInterceptor"
 import { useSubscriptionRestrictions } from "../../../hooks/useSubscriptionRestrictions"
 import SubscriptionRestrictionModal from "../../../components/SubscriptionRestrictionModal"
+import { useSubscription } from "../../../contexts/SubscriptionContext"
 
 
 export default function MisDatosSection({ user }) {
@@ -29,6 +30,9 @@ export default function MisDatosSection({ user }) {
     restrictedFeature,
     closeRestrictionModal
   } = useSubscriptionRestrictions()
+
+  // Hook para información de suscripción
+  const { subscriptionInfo } = useSubscription()
   
   // Estados para cambios pendientes
   const [pendingChanges, setPendingChanges] = useState({})
@@ -199,10 +203,18 @@ export default function MisDatosSection({ user }) {
   }
 
   const handleLinkedInImport = () => {
-    // Verificar acceso a importación de LinkedIn con restricciones de suscripción
-    executeWithSubscriptionCheck('import_linkedin', () => {
-      setShowLinkedInModal(true)
-    })
+    // Verificar acceso usando información local de suscripción
+    const canImportLinkedIn = subscriptionInfo?.limits?.can_import_linkedin || false;
+    
+    if (!canImportLinkedIn) {
+      // Mostrar modal de restricción
+      setRestrictedFeature('import_linkedin');
+      setIsRestrictionModalOpen(true);
+      return;
+    }
+
+    // Permitir importación de LinkedIn
+    setShowLinkedInModal(true);
   }
 
   const handleLinkedInSave = (data) => {

@@ -2,6 +2,9 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const API_VERSION = '/api/v1';
 
+// Importar authService para usar authenticatedRequest
+import authService from './authService';
+
 // URLs de los endpoints
 const ENDPOINTS = {
   ESTIMATE: `${API_BASE_URL}${API_VERSION}/salary/estimate`,
@@ -17,20 +20,13 @@ class SalaryEstimationService {
 
   async estimateSalary(formData) {
     try {
-      const response = await fetch(ENDPOINTS.ESTIMATE, {
+      const response = await authService.authenticatedRequest('/salary/estimate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formData)
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al estimar el salario');
-      }
-
-      return await response.json();
+      // authService.authenticatedRequest ya devuelve los datos parseados
+      return response;
     } catch (error) {
       console.error('Error estimating salary:', error);
       throw new Error(error.message || 'Error al estimar el salario');

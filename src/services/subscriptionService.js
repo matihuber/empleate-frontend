@@ -6,7 +6,30 @@ import authService from './authService';
 
 class SubscriptionService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+    // Usar la misma configuración que authService
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+    const API_VERSION = '/api/v1';
+    this.baseURL = `${API_BASE_URL}${API_VERSION}`;
+  }
+
+  /**
+   * Obtiene información de suscripción del usuario actual (versión de prueba sin autenticación)
+   */
+  async getSubscriptionInfoTest(userId) {
+    try {
+      const response = await fetch(`${this.baseURL}/subscription/info-test/${userId}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error obteniendo información de suscripción (prueba):', error);
+      throw error;
+    }
   }
 
   /**
@@ -16,11 +39,8 @@ class SubscriptionService {
     try {
       const response = await authService.authenticatedRequest(`${this.baseURL}/subscription/info`);
       
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      
-      return await response.json();
+      // authService.authenticatedRequest ya devuelve los datos parseados
+      return response;
     } catch (error) {
       console.error('Error obteniendo información de suscripción:', error);
       throw error;
@@ -34,11 +54,8 @@ class SubscriptionService {
     try {
       const response = await authService.authenticatedRequest(`${this.baseURL}/subscription/feature-access/${feature}`);
       
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      
-      return await response.json();
+      // authService.authenticatedRequest ya devuelve los datos parseados
+      return response;
     } catch (error) {
       console.error(`Error verificando acceso a funcionalidad ${feature}:`, error);
       throw error;
@@ -52,11 +69,8 @@ class SubscriptionService {
     try {
       const response = await authService.authenticatedRequest(`${this.baseURL}/subscription/cv-limits`);
       
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      
-      return await response.json();
+      // authService.authenticatedRequest ya devuelve los datos parseados
+      return response;
     } catch (error) {
       console.error('Error obteniendo límites de CV:', error);
       throw error;

@@ -95,13 +95,79 @@ export const SubscriptionProvider = ({ children }) => {
     try {
       dispatch({ type: SUBSCRIPTION_ACTIONS.SET_LOADING, payload: true });
       
-      const subscriptionInfo = await subscriptionService.getSubscriptionInfo();
+        // Primero intentar cargar desde localStorage
+        const storedInfo = localStorage.getItem('empleate_subscription_info');
+        
+        if (storedInfo) {
+          const subscriptionInfo = JSON.parse(storedInfo);
+          dispatch({ type: SUBSCRIPTION_ACTIONS.SET_SUBSCRIPTION_INFO, payload: subscriptionInfo });
+          return;
+        }
       
-      dispatch({ type: SUBSCRIPTION_ACTIONS.SET_SUBSCRIPTION_INFO, payload: subscriptionInfo });
+      // Fallback: crear información de suscripción por defecto (FREE)
+      const fallbackInfo = {
+        tier: 'free',
+        limits: {
+          max_cvs: 1,
+          can_access_templates: false,
+          can_access_profile_analysis: true,
+          can_access_salary_estimation: false,
+          can_access_course_recommendations: false,
+          can_export_pdf: true,
+          can_import_linkedin: false
+        },
+        cv_count: 0,
+        max_cvs: 1,
+        can_create_cv: true,
+        upgrade_message: null
+      };
+      
+        dispatch({ type: SUBSCRIPTION_ACTIONS.SET_SUBSCRIPTION_INFO, payload: fallbackInfo });
       
     } catch (error) {
       console.error('Error cargando información de suscripción:', error);
+      
+      // Fallback: crear información de suscripción por defecto (FREE)
+      const fallbackInfo = {
+        tier: 'free',
+        limits: {
+          max_cvs: 1,
+          can_access_templates: false,
+          can_access_profile_analysis: true,
+          can_access_salary_estimation: false,
+          can_access_course_recommendations: false,
+          can_export_pdf: true,
+          can_import_linkedin: false
+        },
+        cv_count: 0,
+        max_cvs: 1,
+        can_create_cv: true,
+        upgrade_message: null
+      };
+      
+        dispatch({ type: SUBSCRIPTION_ACTIONS.SET_SUBSCRIPTION_INFO, payload: fallbackInfo });
       dispatch({ type: SUBSCRIPTION_ACTIONS.SET_ERROR, payload: error.message });
+    }
+  }, []);
+
+  // Actualizar información de suscripción (llamada desde AuthContext después del login)
+  const updateSubscriptionInfo = useCallback(async (userId) => {
+    try {
+      
+      // Usar endpoint de prueba para obtener información actualizada
+      const subscriptionInfo = await subscriptionService.getSubscriptionInfoTest(userId);
+      
+      // Actualizar el estado
+      dispatch({ type: SUBSCRIPTION_ACTIONS.SET_SUBSCRIPTION_INFO, payload: subscriptionInfo });
+      
+      // Guardar en localStorage
+      localStorage.setItem('empleate_subscription_info', JSON.stringify(subscriptionInfo));
+      
+      return subscriptionInfo;
+    } catch (error) {
+      console.error('SubscriptionContext: Error actualizando información de suscripción:', error);
+      // No cambiar el estado si hay error, mantener el fallback actual
+      return null;
     }
   }, []);
 
@@ -142,6 +208,20 @@ export const SubscriptionProvider = ({ children }) => {
     loadSubscriptionInfo();
   }, [loadSubscriptionInfo]);
 
+  // Escuchar eventos de actualización de suscripción desde AuthContext
+  useEffect(() => {
+        const handleSubscriptionUpdate = (event) => {
+          const { userId } = event.detail;
+          updateSubscriptionInfo(userId);
+        };
+
+    window.addEventListener('subscriptionUpdate', handleSubscriptionUpdate);
+    
+    return () => {
+      window.removeEventListener('subscriptionUpdate', handleSubscriptionUpdate);
+    };
+  }, [updateSubscriptionInfo]);
+
   // Valor del contexto
   const value = {
     // Estado
@@ -152,6 +232,7 @@ export const SubscriptionProvider = ({ children }) => {
     
     // Acciones
     loadSubscriptionInfo,
+    updateSubscriptionInfo,
     checkFeatureAccess,
     canCreateCV,
     updateCVCount,

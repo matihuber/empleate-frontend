@@ -48,7 +48,7 @@ const SubscriptionInfo = ({ showDetails = false }) => {
 
   const getProgressPercentage = () => {
     if (max_cvs === 0) return 0;
-    if (max_cvs === "Ilimitado") return 0; // No mostrar barra para ilimitado
+    if (max_cvs === null || max_cvs === "Ilimitado") return 0; // No mostrar barra para ilimitado
     return Math.min((cv_count / max_cvs) * 100, 100);
   };
 
@@ -85,12 +85,12 @@ const SubscriptionInfo = ({ showDetails = false }) => {
         <div className="flex justify-between text-sm mb-1">
           <span className="text-gray-600">CVs creados</span>
           <span className={`font-medium ${tierInfo.color}`}>
-            {max_cvs === "Ilimitado" ? `${cv_count} (Ilimitado)` : `${cv_count}/${max_cvs}`}
+            {max_cvs === null || max_cvs === "Ilimitado" ? `${cv_count} (Ilimitado)` : `${cv_count}/${max_cvs}`}
           </span>
         </div>
         
         {/* Progress Bar - Solo mostrar si no es ilimitado */}
-        {max_cvs !== "Ilimitado" && (
+        {max_cvs !== null && max_cvs !== "Ilimitado" && (
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className={`h-2 rounded-full transition-all duration-300 ${getProgressColor()}`}

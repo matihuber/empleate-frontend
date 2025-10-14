@@ -74,19 +74,8 @@ const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect, templates = []
               data-selected={selectedTemplate === template.id}
               data-template-id={template.id}
               data-selected-template={selectedTemplate}
-              onClick={() => {
-                console.log('🔍 CVTemplateSelector: Click en template:', template)
-                console.log('🔍 CVTemplateSelector: Template ID:', template.id)
-                console.log('🔍 CVTemplateSelector: selectedTemplate actual:', selectedTemplate)
-                onTemplateSelect(template)
-              }}
+              onClick={() => onTemplateSelect(template)}
             >
-              {/* Indicador de template avanzado */}
-              {isAdvancedTemplate && (
-                <div className="absolute top-2 right-2 z-10 bg-yellow-500 text-white rounded-full p-1">
-                  <Crown className="w-4 h-4" />
-                </div>
-              )}
               {/* Template Preview */}
               <div className={`bg-white rounded-lg overflow-hidden transition-all duration-200 ${
                 selectedTemplate?.id === template.id 
@@ -97,9 +86,9 @@ const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect, templates = []
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                     {template.name}
                     {isAdvancedTemplate && (
-                      <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                        PRO
-                      </span>
+                      <div className="bg-yellow-500 text-white rounded-full p-1">
+                        <Crown className="w-4 h-4" />
+                      </div>
                     )}
                   </h3>
                   <p className="text-sm text-gray-600">{template.description}</p>

@@ -11,6 +11,7 @@ import CVCanvasEditor from '../../../components/CVCanvasEditor'
 import CVTemplateSelector from '../../../components/CVTemplateSelector'
 import { useSubscriptionRestrictions } from '../../../hooks/useSubscriptionRestrictions'
 import SubscriptionRestrictionModal from '../../../components/SubscriptionRestrictionModal'
+import { useSubscription } from '../../../contexts/SubscriptionContext'
 
 
 export default function CVCreation() {
@@ -31,6 +32,9 @@ export default function CVCreation() {
     closeRestrictionModal,
     getCVLimits
   } = useSubscriptionRestrictions()
+
+  // Hook para información de suscripción
+  const { subscriptionInfo } = useSubscription()
 
   // Estados para las habilidades técnicas
   const [skills, setSkills] = useState([])
@@ -97,11 +101,9 @@ export default function CVCreation() {
       try {
         setLoadingTemplates(true)
         const templatesData = await templateService.getTemplates()
-        console.log('Templates del backend:', templatesData)
         
         // Usar directamente los templates del backend
         setTemplates(templatesData)
-        console.log('Templates cargados del backend:', templatesData)
       } catch (error) {
         console.error('Error cargando templates:', error)
         // En caso de error, usar templates por defecto con IDs que coincidan con el backend
@@ -125,14 +127,19 @@ export default function CVCreation() {
     const isAdvancedTemplate = !templateService.isBasicTemplate(template);
     
     if (isAdvancedTemplate) {
-      // Verificar acceso con restricciones de suscripción
-      await executeWithSubscriptionCheck('templates', () => {
-        setSelectedTemplate(template)
-      })
-    } else {
-      // Template básico, permitir selección
-      setSelectedTemplate(template)
+      // Verificar acceso usando información local de suscripción
+      const canAccessTemplates = subscriptionInfo?.limits?.can_access_templates || false;
+      
+      if (!canAccessTemplates) {
+        // Mostrar modal de restricción
+        setRestrictedFeature('templates');
+        setIsRestrictionModalOpen(true);
+        return;
+      }
     }
+    
+    // Permitir selección del template
+    setSelectedTemplate(template);
   }
 
   const handleContinue = async () => {

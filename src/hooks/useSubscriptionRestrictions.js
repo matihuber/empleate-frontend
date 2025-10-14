@@ -167,6 +167,8 @@ export const useSubscriptionRestrictions = () => {
     subscriptionInfo,
     isRestrictionModalOpen,
     restrictedFeature,
+    setRestrictedFeature,
+    setIsRestrictionModalOpen,
     
     // Acciones
     executeWithSubscriptionCheck,

@@ -30,7 +30,6 @@ class TemplateService {
       }
 
       const templates = await response.json()
-      console.log('TemplateService: Templates obtenidos exitosamente')
       return templates
     } catch (error) {
       console.error('Error getting templates:', error)
@@ -92,20 +91,14 @@ class TemplateService {
    * Check if a template is basic (available for FREE users) or advanced (PRO+ only)
    */
   isBasicTemplate(template) {
-    // Templates básicos disponibles para usuarios FREE
-    const basicTemplateIds = ['moderno', 'clasico', 'basico'];
-    
-    // Si el template tiene un campo 'tier' o 'subscription_required', usarlo
+    // Usar el campo 'tier' del backend si está disponible
     if (template.tier) {
-      return template.tier === 'basic' || template.tier === 'free';
+      return template.tier === 'basic';
     }
     
-    if (template.subscription_required) {
-      return !template.subscription_required;
-    }
-    
-    // Fallback: usar IDs conocidos
-    return basicTemplateIds.includes(template.id);
+    // Fallback: usar IDs conocidos para compatibilidad
+    const basicTemplateIds = ['clasico'];
+    return basicTemplateIds.includes(template.id) || basicTemplateIds.includes(template.name?.toLowerCase());
   }
 
   /**

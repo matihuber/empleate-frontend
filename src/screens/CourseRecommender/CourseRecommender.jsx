@@ -4,6 +4,7 @@ import { BookOpen, ExternalLink, Star, RefreshCw, AlertCircle, CheckCircle, Sett
 import courseRecommendationService from '../../services/courseRecommendationService'
 import { useSubscriptionRestrictions } from '../../hooks/useSubscriptionRestrictions'
 import SubscriptionRestrictionModal from '../../components/SubscriptionRestrictionModal'
+import { useSubscription } from '../../contexts/SubscriptionContext'
 
 export default function CourseRecommender() {
   const navigate = useNavigate()
@@ -18,8 +19,13 @@ export default function CourseRecommender() {
     executeWithSubscriptionCheck,
     isRestrictionModalOpen,
     restrictedFeature,
+    setRestrictedFeature,
+    setIsRestrictionModalOpen,
     closeRestrictionModal
   } = useSubscriptionRestrictions()
+
+  // Hook para información de suscripción
+  const { subscriptionInfo } = useSubscription()
 
   useEffect(() => {
     // Cargar recomendaciones existentes si las hay
@@ -41,37 +47,45 @@ export default function CourseRecommender() {
 
 
   const generateRecommendations = async () => {
-    // Verificar acceso a recomendaciones de cursos con restricciones de suscripción
-    await executeWithSubscriptionCheck('course_recommendations', async () => {
-      setLoading(true)
-      setError(null)
+    // Verificar acceso usando información local de suscripción
+    const canAccessCourseRecommendations = subscriptionInfo?.limits?.can_access_course_recommendations || false;
+    
+    if (!canAccessCourseRecommendations) {
+      // Mostrar modal de restricción
+      setRestrictedFeature('course_recommendations');
+      setIsRestrictionModalOpen(true);
+      return;
+    }
+
+    // Proceder con la generación de recomendaciones
+    setLoading(true)
+    setError(null)
+    
+    // Si ya hay cursos, limpiar la lista para mostrar que se están generando nuevos
+    if (recommendations.length > 0) {
+      setRecommendations([])
+      setHasData(false)
+    }
+    
+    try {
+      const response = await courseRecommendationService.generateRecommendations()
+      setRecommendations(response.recommendations || [])
+      setSkillAnalysis(response.skill_analysis)
+      setHasData(true)
+    } catch (error) {
+      console.error('Error generando recomendaciones:', error)
       
-      // Si ya hay cursos, limpiar la lista para mostrar que se están generando nuevos
-      if (recommendations.length > 0) {
-        setRecommendations([])
-        setHasData(false)
+      // Manejar error de suscripción específicamente
+      if (error.code === 'SUBSCRIPTION_REQUIRED') {
+        setError('SUBSCRIPTION_REQUIRED')
+      } else if (error.message && error.message.includes('No se encontraron datos del usuario')) {
+        setError('NO_USER_DATA')
+      } else {
+        setError(error.message)
       }
-      
-      try {
-        const response = await courseRecommendationService.generateRecommendations()
-        setRecommendations(response.recommendations || [])
-        setSkillAnalysis(response.skill_analysis)
-        setHasData(true)
-      } catch (error) {
-        console.error('Error generando recomendaciones:', error)
-        
-        // Manejar error de suscripción específicamente
-        if (error.code === 'SUBSCRIPTION_REQUIRED') {
-          setError('SUBSCRIPTION_REQUIRED')
-        } else if (error.message && error.message.includes('No se encontraron datos del usuario')) {
-          setError('NO_USER_DATA')
-        } else {
-          setError(error.message)
-        }
-      } finally {
-        setLoading(false)
-      }
-    })
+    } finally {
+      setLoading(false)
+    }
   }
 
 

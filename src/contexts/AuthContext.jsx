@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from 'react';
 import authService from '../services/authService';
+import subscriptionService from '../services/subscriptionService';
 
 // Estados de autenticación
 const AUTH_STATES = {
@@ -204,6 +205,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Función para notificar al SubscriptionContext que actualice la información
+  const notifySubscriptionUpdate = useCallback((userId) => {
+    // Disparar evento personalizado para que SubscriptionContext lo escuche
+    window.dispatchEvent(new CustomEvent('subscriptionUpdate', { detail: { userId } }));
+  }, []);
+
+  // Función para cargar información de suscripción (ya no se usa directamente)
+  const loadSubscriptionInfo = useCallback(async () => {
+    return null;
+  }, []);
+
   // Función para login básico
   const loginBasic = useCallback(async (email, password) => {
     try {
@@ -228,6 +240,9 @@ export const AuthProvider = ({ children }) => {
       // Establecer como autenticado SOLO al final, cuando todo esté confirmado
       dispatch({ type: AUTH_ACTIONS.SET_AUTH_STATE, payload: AUTH_STATES.AUTHENTICATED });
       
+        // Notificar al SubscriptionContext que actualice la información
+        notifySubscriptionUpdate(response.user.sub);
+      
     } catch (error) {
       // Asegurar que el estado de autenticación se mantenga como no autenticado
       dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: error.message });
@@ -235,7 +250,7 @@ export const AuthProvider = ({ children }) => {
       // Siempre limpiar el loading, sin importar si fue exitoso o no
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
     }
-  }, []);
+  }, [notifySubscriptionUpdate]);
 
   // Función para login con Google
   const loginGoogle = useCallback(async () => {
