@@ -47,15 +47,6 @@ export default function UserHome() {
     }
   }, [sessionExpired, navigate, clearSessionExpired])
 
-  // Manejar parámetros de URL para cambiar sección
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const section = urlParams.get('section')
-    if (section && menuItems.some(item => item.id === section)) {
-      setActiveSection(section)
-    }
-  }, [])
-  
   // Si no hay usuario, mostrar loading o redirigir
   if (!user) {
     return (
@@ -79,6 +70,15 @@ export default function UserHome() {
     { id: 'recomendador-cursos', label: 'Recomendador de cursos', icon: BookOpen },
     { id: 'configuracion', label: 'Configuración', icon: Settings }
   ]
+
+  // Manejar parámetros de URL para cambiar sección
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const section = urlParams.get('section')
+    if (section && menuItems.some(item => item.id === section)) {
+      setActiveSection(section)
+    }
+  }, [menuItems])
 
   const handleMenuClick = (sectionId) => {
     setActiveSection(sectionId)

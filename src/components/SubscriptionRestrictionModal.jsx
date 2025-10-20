@@ -63,9 +63,9 @@ const SubscriptionRestrictionModal = ({
 
   return (
     <div className="fixed inset-0 backdrop-brightness-75 backdrop-saturate-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[85vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {getFeatureIcon(feature)}
@@ -85,9 +85,9 @@ const SubscriptionRestrictionModal = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          <div className="text-center mb-6">
-            <p className="text-gray-600 mb-4">
+        <div className="p-3">
+          <div className="text-center mb-4">
+            <p className="text-gray-600 mb-3">
               {getFeatureName(feature)} no está disponible en tu plan actual.
             </p>
             <p className="text-sm text-gray-500">
@@ -96,7 +96,7 @@ const SubscriptionRestrictionModal = ({
           </div>
 
           {/* Plan Recommendation */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 mb-6">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3 mb-4">
             <div className="text-center">
               <h4 className="font-semibold text-gray-900 mb-2">
                 Plan Recomendado: {planInfo.name}
@@ -104,7 +104,7 @@ const SubscriptionRestrictionModal = ({
               <div className="text-2xl font-bold text-blue-600 mb-2">
                 ${planInfo.price}/mes
               </div>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <ul className="text-sm text-gray-600 space-y-0.5">
                 {planInfo.features.slice(0, 3).map((feature, index) => (
                   <li key={index} className="flex items-center justify-center">
                     <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -118,9 +118,9 @@ const SubscriptionRestrictionModal = ({
           </div>
 
           {/* Features Comparison */}
-          <div className="mb-6">
+          <div className="mb-4">
             <h5 className="font-medium text-gray-900 mb-3">¿Qué incluye {planInfo.name}?</h5>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {planInfo.features.map((feature, index) => (
                 <li key={index} className="flex items-start">
                   <svg className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -134,7 +134,7 @@ const SubscriptionRestrictionModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50">
+        <div className="p-3 border-t border-gray-200 bg-gray-50">
           <div className="flex space-x-3">
             {showUpgradeButton && (
               <button

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, ExternalLink, Star, RefreshCw, AlertCircle, CheckCircle, Settings } from 'lucide-react'
 import courseRecommendationService from '../../services/courseRecommendationService'
+import authService from '../../services/authService'
 import { useSubscriptionRestrictions } from '../../hooks/useSubscriptionRestrictions'
 import SubscriptionRestrictionModal from '../../components/SubscriptionRestrictionModal'
+import DataRequiredModal from '../../components/DataRequiredModal'
 import { useSubscription } from '../../contexts/SubscriptionContext'
 
 export default function CourseRecommender() {
@@ -13,6 +15,8 @@ export default function CourseRecommender() {
   const [skillAnalysis, setSkillAnalysis] = useState(null)
   const [error, setError] = useState(null)
   const [hasData, setHasData] = useState(false)
+  const [progress, setProgress] = useState({ step: 0, message: '', percentage: 0 })
+  const [showDataRequiredModal, setShowDataRequiredModal] = useState(false)
 
   // Hook para restricciones de suscripción
   const {
@@ -26,6 +30,24 @@ export default function CourseRecommender() {
 
   // Hook para información de suscripción
   const { subscriptionInfo } = useSubscription()
+
+  // Función para verificar si el usuario tiene datos previos
+  const checkUserHasData = async () => {
+    try {
+      // Obtener el ID del usuario desde el token
+      const userInfo = authService.getCurrentUser();
+      if (!userInfo || !userInfo.sub) {
+        return false;
+      }
+
+      // Usar el nuevo endpoint específico para verificar análisis
+      const response = await authService.authenticatedRequest(`/my-data/has-analysis/${userInfo.sub}`);
+      return response.has_analysis || false;
+    } catch (error) {
+      console.error('Error verificando análisis del usuario:', error);
+      return false;
+    }
+  }
 
   useEffect(() => {
     // Cargar recomendaciones existentes si las hay
@@ -57,9 +79,19 @@ export default function CourseRecommender() {
       return;
     }
 
+    // Verificar si el usuario tiene datos previos (CV o LinkedIn analizado)
+    const hasPreviousData = await checkUserHasData();
+    
+    if (!hasPreviousData) {
+      // Mostrar modal de datos requeridos
+      setShowDataRequiredModal(true);
+      return;
+    }
+
     // Proceder con la generación de recomendaciones
     setLoading(true)
     setError(null)
+    setProgress({ step: 0, message: 'Iniciando análisis...', percentage: 0 })
     
     // Si ya hay cursos, limpiar la lista para mostrar que se están generando nuevos
     if (recommendations.length > 0) {
@@ -68,7 +100,30 @@ export default function CourseRecommender() {
     }
     
     try {
+      // Simular progreso durante la generación (optimizado para ~20s)
+      const progressSteps = [
+        { step: 1, message: 'Analizando habilidades...', percentage: 25 },
+        { step: 2, message: 'Buscando cursos...', percentage: 50 },
+        { step: 3, message: 'Generando recomendaciones...', percentage: 75 },
+        { step: 4, message: 'Finalizando...', percentage: 100 }
+      ]
+
+      // Actualizar progreso cada 5 segundos (optimizado para ~20s total)
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          const nextStep = prev.step + 1
+          if (nextStep <= progressSteps.length) {
+            return progressSteps[nextStep - 1]
+          }
+          return prev
+        })
+      }, 5000)
+
       const response = await courseRecommendationService.generateRecommendations()
+      
+      clearInterval(progressInterval)
+      setProgress({ step: 5, message: '¡Recomendaciones generadas!', percentage: 100 })
+      
       setRecommendations(response.recommendations || [])
       setSkillAnalysis(response.skill_analysis)
       setHasData(true)
@@ -85,6 +140,7 @@ export default function CourseRecommender() {
       }
     } finally {
       setLoading(false)
+      setProgress({ step: 0, message: '', percentage: 0 })
     }
   }
 
@@ -122,6 +178,26 @@ export default function CourseRecommender() {
             </button>
           </div>
         </div>
+
+        {/* Progress Indicator */}
+        {loading && progress.step > 0 && (
+          <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {progress.message}
+              </h3>
+              <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                <div 
+                  className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${progress.percentage}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600">
+                Paso {progress.step} de 4 - {progress.percentage}% completado
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && error !== 'SUBSCRIPTION_REQUIRED' && error !== 'NO_USER_DATA' && (
@@ -298,6 +374,14 @@ export default function CourseRecommender() {
         feature={restrictedFeature}
         title="Funcionalidad no disponible"
         showUpgradeButton={true}
+      />
+
+      {/* Modal de datos requeridos */}
+      <DataRequiredModal
+        isOpen={showDataRequiredModal}
+        onClose={() => setShowDataRequiredModal(false)}
+        title="Datos profesionales requeridos"
+        message="Para generar recomendaciones de cursos personalizados, necesitas subir un CV inicial o importar tu perfil de LinkedIn para que podamos analizar tu experiencia profesional. Dirígete a la sección 'Mis Datos' para subir tu información."
       />
     </div>
   )

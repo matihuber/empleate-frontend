@@ -110,8 +110,14 @@ class SubscriptionService {
         cvs: "¡Actualiza a PREMIUM ($11.99/mes) para CVs ilimitados!"
       }
     };
-
-    return messages[tier]?.[feature] || `¡Actualiza tu suscripción para acceder a ${feature}!`;
+    const featureName = {
+      salary_estimation: "estimación salarial",
+      course_recommendations: "recomendaciones de cursos",
+      export_pdf: "exportación a PDF",
+      import_linkedin: "importación de LinkedIn",
+      cvs: "creación de CVs"
+    };
+    return messages[tier]?.[feature] || `¡Actualiza tu suscripción para acceder a ${featureName[feature]}!`;
   }
 
   /**

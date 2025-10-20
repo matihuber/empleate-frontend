@@ -239,7 +239,7 @@ class UserProfileService {
 
       if (!response.ok) {
         if (response.status === 404) {
-          // No CV found
+          // No CV found - no es un error, devolver null silenciosamente
           return null
         }
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -249,6 +249,10 @@ class UserProfileService {
       console.log('UserProfileService: CV cargado exitosamente')
       return result
     } catch (error) {
+      // Si es 404, devolver null silenciosamente sin lanzar error
+      if (error.message.includes('404')) {
+        return null
+      }
       console.error('Error getting user CV:', error)
       throw error
     }
@@ -268,7 +272,7 @@ class UserProfileService {
 
       if (!response.ok) {
         if (response.status === 404) {
-          // No LinkedIn profile found
+          // No LinkedIn profile found - no es un error, devolver null silenciosamente
           return null
         }
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -278,6 +282,10 @@ class UserProfileService {
       console.log('UserProfileService: Perfil de LinkedIn cargado exitosamente')
       return result
     } catch (error) {
+      // Si es 404, devolver null silenciosamente sin lanzar error
+      if (error.message.includes('404')) {
+        return null
+      }
       console.error('Error getting user LinkedIn profile:', error)
       throw error
     }
