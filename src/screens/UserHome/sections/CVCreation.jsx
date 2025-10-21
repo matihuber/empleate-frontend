@@ -269,15 +269,6 @@ export default function CVCreation() {
 
   // Función para transformar datos del backend al formato del frontend
   const transformBackendCVData = (backendData) => {
-    return {
-      header: backendData.header,
-      summary: backendData.summary,
-      experience: backendData.experience,
-      education: backendData.education,
-      skills: backendData.skills,
-      languages: backendData.languages
-    }
-    
     // Transformar skills manteniendo el nivel de conocimiento
     const transformedSkills = backendData.skills?.hard?.map(skill => {
       if (typeof skill === 'object') {
