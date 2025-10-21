@@ -1,4 +1,6 @@
 import React from 'react'
+import { Crown, Lock } from 'lucide-react'
+import templateService from '../services/templateService'
 
 // Función para determinar el mejor color de texto basándose en el color de fondo
 const getContrastColor = (hexColor) => {
@@ -55,6 +57,7 @@ const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect, templates = []
         {templates.map((template) => {
           // Obtener colores del template o usar colores por defecto
           const colors = template.theme_config?.colors || getDefaultColors(template.category)
+          const isAdvancedTemplate = !templateService.isBasicTemplate(template)
           
           return (
             <div
@@ -63,7 +66,7 @@ const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect, templates = []
                 selectedTemplate?.id === template.id
                   ? 'scale-105'
                   : 'hover:scale-105'
-              }`}
+              } ${isAdvancedTemplate ? 'opacity-90' : ''}`}
               style={{
                 border: selectedTemplate?.id === template.id ? '4px solid #2563eb' : 'none',
                 borderRadius: '12px'
@@ -71,12 +74,7 @@ const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect, templates = []
               data-selected={selectedTemplate === template.id}
               data-template-id={template.id}
               data-selected-template={selectedTemplate}
-              onClick={() => {
-                console.log('🔍 CVTemplateSelector: Click en template:', template)
-                console.log('🔍 CVTemplateSelector: Template ID:', template.id)
-                console.log('🔍 CVTemplateSelector: selectedTemplate actual:', selectedTemplate)
-                onTemplateSelect(template)
-              }}
+              onClick={() => onTemplateSelect(template)}
             >
               {/* Template Preview */}
               <div className={`bg-white rounded-lg overflow-hidden transition-all duration-200 ${
@@ -85,7 +83,14 @@ const CVTemplateSelector = ({ selectedTemplate, onTemplateSelect, templates = []
                   : 'shadow-sm hover:shadow-md'
               }`}>
                 <div className="p-4 border-b border-gray-200">
-                  <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    {template.name}
+                    {isAdvancedTemplate && (
+                      <div className="bg-yellow-500 text-white rounded-full p-1">
+                        <Crown className="w-4 h-4" />
+                      </div>
+                    )}
+                  </h3>
                   <p className="text-sm text-gray-600">{template.description}</p>
                 </div>
                 

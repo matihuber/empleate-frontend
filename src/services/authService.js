@@ -40,12 +40,22 @@ class AuthService {
   // Función helper para hacer peticiones HTTP
   async makeRequest(url, options = {}) {
     try {
-      const response = await fetch(url, {
+      // Construir URL completa si es relativa
+      const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${API_VERSION}${url}`;
+      
+      
+      const response = await fetch(fullUrl, {
         ...options,
         headers: this.getHeaders(options.includeAuth !== false),
       });
+      
 
       if (!response.ok) {
+        console.log('AuthService: Response no es ok:', response);
+        console.log('AuthService: Response status:', response.status);
+        console.log('AuthService: Response statusText:', response.statusText);
+        console.log('AuthService: Response ok:', response.ok);
+        
         const errorData = await response.json().catch(() => ({}));
         console.error('Backend error response:', errorData);
         
@@ -73,7 +83,9 @@ class AuthService {
           throw new Error('Error del servidor. Intenta más tarde.');
         } else {
           // Otros errores
-          throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`);
+          const status = response.status || 'undefined';
+          const statusText = response.statusText || 'undefined';
+          throw new Error(errorData.detail || `Error ${status}: ${statusText}`);
         }
       }
 

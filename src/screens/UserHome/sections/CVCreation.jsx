@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react'
-import { ChevronRight, ChevronLeft, } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ChevronRight, ChevronLeft } from 'lucide-react'
 import LoginButton from '../../../components/LoginButton'
 import CVTemplate1 from '../../../components/CVTemplate1'
 import TemplatePreview from '../../../components/TemplatePreview'
 import apiInterceptor from '../../../services/apiInterceptor'
+import authService from '../../../services/authService'
 import templateService from '../../../services/templateService'
 import cvPrepService from '../../../services/cvPrepService'
+import userProfileService from '../../../services/userProfileService'
 import cvGenerationService from '../../../services/cvGenerationService'
 import CVCanvasEditor from '../../../components/CVCanvasEditor'
 import CVTemplateSelector from '../../../components/CVTemplateSelector'
+import { useSubscriptionRestrictions } from '../../../hooks/useSubscriptionRestrictions'
+import SubscriptionRestrictionModal from '../../../components/SubscriptionRestrictionModal'
+import { useSubscription } from '../../../contexts/SubscriptionContext'
+import DataRequiredModal from '../../../components/DataRequiredModal'
 
 
 export default function CVCreation() {
+  const navigate = useNavigate()
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [templates, setTemplates] = useState([])
   const [loadingTemplates, setLoadingTemplates] = useState(true)
@@ -19,6 +27,22 @@ export default function CVCreation() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedCV, setGeneratedCV] = useState(null)
   const [error, setError] = useState(null)
+  const [showDataRequiredModal, setShowDataRequiredModal] = useState(false)
+
+  // Hook para restricciones de suscripción
+  const {
+    executeWithSubscriptionCheck,
+    checkCVCreation,
+    isRestrictionModalOpen,
+    restrictedFeature,
+    closeRestrictionModal,
+    getCVLimits,
+    setRestrictedFeature,
+    setIsRestrictionModalOpen
+  } = useSubscriptionRestrictions()
+
+  // Hook para información de suscripción
+  const { subscriptionInfo } = useSubscription()
 
   // Estados para las habilidades técnicas
   const [skills, setSkills] = useState([])
@@ -85,11 +109,9 @@ export default function CVCreation() {
       try {
         setLoadingTemplates(true)
         const templatesData = await templateService.getTemplates()
-        console.log('Templates del backend:', templatesData)
         
         // Usar directamente los templates del backend
         setTemplates(templatesData)
-        console.log('Templates cargados del backend:', templatesData)
       } catch (error) {
         console.error('Error cargando templates:', error)
         // En caso de error, usar templates por defecto con IDs que coincidan con el backend
@@ -108,8 +130,24 @@ export default function CVCreation() {
 
 
 
-  const handleTemplateSelect = (template) => {
-    setSelectedTemplate(template)
+  const handleTemplateSelect = async (template) => {
+    // Verificar si el template es avanzado y requiere suscripción PRO
+    const isAdvancedTemplate = !templateService.isBasicTemplate(template);
+    
+    if (isAdvancedTemplate) {
+      // Verificar acceso usando información local de suscripción
+      const canAccessTemplates = subscriptionInfo?.limits?.can_access_templates || false;
+      
+      if (!canAccessTemplates) {
+        // Mostrar modal de restricción
+        setRestrictedFeature('templates');
+        setIsRestrictionModalOpen(true);
+        return;
+      }
+    }
+    
+    // Permitir selección del template
+    setSelectedTemplate(template);
   }
 
   const handleContinue = async () => {
@@ -119,11 +157,16 @@ export default function CVCreation() {
     }
 
     try {
-      console.log('🔍 CVCreation: Template seleccionado:', selectedTemplate)
+      // Verificar si el usuario tiene datos previos (CV o LinkedIn analizado)
+      const hasPreviousData = await checkUserHasData();
+      
+      if (!hasPreviousData) {
+        // Mostrar modal de datos requeridos
+        setShowDataRequiredModal(true);
+        return;
+      }
       
       // NO llamar al backend - usar solo templates locales
-      console.log('✅ CVCreation: Template seleccionado localmente')
-      
       setCurrentStep('personalization')
     } catch (error) {
       console.error('❌ CVCreation: Error:', error)
@@ -131,9 +174,28 @@ export default function CVCreation() {
     }
   }
 
+  // Función para verificar si el usuario tiene datos previos
+  const checkUserHasData = async () => {
+    try {
+      // Obtener el ID del usuario desde el token
+      const userInfo = authService.getCurrentUser();
+      if (!userInfo || !userInfo.sub) {
+        return false;
+      }
+
+      // Usar el nuevo endpoint específico para verificar análisis
+      const response = await authService.authenticatedRequest(`/my-data/has-analysis/${userInfo.sub}`);
+      return response.has_analysis || false;
+    } catch (error) {
+      console.error('Error verificando análisis del usuario:', error);
+      return false;
+    }
+  }
+
+  // Ya no necesitamos esta función porque el modal no tiene botón
+
   const handlePersonalizationContinue = async () => {
     try {
-      console.log('🔍 CVCreation: Datos de personalización:', personalizationData)
       
       // TEMPORAL: Validación de LinkedIn comentada
       // if (personalizationData.link && !validateLinkedInUrl(personalizationData.link)) {
@@ -142,7 +204,6 @@ export default function CVCreation() {
       // }
       
       // NO llamar al backend - guardar solo localmente
-      console.log('✅ CVCreation: Datos de personalización guardados localmente')
       
       setCurrentStep('skills')
     } catch (error) {
@@ -153,6 +214,12 @@ export default function CVCreation() {
 
   const handleSkillsContinue = async () => {
     try {
+      // Verificar si puede crear CV antes de generar
+      const canCreate = await checkCVCreation()
+      if (!canCreate) {
+        return // El modal de restricción se mostrará automáticamente
+      }
+      
       // Generar CV automáticamente
       await generateCV()
     } catch (error) {
@@ -202,16 +269,6 @@ export default function CVCreation() {
 
   // Función para transformar datos del backend al formato del frontend
   const transformBackendCVData = (backendData) => {
-    console.log('🔍 CVCreation: Transformando datos del backend:', backendData)
-    console.log('🔍 CVCreation: Estructura del backend:', {
-      header: backendData.header,
-      summary: backendData.summary,
-      experience: backendData.experience,
-      education: backendData.education,
-      skills: backendData.skills,
-      languages: backendData.languages
-    })
-    
     // Transformar skills manteniendo el nivel de conocimiento
     const transformedSkills = backendData.skills?.hard?.map(skill => {
       if (typeof skill === 'object') {
@@ -305,7 +362,6 @@ export default function CVCreation() {
       projects: backendData.projects || [],
     }
     
-    console.log('✅ CVCreation: Datos transformados:', transformedData)
     return transformedData
   }
 
@@ -396,10 +452,7 @@ export default function CVCreation() {
             <CVTemplateSelector
               selectedTemplate={selectedTemplate}
               templates={templates}
-              onTemplateSelect={(template) => {
-                console.log('🔍 CVCreation: onTemplateSelect llamado con:', template)
-                handleTemplateSelect(template)
-              }}
+              onTemplateSelect={handleTemplateSelect}
             />
 
             {/* Botón continuar */}
@@ -719,23 +772,15 @@ export default function CVCreation() {
   // Manejadores para el editor
   const handleSaveCV = async (cvData) => {
     try {
-      console.log('🔍 CVCreation: Guardando CV...')
-      console.log('🔍 CVCreation: cvData:', cvData)
-      console.log('🔍 CVCreation: selectedTemplate:', selectedTemplate)
-      console.log('🔍 CVCreation: selectedTemplate.id:', selectedTemplate?.id)
       
       // Usar el nombre del CV que ya está en el editor
       const cvName = cvData.name || 'Mi CV Personalizado'
-      console.log('🔍 CVCreation: Nombre del CV:', cvName)
       
       // Importar servicio dinámicamente
       const { cvStorageService } = await import('../../../services/cvStorageService')
-      console.log('🔍 CVCreation: Servicio importado correctamente')
       
       // Guardar en el backend
-      console.log('🔍 CVCreation: Llamando a cvStorageService.saveCV...')
       await cvStorageService.saveCV(cvData, cvName, selectedTemplate?.id || 'moderno')
-      console.log('✅ CVCreation: CV guardado exitosamente en backend')
       
       // Mostrar notificación más elegante
       const notification = document.createElement('div')
@@ -803,11 +848,9 @@ export default function CVCreation() {
 
   const handleExportCV = async (cvData, onProgress = null) => {
     try {
-      console.log('🔍 CVCreation: Exportando CV...')
       
       // Usar el nombre del CV que ya está en el editor
       const fileName = cvData.name || 'Mi CV'
-      console.log('🔍 CVCreation: Nombre del archivo:', fileName)
       
       // Importar servicio dinámicamente
       const { pdfExportService } = await import('../../../services/pdfExportService')
@@ -845,7 +888,6 @@ export default function CVCreation() {
         }, 3000)
         
       } catch (backendError) {
-        console.log('⚠️ Backend no disponible, usando fallback...')
         // Fallback: usar html2canvas + jsPDF
         await pdfExportService.exportToPDFFallback(cvData, fileName)
         
@@ -876,7 +918,7 @@ export default function CVCreation() {
             notification.parentNode.removeChild(notification)
           }
         }, 3000)
-      }
+        }
       
     } catch (error) {
       console.error('❌ CVCreation: Error exportando CV:', error)
@@ -914,6 +956,23 @@ export default function CVCreation() {
   return (
     <div>
       {renderCurrentStep()}
+      
+      {/* Modal de restricción de suscripción */}
+      <SubscriptionRestrictionModal
+        isOpen={isRestrictionModalOpen}
+        onClose={closeRestrictionModal}
+        feature={restrictedFeature}
+        title="Funcionalidad no disponible"
+        showUpgradeButton={true}
+      />
+
+      {/* Modal de datos requeridos */}
+      <DataRequiredModal
+        isOpen={showDataRequiredModal}
+        onClose={() => setShowDataRequiredModal(false)}
+        title="Datos profesionales requeridos"
+        message="Para generar un CV personalizado, necesitas subir un CV inicial o importar tu perfil de LinkedIn para que podamos analizar tu experiencia profesional. Dirígete a la sección 'Mis Datos' para subir tu información."
+      />
     </div>
   )
 }

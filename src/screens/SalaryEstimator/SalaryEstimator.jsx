@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { salaryEstimationService } from '../../services/salaryEstimationService';
+import { useSubscriptionRestrictions } from '../../hooks/useSubscriptionRestrictions';
+import SubscriptionRestrictionModal from '../../components/SubscriptionRestrictionModal';
+import { useSubscription } from '../../contexts/SubscriptionContext';
 import './SalaryEstimator.css';
 
 const SalaryEstimator = () => {
@@ -25,6 +28,19 @@ const SalaryEstimator = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+
+  // Hook para restricciones de suscripción
+  const {
+    executeWithSubscriptionCheck,
+    isRestrictionModalOpen,
+    restrictedFeature,
+    setRestrictedFeature,
+    setIsRestrictionModalOpen,
+    closeRestrictionModal
+  } = useSubscriptionRestrictions();
+
+  // Hook para información de suscripción
+  const { subscriptionInfo } = useSubscription();
 
   // Cargar opciones del dataset
   useEffect(() => {
@@ -230,6 +246,17 @@ const SalaryEstimator = () => {
       return;
     }
 
+    // Verificar acceso usando información local de suscripción
+    const canAccessSalaryEstimation = subscriptionInfo?.limits?.can_access_salary_estimation || false;
+    
+    if (!canAccessSalaryEstimation) {
+      // Mostrar modal de restricción
+      setRestrictedFeature('salary_estimation');
+      setIsRestrictionModalOpen(true);
+      return;
+    }
+
+    // Proceder con la estimación salarial
     setLoading(true);
     setError(null);
     setResults(null);
@@ -412,6 +439,15 @@ const SalaryEstimator = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de restricción de suscripción */}
+      <SubscriptionRestrictionModal
+        isOpen={isRestrictionModalOpen}
+        onClose={closeRestrictionModal}
+        feature={restrictedFeature}
+        title="Funcionalidad no disponible"
+        showUpgradeButton={true}
+      />
     </div>
   );
 };
