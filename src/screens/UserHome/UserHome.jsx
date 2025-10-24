@@ -153,7 +153,7 @@ export default function UserHome() {
                   <li key={item.id}>
                     <button
                       onClick={() => handleMenuClick(item.id)}
-                      className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors duration-200 ${
+                      className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors duration-200 cursor-pointer ${
                         activeSection === item.id
                           ? 'bg-blue-50 text-blue-700'
                           : 'text-gray-700 hover:bg-gray-100'

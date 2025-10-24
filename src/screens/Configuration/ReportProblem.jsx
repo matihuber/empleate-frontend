@@ -31,7 +31,7 @@ const ReportProblem = ({ onBack }) => {
       </div>
 
       {/* Formulario */}
-      <div className="max-w-2xl">
+      <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-6">
           Reportar un problema
         </h2>

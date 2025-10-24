@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { HelpCircle, FileText, Shield, ChevronDown, X, Check } from 'lucide-react'
 import ReportProblem from './ReportProblem'
+import SubscriptionPlans from './Subscription'
 
 const Configuration = () => {
   const [profileType, setProfileType] = useState('cambio-empresa')
   const [province, setProvince] = useState('capital-federal')
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [currentView, setCurrentView] = useState('main') // 'main', 'report', 'subscription'
+  const [currentView, setCurrentView] = useState('main')
 
   // Provincias argentinas
   const provinces = [
@@ -58,9 +59,13 @@ const Configuration = () => {
     setShowDeleteModal(false)
   }
 
-  // Renderizar vista segun currentView
+  // Renderizar vista segun view
   if (currentView === 'report') {
     return <ReportProblem onBack={() => setCurrentView('main')} />
+  }
+
+  if (currentView === 'subscription') {
+    return <SubscriptionPlans onBack={() => setCurrentView('main')} />
   }
 
   return (
@@ -72,8 +77,8 @@ const Configuration = () => {
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl">
-        {/* Columna Izquierda - Preferencias y Suscripción */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/*Preferencias y Suscripción */}
         <div className="space-y-6">
           {/* Preferencias */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-md">
@@ -161,7 +166,7 @@ const Configuration = () => {
           </div>
         </div>
 
-        {/* Columna Derecha - Acerca de */}
+        {/*Acerca de */}
         <div>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-md">
             <div className="p-6">
