@@ -232,7 +232,8 @@ class PDFExportService {
           } else if (exp.current) {
             text += `Fecha de finalización: Presente\n`
           }
-          if (exp.description && exp.description.trim() && !exp.description.includes('Descripción del cargo...')) {
+          // Solo agregar descripción si existe, no está vacía, y no es un placeholder
+          if (exp.description && exp.description.trim() && exp.description.length > 0) {
             text += `Descripción: ${exp.description}\n`
           }
           text += '\n'

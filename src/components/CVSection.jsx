@@ -476,7 +476,7 @@ const CVSection = ({
                       newData[index] = { ...newData[index], description: e.target.value }
                       setEditData(newData)
                     }}
-                    placeholder="Descripción del cargo..."
+                    placeholder="Describe las responsabilidades, logros y tecnologías utilizadas en este cargo..."
                     rows={3}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -721,7 +721,9 @@ const CVSection = ({
                   <h3 className="font-semibold">{exp.company || "Empresa"}</h3>
                   <p className="text-sm text-gray-600">{exp.position || "Cargo"}</p>
                   <p className="text-xs text-gray-500">{exp.startDate} - {exp.current ? "Presente" : exp.endDate}</p>
-                  <p className="text-sm mt-1">{exp.description || "Descripción del cargo..."}</p>
+                  <p className={`text-sm mt-1 ${!exp.description ? 'italic opacity-70' : ''}`}>
+                    {exp.description || "(Haz clic para agregar descripción del cargo)"}
+                  </p>
                 </div>
               ))}
             </div>

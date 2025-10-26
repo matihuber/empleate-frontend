@@ -322,7 +322,7 @@ export default function CVCreation() {
       startDate: exp.start_date || '2020',
       endDate: exp.end_date || 'Presente', // Cambiar de '2023' a 'Presente'
       current: exp.end_date === 'present' || exp.end_date === null || !exp.end_date,
-      description: exp.description || 'Descripción del cargo...',
+      description: exp.highlights ? exp.highlights.join('\n') : '', // Join highlights array into description string
     })) || []
     
     // Transformar education
