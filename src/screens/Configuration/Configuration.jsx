@@ -18,6 +18,7 @@ const Configuration = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [error, setError] = useState(null)
+  const [deleteError, setDeleteError] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
   // Provincias argentinas
@@ -72,11 +73,13 @@ const Configuration = () => {
   }
 
   const handleDeleteAccount = () => {
+    setDeleteError(null) // Limpiar error anterior
     setShowDeleteModal(true)
   }
 
   const confirmDeleteAccount = async () => {
     setIsDeleting(true)
+    setDeleteError(null) // Limpiar error antes de intentar
     try {
       await configService.deleteAccount()
       // Logout y redirigir a home
@@ -84,8 +87,8 @@ const Configuration = () => {
       navigate('/')
     } catch (error) {
       console.error('Error deleting account:', error)
-      setError(error.message || 'Error al eliminar la cuenta')
-      setShowDeleteModal(false)
+      setDeleteError(error.message || 'Error al eliminar la cuenta')
+      // NO cerrar el modal para que el usuario vea el error
     } finally {
       setIsDeleting(false)
     }
@@ -207,7 +210,7 @@ const Configuration = () => {
                 </div>
               </div>
 
-              {/* Mensaje de error */}
+              {/* Mensaje de error para guardar cambios */}
               {error && (
                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm text-red-600">{error}</p>
@@ -343,8 +346,14 @@ const Configuration = () => {
         <div className="fixed inset-0 backdrop-brightness-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-xl relative">
             <button
-              onClick={() => setShowDeleteModal(false)}
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
+              onClick={() => {
+                setShowDeleteModal(false)
+                setDeleteError(null) // Limpiar error al cerrar
+              }}
+              disabled={isDeleting}
+              className={`absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10 ${
+                isDeleting ? 'cursor-not-allowed opacity-50' : ''
+              }`}
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
@@ -356,6 +365,13 @@ const Configuration = () => {
               <p className="text-gray-600 font-medium mb-6">
                     ¿Estás seguro que deseas cerrar tu cuenta de manera permanente?
               </p>
+
+              {/* Mensaje de error dentro del modal */}
+              {deleteError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{deleteError}</p>
+                </div>
+              )}
 
               <div className="flex justify-center">
                 <button

@@ -122,7 +122,7 @@ class AuthService {
         refreshToken: response.refresh_token
       };
     } catch (error) {
-      throw new Error(`Error en login: ${error.message}`);
+      throw new Error(error.message);
     }
   }
 
