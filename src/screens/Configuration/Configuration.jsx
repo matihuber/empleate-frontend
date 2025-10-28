@@ -3,6 +3,7 @@ import { HelpCircle, FileText, Shield, ChevronDown, X, Check } from 'lucide-reac
 import ReportProblem from './ReportProblem'
 import SubscriptionPlans from './Subscription'
 import TermsAndConditions from './TermsAndConditions'
+import PrivacyPolicy from './PrivacyPolicy'
 
 const Configuration = () => {
   const [profileType, setProfileType] = useState('cambio-empresa')
@@ -11,6 +12,7 @@ const Configuration = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [currentView, setCurrentView] = useState('main')
   const [showTerms, setShowTerms] = useState(false)
+  const [showPrivacy, setShowPrivacy] = useState(false)
 
   // Provincias argentinas
   const provinces = [
@@ -194,13 +196,13 @@ const Configuration = () => {
                     <span className="text-gray-700">Términos y condiciones</span>
                   </button>
                   
-                  <a
-                    href="#"
-                    className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                  <button
+                    onClick={() => setShowPrivacy(true)}
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer w-full text-left"
                   >
                     <Shield className="w-5 h-5 text-gray-500" />
                     <span className="text-gray-700">Política de privacidad</span>
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -284,6 +286,12 @@ const Configuration = () => {
       <TermsAndConditions 
         isOpen={showTerms} 
         onClose={() => setShowTerms(false)} 
+      />
+
+      {/* Modal de Política de Privacidad */}
+      <PrivacyPolicy 
+        isOpen={showPrivacy} 
+        onClose={() => setShowPrivacy(false)} 
       />
     </div>
   )
