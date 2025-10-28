@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { HelpCircle, FileText, Shield, ChevronDown, X, Check } from 'lucide-react'
 import ReportProblem from './ReportProblem'
 import SubscriptionPlans from './Subscription'
+import TermsAndConditions from './TermsAndConditions'
 
 const Configuration = () => {
   const [profileType, setProfileType] = useState('cambio-empresa')
@@ -9,6 +10,7 @@ const Configuration = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [currentView, setCurrentView] = useState('main')
+  const [showTerms, setShowTerms] = useState(false)
 
   // Provincias argentinas
   const provinces = [
@@ -184,13 +186,13 @@ const Configuration = () => {
                     <span className="text-gray-700">FAQs</span>
                   </a>
                   
-                  <a
-                    href="#"
-                    className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                  <button
+                    onClick={() => setShowTerms(true)}
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer w-full text-left"
                   >
                     <FileText className="w-5 h-5 text-gray-500" />
                     <span className="text-gray-700">Términos y condiciones</span>
-                  </a>
+                  </button>
                   
                   <a
                     href="#"
@@ -277,6 +279,12 @@ const Configuration = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Términos y Condiciones */}
+      <TermsAndConditions 
+        isOpen={showTerms} 
+        onClose={() => setShowTerms(false)} 
+      />
     </div>
   )
 }
