@@ -4,6 +4,7 @@ import ReportProblem from './ReportProblem'
 import SubscriptionPlans from './Subscription'
 import TermsAndConditions from './TermsAndConditions'
 import PrivacyPolicy from './PrivacyPolicy'
+import FAQs from './FAQs'
 
 const Configuration = () => {
   const [profileType, setProfileType] = useState('cambio-empresa')
@@ -13,6 +14,7 @@ const Configuration = () => {
   const [currentView, setCurrentView] = useState('main')
   const [showTerms, setShowTerms] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
+  const [showFAQs, setShowFAQs] = useState(false)
 
   // Provincias argentinas
   const provinces = [
@@ -180,13 +182,13 @@ const Configuration = () => {
               <div className="mb-6">
                 <h3 className="font-medium text-gray-700 mb-3">Ayuda</h3>
                 <div className="space-y-2">
-                  <a
-                    href="#"
-                    className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                  <button
+                    onClick={() => setShowFAQs(true)}
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer w-full text-left"
                   >
                     <HelpCircle className="w-5 h-5 text-gray-500" />
                     <span className="text-gray-700">FAQs</span>
-                  </a>
+                  </button>
                   
                   <button
                     onClick={() => setShowTerms(true)}
@@ -292,6 +294,12 @@ const Configuration = () => {
       <PrivacyPolicy 
         isOpen={showPrivacy} 
         onClose={() => setShowPrivacy(false)} 
+      />
+
+      {/* Modal de FAQs */}
+      <FAQs 
+        isOpen={showFAQs} 
+        onClose={() => setShowFAQs(false)} 
       />
     </div>
   )
