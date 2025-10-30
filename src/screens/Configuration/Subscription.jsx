@@ -1,6 +1,15 @@
 import { ChevronLeft, Check, X } from 'lucide-react'
+import { useState } from 'react'
+import SubscriptionHistory from './SubscriptionHistory'
 
 const Subscription = ({ onBack }) => {
+  const [showHistory, setShowHistory] = useState(false)
+
+  // Si está mostrando el historial, renderizar ese componente
+  if (showHistory) {
+    return <SubscriptionHistory onBack={() => setShowHistory(false)} />
+  }
+
   const plans = [
     {
       name: 'Gratuito',
@@ -109,19 +118,24 @@ const Subscription = ({ onBack }) => {
       <div className="mt-8 flex items-center justify-between">
         <button
           onClick={onBack}
-          className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+          className="flex items-center text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
         >
           <ChevronLeft className="w-5 h-5 mr-1" />
           <span className="text-sm font-medium">Volver</span>
         </button>
         
         <div className="flex items-center space-x-4 text-sm">
-          <a href="#" className="text-blue-600 hover:text-blue-700">
+          <button 
+            className="text-blue-600 hover:text-blue-700 cursor-pointer"
+          >
             Gestionar suscripción
-          </a>
-          <a href="#" className="text-blue-600 hover:text-blue-700">
+          </button>
+          <button 
+            onClick={() => setShowHistory(true)}
+            className="text-blue-600 hover:text-blue-700 cursor-pointer"
+          >
             Ver historial de facturación
-          </a>
+          </button>
         </div>
       </div>
     </div>
