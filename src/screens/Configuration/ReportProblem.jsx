@@ -1,16 +1,27 @@
 import { useState } from 'react'
 import { ChevronLeft, X, Check } from 'lucide-react'
+import configService from '../../services/configService'
 
 const ReportProblem = ({ onBack }) => {
   const [subject, setSubject] = useState('')
   const [description, setDescription] = useState('')
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Aquí iría la lógica para enviar el formulario al backend
-    console.log('Enviando reporte:', { subject, description })
-    setShowSuccessModal(true)
+    setIsLoading(true)
+    setError(null)
+    try {
+      await configService.createSupportTicket(subject, description)
+      setShowSuccessModal(true)
+    } catch (error) {
+      console.error('Error creating support ticket:', error)
+      setError(error.message || 'Error al enviar el reporte')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleCloseModal = () => {
@@ -62,17 +73,24 @@ const ReportProblem = ({ onBack }) => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
-          
+
+          {/* Mensaje de error */}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={!isFormValid}
-            className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200  ${
-              isFormValid 
-                ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer ' 
-                : 'bg-blue-600 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+            disabled={!isFormValid || isLoading}
+            className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+              !isFormValid || isLoading
+                ? 'bg-blue-600 text-white cursor-not-allowed disabled:opacity-50'
+                : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
             }`}
           >
-            Enviar
+            {isLoading ? 'Enviando...' : 'Enviar'}
           </button>
         </form>
 

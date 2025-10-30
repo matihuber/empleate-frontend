@@ -24,18 +24,9 @@ export default function Login() {
   // Limpiar errores cuando cambie el error del contexto
   useEffect(() => {
     if (error) {
-      // Si es un error de credenciales incorrectas, mostrar en ambos campos
-      if (error.includes('incorrectas') || error.includes('credenciales') || error.includes('401')) {
-        const newErrors = { 
-          general: error,
-          email: "Credenciales incorrectas",
-          password: "Credenciales incorrectas"
-        }
-        setErrors(newErrors)
-      } else {
-        const newErrors = { general: error }
-        setErrors(newErrors)
-      }
+      // Solo mostrar el error general en el banner superior
+      // Los campos se marcarán en rojo automáticamente si hay error general de credenciales
+      setErrors({ general: error })
     }
     // NO limpiar errores automáticamente cuando error es null
     // Los errores se limpiarán cuando el usuario interactúe con los campos
@@ -242,6 +233,7 @@ export default function Login() {
               value={formData.email}
               onChange={handleInputChange}
               error={errors.email}
+              hasGeneralError={!!errors.general}
             />
 
             <div className="relative">
@@ -253,6 +245,7 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleInputChange}
                 error={errors.password}
+                hasGeneralError={!!errors.general}
               />
               <button
                 type="button"
@@ -285,6 +278,10 @@ export default function Login() {
             <Link
               to="/register"
               className="text-blue-600 hover:text-blue-700 font-medium"
+              onClick={() => {
+                clearError()
+                setErrors({})
+              }}
             >
               Regístrate
             </Link>

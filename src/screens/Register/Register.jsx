@@ -25,6 +25,12 @@ export default function Register() {
   const [errors, setErrors] = useState({})
   const infoIconRef = useRef(null)
 
+  // Limpiar errores del contexto y del estado local al montar (para evitar errores de login)
+  useEffect(() => {
+    clearError()
+    setErrors({}) // También limpiar el estado local inmediatamente
+  }, [clearError])
+
   // Limpiar errores cuando cambie el error del contexto
   useEffect(() => {
     if (error) {
@@ -309,6 +315,10 @@ export default function Register() {
             <Link
               to="/login"
               className="text-blue-600 hover:text-blue-700 font-medium"
+              onClick={() => {
+                clearError()
+                setErrors({})
+              }}
             >
               Inicia sesión
             </Link>

@@ -1,6 +1,9 @@
 import { forwardRef } from "react"
 
-const LoginInput = forwardRef(({ type = "text", placeholder, icon: Icon, className = "", error, ...props }, ref) => {
+const LoginInput = forwardRef(({ type = "text", placeholder, icon: Icon, className = "", error, hasGeneralError = false, ...props }, ref) => {
+  // Mostrar borde rojo si hay error específico O si hay error general
+  const showRedBorder = error || hasGeneralError
+
   return (
     <div className="relative w-full">
       <div className="relative">
@@ -14,18 +17,19 @@ const LoginInput = forwardRef(({ type = "text", placeholder, icon: Icon, classNa
           type={type}
           placeholder={placeholder}
           className={`
-            w-full px-4 py-4 
-            ${Icon ? "pl-12" : "pl-4"} 
+            w-full px-4 py-4
+            ${Icon ? "pl-12" : "pl-4"}
             bg-gray-50 border border-gray-200 rounded-xl
             text-gray-900 placeholder-gray-500
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
             transition-all duration-200
-            ${error ? "border-red-500 focus:ring-red-500" : ""}
+            ${showRedBorder ? "border-red-500 focus:ring-red-500" : ""}
             ${className}
           `}
           {...props}
         />
       </div>
+      {/* Solo mostrar texto de error si hay un error específico del campo, NO por error general */}
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   )

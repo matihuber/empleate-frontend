@@ -1,17 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { HelpCircle, FileText, Shield, ChevronDown, X, Check } from 'lucide-react'
 import ReportProblem from './ReportProblem'
 import SubscriptionPlans from './Subscription'
+import configService from '../../services/configService'
+import { useAuth } from '../../contexts/AuthContext'
 import TermsAndConditions from './TermsAndConditions'
 import PrivacyPolicy from './PrivacyPolicy'
 import FAQs from './FAQs'
 
 const Configuration = () => {
-  const [profileType, setProfileType] = useState('cambio-empresa')
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+  const [profileType, setProfileType] = useState('busqueda-activa')
   const [province, setProvince] = useState('capital-federal')
+  const [subscriptionTier, setSubscriptionTier] = useState('FREE')
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [currentView, setCurrentView] = useState('main')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
+  const [error, setError] = useState(null)
+  const [deleteError, setDeleteError] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showFAQs, setShowFAQs] = useState(false)
@@ -46,23 +57,85 @@ const Configuration = () => {
 
   // Tipos de perfil
   const profileTypes = [
-    { value: 'primer-empleo', label: 'Busco mi primer empleo' },
-    { value: 'desempleado', label: 'Profesional en búsqueda activa' },
-    { value: 'cambio-empresa', label: 'Cambio de empresa' }
+    { value: 'pasantia', label: 'Buscando pasantía' },
+    { value: 'sin-experiencia', label: 'Sin experiencia laboral' },
+    { value: 'busqueda-pasiva', label: 'Búsqueda pasiva' },
+    { value: 'busqueda-activa', label: 'Búsqueda activa' },
+    { value: 'desempleado', label: 'Desempleado/a buscando trabajo' }
   ]
 
-  const handleSaveChanges = () => {
-    console.log('Guardando cambios:', { profileType, province })
-    setShowSuccessModal(true)
+  const handleSaveChanges = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      await configService.updatePreferences(profileType, province)
+      setShowSuccessModal(true)
+    } catch (error) {
+      console.error('Error saving preferences:', error)
+      setError(error.message || 'Error al guardar las preferencias')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleDeleteAccount = () => {
+    setDeleteError(null) // Limpiar error anterior
     setShowDeleteModal(true)
   }
 
-  const confirmDeleteAccount = () => {
-    console.log('Eliminando cuenta...')
-    setShowDeleteModal(false)
+  const confirmDeleteAccount = async () => {
+    setIsDeleting(true)
+    setDeleteError(null) // Limpiar error antes de intentar
+    try {
+      await configService.deleteAccount()
+      // Logout y redirigir a home
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      setDeleteError(error.message || 'Error al eliminar la cuenta')
+      // NO cerrar el modal para que el usuario vea el error
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  // Cargar preferencias del usuario al montar el componente
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        setIsLoadingData(true)
+        const data = await configService.getPreferences()
+
+        // Solo actualizar si los valores no son null
+        if (data.profile_type) {
+          setProfileType(data.profile_type)
+        }
+        if (data.province) {
+          setProvince(data.province)
+        }
+        if (data.subscription_tier) {
+          setSubscriptionTier(data.subscription_tier)
+        }
+      } catch (error) {
+        console.error('Error loading preferences:', error)
+        // No mostrar error al usuario, usar valores por defecto
+      } finally {
+        setIsLoadingData(false)
+      }
+    }
+
+    loadPreferences()
+  }, [])
+
+  // Mapear tier a nombre legible
+  const getSubscriptionName = (tier) => {
+    const tierMap = {
+      'FREE': 'Básico',
+      'PRO': 'Pro',
+      'PREMIUM': 'Premium'
+    }
+    return tierMap[tier] || 'Básico'
   }
 
   // Renderizar vista segun view
@@ -100,7 +173,10 @@ const Configuration = () => {
                   <select
                     value={profileType}
                     onChange={(e) => setProfileType(e.target.value)}
-                    className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
+                    disabled={isLoadingData}
+                    className={`w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none ${
+                      isLoadingData ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
                   >
                     {profileTypes.map(type => (
                       <option key={type.value} value={type.value}>
@@ -123,7 +199,10 @@ const Configuration = () => {
                   <select
                     value={province}
                     onChange={(e) => setProvince(e.target.value)}
-                    className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
+                    disabled={isLoadingData}
+                    className={`w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none ${
+                      isLoadingData ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
                   >
                     {provinces.map(prov => (
                       <option key={prov.value} value={prov.value}>
@@ -137,11 +216,23 @@ const Configuration = () => {
                 </div>
               </div>
 
+              {/* Mensaje de error para guardar cambios */}
+              {error && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
               {/* Botón guardar cambios */}
-              <button 
+              <button
                 onClick={handleSaveChanges}
-                className="w-full mt-4 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer">
-                Guardar cambios
+                disabled={isLoading || isLoadingData}
+                className={`w-full mt-4 py-3 px-4 rounded-lg transition-colors font-medium ${
+                  isLoading || isLoadingData
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
+                } text-white`}>
+                {isLoading ? 'Guardando...' : 'Guardar cambios'}
               </button>
             </div>
           </div>
@@ -149,11 +240,15 @@ const Configuration = () => {
           {/* Suscripción */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-md">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Suscripción</h2>
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Plan</p>
-                <p className="text-lg font-medium text-gray-900">Básico</p>
+                {isLoadingData ? (
+                  <div className="h-6 w-20 bg-gray-200 rounded animate-pulse mt-1"></div>
+                ) : (
+                  <p className="text-lg font-medium text-gray-900">{getSubscriptionName(subscriptionTier)}</p>
+                )}
               </div>
               <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer"
                 onClick={() => setCurrentView('subscription')}>
@@ -257,8 +352,14 @@ const Configuration = () => {
         <div className="fixed inset-0 backdrop-brightness-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-xl relative">
             <button
-              onClick={() => setShowDeleteModal(false)}
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
+              onClick={() => {
+                setShowDeleteModal(false)
+                setDeleteError(null) // Limpiar error al cerrar
+              }}
+              disabled={isDeleting}
+              className={`absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10 ${
+                isDeleting ? 'cursor-not-allowed opacity-50' : ''
+              }`}
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
@@ -271,12 +372,24 @@ const Configuration = () => {
                     ¿Estás seguro que deseas cerrar tu cuenta de manera permanente?
               </p>
 
+              {/* Mensaje de error dentro del modal */}
+              {deleteError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{deleteError}</p>
+                </div>
+              )}
+
               <div className="flex justify-center">
                 <button
                   onClick={confirmDeleteAccount}
-                  className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  disabled={isDeleting}
+                  className={`px-8 py-3 rounded-lg transition-colors font-medium text-white ${
+                    isDeleting
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
                 >
-                  Cerrar cuenta
+                  {isDeleting ? 'Eliminando...' : 'Cerrar cuenta'}
                 </button>
               </div>
             </div>
