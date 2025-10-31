@@ -8,6 +8,7 @@ import Login from './screens/Login';
 import Register from './screens/Register';
 import PasswordRecovery from './screens/PasswordRecovery';
 import UserHome from './screens/UserHome';
+import Checkout from './screens/Checkout';
 import AuthCallback from './screens/AuthCallback';
 import SessionExpired from './components/SessionExpired';
 
@@ -39,7 +40,13 @@ function App() {
                 <UserHome />
               </ProtectedRoute>
             } />
-            
+
+            <Route path="/checkout" element={
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            } />
+
             {/* Callback de OAuth (accesible para todos) */}
             <Route path="/auth/callback" element={<AuthCallback />} />
             
