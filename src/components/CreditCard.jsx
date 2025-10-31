@@ -14,8 +14,9 @@ const CreditCard = ({
     cardType = 'visa' // 'visa' o 'mastercard'
 }) => {
     // Formatear número de tarjeta con espacios (o placeholder)
+    // Primero eliminar espacios existentes, luego formatear en grupos de 4
     const formattedNumber = cardNumber
-        ? cardNumber.match(/.{1,4}/g)?.join(' ') || cardNumber
+        ? cardNumber.replace(/\s/g, '').match(/.{1,4}/g)?.join(' ') || cardNumber
         : '#### #### #### ####';
 
     // Formatear fecha de vencimiento (o placeholder)
@@ -44,7 +45,7 @@ const CreditCard = ({
     // SVG del chip EMV
     const ChipSVG = () => (
         <svg
-            className={`absolute top-12 left-6 w-12 h-12 ${currentColors.chip}`}
+            className={`absolute top-16 left-6 w-14 h-14 ${currentColors.chip}`}
             viewBox="0 0 50 50"
             xmlns="http://www.w3.org/2000/svg"
         >
@@ -62,7 +63,7 @@ const CreditCard = ({
     // SVG del icono contactless
     const ContactlessSVG = () => (
         <svg
-            className="absolute top-14 right-16 w-6 h-6 opacity-80"
+            className="absolute top-18 right-16 w-10 h-10 opacity-95"
             viewBox="0 0 50 50"
             xmlns="http://www.w3.org/2000/svg"
         >
@@ -80,12 +81,12 @@ const CreditCard = ({
     // Logo de Visa
     const VisaLogo = () => (
         <div className="absolute top-6 right-6">
-            <svg className="w-16 h-auto" viewBox="0 0 48 16" fill="none">
+            <svg className="w-20 h-auto" viewBox="0 0 48 16" fill="none">
                 <text
                     x="0"
                     y="12"
                     className="font-bold"
-                    style={{ fontSize: '14px', fill: '#1434CB', fontFamily: 'Arial, sans-serif' }}
+                    style={{ fontSize: '16px', fill: '#FFFFFF', fontFamily: 'Arial, sans-serif' }}
                 >
                     VISA
                 </text>
@@ -95,8 +96,8 @@ const CreditCard = ({
 
     // Logo de Mastercard
     const MastercardLogo = () => (
-        <div className="absolute top-6 right-6">
-            <svg className="w-12 h-12" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <div className="absolute top-2 right-10">
+            <svg className="w-14 h-14" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="16" cy="24" r="14" fill="#ff9800" />
                 <circle cx="32" cy="24" r="14" fill="#d50000" />
                 <path
