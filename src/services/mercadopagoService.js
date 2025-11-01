@@ -172,7 +172,11 @@ class MercadoPagoService {
         return new Promise((resolve, reject) => {
             // Verificar si ya está cargado
             if (window.MercadoPago) {
-                resolve(window.MercadoPago);
+                // Crear una nueva instancia con la public key
+                const mp = new window.MercadoPago(publicKey);
+                console.log('🔍 SDK ya cargado, creando nueva instancia:', mp);
+                console.log('🔍 Tipo:', typeof mp);
+                resolve(mp);
                 return;
             }
 
@@ -183,8 +187,19 @@ class MercadoPagoService {
 
             script.onload = () => {
                 if (window.MercadoPago) {
+                    console.log('🔍 window.MercadoPago:', window.MercadoPago);
+                    console.log('🔍 Tipo:', typeof window.MercadoPago);
+                    console.log('🔍 Propiedades:', Object.keys(window.MercadoPago));
+                    console.log('🔍 Prototype:', Object.getOwnPropertyNames(window.MercadoPago.prototype || {}));
+
                     // Inicializar MercadoPago con la public key
                     const mp = new window.MercadoPago(publicKey);
+
+                    console.log('🔍 Instancia mp:', mp);
+                    console.log('🔍 Tipo mp:', typeof mp);
+                    console.log('🔍 Propiedades mp:', Object.keys(mp));
+                    console.log('🔍 Métodos mp:', Object.getOwnPropertyNames(Object.getPrototypeOf(mp)));
+
                     resolve(mp);
                 } else {
                     reject(new Error('MercadoPago SDK no se cargó correctamente'));
@@ -213,11 +228,25 @@ class MercadoPagoService {
      */
     async createCardToken(mp, cardData) {
         try {
-            const token = await mp.createCardToken(cardData);
+            console.log('🔄 Creando token con datos:', cardData);
+
+            // API correcta del SDK v2 de MercadoPago
+            const token = await mp.createCardToken({
+                cardNumber: cardData.cardNumber,
+                cardholderName: cardData.cardholderName,
+                cardExpirationMonth: cardData.expirationMonth,
+                cardExpirationYear: cardData.expirationYear,
+                securityCode: cardData.securityCode,
+                identificationType: cardData.identificationType,
+                identificationNumber: cardData.identificationNumber,
+            });
+
+            console.log('✅ Token creado exitosamente:', token);
             return token;
         } catch (error) {
-            console.error('Error creando token de tarjeta:', error);
-            throw new Error('No se pudo tokenizar la tarjeta');
+            console.error('❌ Error creando token de tarjeta:', error);
+            console.error('Detalles del error:', error.message, error.cause);
+            throw new Error('No se pudo tokenizar la tarjeta: ' + (error.message || 'Error desconocido'));
         }
     }
 

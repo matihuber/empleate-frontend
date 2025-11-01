@@ -193,7 +193,7 @@ const CreditCard = ({
             </div>
 
             {/* Estilos globales necesarios para el efecto 3D */}
-            <style jsx>{`
+            <style>{`
                 .preserve-3d {
                     transform-style: preserve-3d;
                 }

@@ -22,10 +22,16 @@ const Checkout = () => {
         isReady,
         isLoading,
         error: mpError,
+        mp,
         createSubscription,
         getPricing,
         clearError,
     } = useMercadoPago();
+
+    // Debug: ver qué está recibiendo Checkout
+    console.log('🔍 Checkout - mp recibido:', mp);
+    console.log('🔍 Checkout - tipo mp:', typeof mp);
+    console.log('🔍 Checkout - tiene cardForm?:', typeof mp?.cardForm);
 
     // Cargar precios al montar
     useEffect(() => {
@@ -57,15 +63,17 @@ const Checkout = () => {
         }
     }, [plan]);
 
-    const handleFormSubmit = async (cardFormData) => {
+    const handleFormSubmit = async (tokenData) => {
         try {
             setError(null);
             clearError();
 
-            // Crear suscripción
+            console.log('📦 Datos recibidos del CardForm:', tokenData);
+
+            // Crear suscripción con el token generado por CardForm
             const result = await createSubscription({
                 plan: plan,
-                cardFormData: cardFormData,
+                payment_token: tokenData.token,
                 email: user.email,
             });
 
@@ -261,6 +269,8 @@ const Checkout = () => {
                         onSubmit={handleFormSubmit}
                         isLoading={isLoading}
                         submitButtonText={`Suscribirse por $${planInfo?.priceARS.toFixed(2)} ARS/mes`}
+                        amount={planInfo?.priceARS?.toString() || "0"}
+                        mp={mp}
                     />
                 </div>
 

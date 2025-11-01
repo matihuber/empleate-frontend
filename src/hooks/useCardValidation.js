@@ -45,8 +45,8 @@ export const useCardValidation = () => {
             return 'visa';
         }
 
-        // Mastercard: empieza con 51-55 o 2221-2720
-        if (/^(5[1-5]|2(2[2-9][1-9]|[3-6][0-9]{2}|7[0-1][0-9]|720))/.test(digits)) {
+        // Mastercard: empieza con 51-55 o 2221-2720 o 503 (tarjetas de prueba MercadoPago)
+        if (/^(5[1-5]|503|2(2[2-9][1-9]|[3-6][0-9]{2}|7[0-1][0-9]|720))/.test(digits)) {
             return 'mastercard';
         }
 

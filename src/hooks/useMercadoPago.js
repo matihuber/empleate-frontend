@@ -3,7 +3,10 @@ import mercadopagoService from '../services/mercadopagoService';
 
 /**
  * Hook personalizado para integración con MercadoPago
- * Maneja la inicialización del SDK, tokenización y creación de suscripciones
+ * Maneja la inicialización del SDK y creación de suscripciones
+ *
+ * El token de pago se crea ahora usando CardForm del SDK v2,
+ * no se usa createCardToken directamente
  */
 export const useMercadoPago = () => {
     const [isReady, setIsReady] = useState(false);
@@ -11,7 +14,7 @@ export const useMercadoPago = () => {
     const [error, setError] = useState(null);
     const [publicKey, setPublicKey] = useState(null);
 
-    // Usar ref para la instancia de MercadoPago (es una clase, no debe ir en estado)
+    // Usar ref para almacenar la instancia de mp (evita problemas de serialización de React)
     const mpRef = useRef(null);
 
     /**
@@ -29,10 +32,15 @@ export const useMercadoPago = () => {
 
                 // Cargar SDK
                 const mpInstance = await mercadopagoService.loadMercadoPagoSDK(key);
+
+                // Almacenar en ref (evita problemas de serialización)
                 mpRef.current = mpInstance;
-                setIsReady(true);
 
                 console.log('✅ MercadoPago SDK inicializado correctamente');
+                console.log('🔍 mpRef.current almacenado:', mpRef.current);
+                console.log('🔍 Tipo:', typeof mpRef.current);
+
+                setIsReady(true);
             } catch (err) {
                 console.error('❌ Error inicializando MercadoPago:', err);
                 setError(err.message);
@@ -45,44 +53,10 @@ export const useMercadoPago = () => {
     }, []);
 
     /**
-     * Crea un token de tarjeta de crédito
-     * @param {Object} cardFormData - Datos del formulario de tarjeta
-     */
-    const createCardToken = useCallback(
-        async (cardFormData) => {
-            if (!mpRef.current) {
-                throw new Error('MercadoPago SDK no está inicializado');
-            }
-
-            try {
-                setIsLoading(true);
-                setError(null);
-
-                // Formatear datos para MercadoPago
-                const cardData = mercadopagoService.formatCardDataForMP(cardFormData);
-
-                // Crear token
-                const token = await mercadopagoService.createCardToken(mpRef.current, cardData);
-
-                console.log('✅ Token de tarjeta creado:', token.id);
-
-                return token.id;
-            } catch (err) {
-                console.error('❌ Error creando token:', err);
-                setError('No se pudo procesar la tarjeta. Verifica los datos ingresados.');
-                throw err;
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        []
-    );
-
-    /**
      * Crea una suscripción con MercadoPago
      * @param {Object} subscriptionData
      * @param {string} subscriptionData.plan - Plan (PRO o PREMIUM)
-     * @param {Object} subscriptionData.cardFormData - Datos de la tarjeta
+     * @param {string} subscriptionData.payment_token - Token de la tarjeta (generado por CardForm)
      * @param {string} subscriptionData.email - Email del usuario
      */
     const createSubscription = useCallback(
@@ -91,13 +65,10 @@ export const useMercadoPago = () => {
                 setIsLoading(true);
                 setError(null);
 
-                // Paso 1: Crear token de tarjeta
-                const cardToken = await createCardToken(subscriptionData.cardFormData);
-
-                // Paso 2: Crear suscripción en el backend
+                // Crear suscripción en el backend con el token generado por CardForm
                 const result = await mercadopagoService.createSubscription({
                     plan: subscriptionData.plan,
-                    payment_token: cardToken,
+                    payment_token: subscriptionData.payment_token,
                     email: subscriptionData.email,
                 });
 
@@ -114,7 +85,7 @@ export const useMercadoPago = () => {
                 setIsLoading(false);
             }
         },
-        [createCardToken]
+        []
     );
 
     /**
@@ -213,6 +184,10 @@ export const useMercadoPago = () => {
         setError(null);
     }, []);
 
+    // Debug: verificar qué estamos retornando
+    console.log('🔍 Hook - Retornando mp:', mpRef.current);
+    console.log('🔍 Hook - Tipo de mp:', typeof mpRef.current);
+
     return {
         // Estado
         isReady,
@@ -220,8 +195,10 @@ export const useMercadoPago = () => {
         error,
         publicKey,
 
+        // Instancia del SDK (para usar con CardForm)
+        mp: mpRef.current,
+
         // Acciones
-        createCardToken,
         createSubscription,
         cancelSubscription,
         getPricing,
