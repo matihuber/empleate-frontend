@@ -111,7 +111,7 @@ const FAQs = ({ isOpen, onClose }) => {
       id: 18,
       category: "Soporte",
       question: "¿Cómo puedo contactar al equipo de soporte?",
-      answer: "Puedes contactarnos a través del botón 'Reportar un problema' en la sección de Configuración, o enviarnos un correo a soporte@empleate.com. Nuestro equipo responde en un plazo máximo de 24-48 horas."
+      answer: "Puedes contactarnos a través del botón 'Reportar un problema' en la sección de Configuración, o enviarnos un correo a soporte@empleate.work. Nuestro equipo responde en un plazo máximo de 24-48 horas."
     },
     {
       id: 19,
@@ -189,7 +189,7 @@ const FAQs = ({ isOpen, onClose }) => {
 
           <div className="bg-blue-50 p-4 rounded-lg mt-6">
             <p className="text-sm text-gray-700">
-              <span className="font-semibold">¿No encontraste lo que buscabas?</span> Contáctanos a través de soporte@empleate.com o usa el botón "Reportar un problema" en la sección de Configuración.
+              <span className="font-semibold">¿No encontraste lo que buscabas?</span> Contáctanos a través de soporte@empleate.work o usa el botón "Reportar un problema" en la sección de Configuración.
             </p>
           </div>
         </div>

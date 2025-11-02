@@ -167,7 +167,7 @@ const TermsAndConditions = ({ isOpen, onClose }) => {
               Si tienes preguntas sobre estos Términos y Condiciones, puedes contactarnos a través de:
             </p>
             <ul className="list-none text-gray-700 space-y-1 ml-4 mt-2">
-              <li>Email: soporte@empleate.com</li>
+              <li>Email: soporte@empleate.work</li>
               <li>Sección de soporte en la plataforma</li>
             </ul>
           </div>

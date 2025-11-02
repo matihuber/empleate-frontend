@@ -1,17 +1,20 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { HelpCircle, FileText, Shield, ChevronDown, X, Check } from 'lucide-react'
 import ReportProblem from './ReportProblem'
 import SubscriptionPlans from './Subscription'
 import configService from '../../services/configService'
 import { useAuth } from '../../contexts/AuthContext'
+import { useSubscription } from '../../contexts/SubscriptionContext'
 import TermsAndConditions from './TermsAndConditions'
 import PrivacyPolicy from './PrivacyPolicy'
 import FAQs from './FAQs'
 
 const Configuration = () => {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const [searchParams] = useSearchParams()
+  const { logout, user } = useAuth()
+  const { updateSubscriptionInfo } = useSubscription()
   const [profileType, setProfileType] = useState('busqueda-activa')
   const [province, setProvince] = useState('capital-federal')
   const [subscriptionTier, setSubscriptionTier] = useState('FREE')
@@ -100,42 +103,71 @@ const Configuration = () => {
     }
   }
 
+  // Leer query param 'view' para navegar directamente a una sección
+  useEffect(() => {
+    const view = searchParams.get('view')
+    if (view) {
+      setCurrentView(view)
+    } else {
+      // Si no hay parámetro view, volver a la vista principal
+      setCurrentView('main')
+    }
+  }, [searchParams])
+
+  // Función para cargar preferencias del usuario
+  const loadPreferences = useCallback(async () => {
+    try {
+      setIsLoadingData(true)
+      const data = await configService.getPreferences()
+
+      // Solo actualizar si los valores no son null
+      if (data.profile_type) {
+        setProfileType(data.profile_type)
+      }
+      if (data.province) {
+        setProvince(data.province)
+      }
+      if (data.subscription_tier) {
+        setSubscriptionTier(data.subscription_tier)
+      }
+    } catch (error) {
+      console.error('Error loading preferences:', error)
+      // No mostrar error al usuario, usar valores por defecto
+    } finally {
+      setIsLoadingData(false)
+    }
+  }, [])
+
   // Cargar preferencias del usuario al montar el componente
   useEffect(() => {
-    const loadPreferences = async () => {
-      try {
-        setIsLoadingData(true)
-        const data = await configService.getPreferences()
-
-        // Solo actualizar si los valores no son null
-        if (data.profile_type) {
-          setProfileType(data.profile_type)
-        }
-        if (data.province) {
-          setProvince(data.province)
-        }
-        if (data.subscription_tier) {
-          setSubscriptionTier(data.subscription_tier)
-        }
-      } catch (error) {
-        console.error('Error loading preferences:', error)
-        // No mostrar error al usuario, usar valores por defecto
-      } finally {
-        setIsLoadingData(false)
-      }
-    }
-
     loadPreferences()
-  }, [])
+  }, [loadPreferences])
+
+  // Recargar datos cuando se actualiza la suscripción (viene de checkout o cancelación)
+  useEffect(() => {
+    const subscriptionUpdated = searchParams.get('subscriptionUpdated')
+    if (subscriptionUpdated === 'true' && user?.sub) {
+      // Recargar datos de preferencias
+      loadPreferences()
+      // Actualizar información de suscripción desde el backend
+      updateSubscriptionInfo(user.sub)
+      // Limpiar los parámetros de la URL
+      setTimeout(() => {
+        navigate('/user-home?section=configuracion', { replace: true })
+      }, 100)
+    }
+  }, [searchParams, loadPreferences, navigate, updateSubscriptionInfo, user?.sub])
 
   // Mapear tier a nombre legible
   const getSubscriptionName = (tier) => {
+    // Normalizar a minúsculas para coincidir con los valores del backend
+    const normalizedTier = tier?.toLowerCase();
     const tierMap = {
-      'FREE': 'Básico',
-      'PRO': 'Pro',
-      'PREMIUM': 'Premium'
+      'free': 'Básico',
+      'pro': 'Pro',
+      'premium': 'Premium'
     }
-    return tierMap[tier] || 'Básico'
+    return tierMap[normalizedTier] || 'Básico'
   }
 
   // Renderizar vista segun view
@@ -144,7 +176,10 @@ const Configuration = () => {
   }
 
   if (currentView === 'subscription') {
-    return <SubscriptionPlans onBack={() => setCurrentView('main')} />
+    return <SubscriptionPlans onBack={() => {
+      // Navegar sin el parámetro view para permitir navegación a otras secciones
+      navigate('/user-home?section=configuracion', { replace: true });
+    }} />
   }
 
   return (
