@@ -36,13 +36,8 @@ export const useMercadoPago = () => {
                 // Almacenar en ref (evita problemas de serialización)
                 mpRef.current = mpInstance;
 
-                console.log('✅ MercadoPago SDK inicializado correctamente');
-                console.log('🔍 mpRef.current almacenado:', mpRef.current);
-                console.log('🔍 Tipo:', typeof mpRef.current);
-
                 setIsReady(true);
             } catch (err) {
-                console.error('❌ Error inicializando MercadoPago:', err);
                 setError(err.message);
             } finally {
                 setIsLoading(false);
@@ -183,10 +178,6 @@ export const useMercadoPago = () => {
     const clearError = useCallback(() => {
         setError(null);
     }, []);
-
-    // Debug: verificar qué estamos retornando
-    console.log('🔍 Hook - Retornando mp:', mpRef.current);
-    console.log('🔍 Hook - Tipo de mp:', typeof mpRef.current);
 
     return {
         // Estado

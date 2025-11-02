@@ -255,9 +255,20 @@ class MercadoPagoService {
      * @param {Object} formData - Datos del formulario
      */
     formatCardDataForMP(formData) {
+        // Validar formato de fecha
+        if (!/^\d{2}\/\d{2}$/.test(formData.expiryDate)) {
+            throw new Error('Formato de fecha inválido. Debe ser MM/YY');
+        }
+
         // Extraer mes y año de la fecha MM/YY
         const [month, year] = formData.expiryDate.split('/');
         const fullYear = `20${year}`; // Convertir YY a YYYY
+
+        // Validar que el mes sea válido
+        const monthNum = parseInt(month, 10);
+        if (monthNum < 1 || monthNum > 12) {
+            throw new Error('El mes debe estar entre 01 y 12');
+        }
 
         return {
             cardNumber: formData.cardNumber.replace(/\s/g, ''), // Remover espacios
@@ -266,7 +277,7 @@ class MercadoPagoService {
             expirationYear: fullYear,
             securityCode: formData.cvv,
             identificationType: 'DNI', // Valor por defecto para Argentina
-            identificationNumber: '00000000', // TODO: Solicitar DNI al usuario
+            identificationNumber: formData.identificationNumber,
         };
     }
 }

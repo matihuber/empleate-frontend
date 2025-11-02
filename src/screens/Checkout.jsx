@@ -28,11 +28,6 @@ const Checkout = () => {
         clearError,
     } = useMercadoPago();
 
-    // Debug: ver qué está recibiendo Checkout
-    console.log('🔍 Checkout - mp recibido:', mp);
-    console.log('🔍 Checkout - tipo mp:', typeof mp);
-    console.log('🔍 Checkout - tiene cardForm?:', typeof mp?.cardForm);
-
     // Cargar precios al montar
     useEffect(() => {
         const loadPricing = async () => {
@@ -68,11 +63,10 @@ const Checkout = () => {
             setError(null);
             clearError();
 
-            console.log('📦 Datos recibidos del CardForm:', tokenData);
-
             // Crear suscripción con el token generado por CardForm
+            // Normalizar plan a lowercase para coincidir con los enum values del backend
             const result = await createSubscription({
-                plan: plan,
+                plan: plan.toLowerCase(),
                 payment_token: tokenData.token,
                 email: user.email,
             });
@@ -93,11 +87,18 @@ const Checkout = () => {
     };
 
     const getPlanInfo = () => {
-        if (!pricing || !pricing[plan]) {
+        if (!pricing) {
             return null;
         }
 
-        const planData = pricing[plan];
+        // Normalizar plan a lowercase para coincidir con las keys del backend
+        const planKey = plan.toLowerCase();
+
+        if (!pricing[planKey]) {
+            return null;
+        }
+
+        const planData = pricing[planKey];
 
         return {
             name: planData.name,
@@ -159,7 +160,7 @@ const Checkout = () => {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate('/configuration?view=subscription')}
                         className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
                     >
                         <svg
@@ -175,7 +176,7 @@ const Checkout = () => {
                                 d="M15 19l-7-7 7-7"
                             />
                         </svg>
-                        Volver
+                        Volver a planes
                     </button>
                     <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
                     <p className="text-gray-600 mt-2">

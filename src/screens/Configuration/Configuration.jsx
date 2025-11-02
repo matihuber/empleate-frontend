@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { HelpCircle, FileText, Shield, ChevronDown, X, Check } from 'lucide-react'
 import ReportProblem from './ReportProblem'
 import SubscriptionPlans from './Subscription'
@@ -11,6 +11,7 @@ import FAQs from './FAQs'
 
 const Configuration = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { logout } = useAuth()
   const [profileType, setProfileType] = useState('busqueda-activa')
   const [province, setProvince] = useState('capital-federal')
@@ -99,6 +100,14 @@ const Configuration = () => {
       setIsDeleting(false)
     }
   }
+
+  // Leer query param 'view' para navegar directamente a una sección
+  useEffect(() => {
+    const view = searchParams.get('view')
+    if (view) {
+      setCurrentView(view)
+    }
+  }, [searchParams])
 
   // Cargar preferencias del usuario al montar el componente
   useEffect(() => {
