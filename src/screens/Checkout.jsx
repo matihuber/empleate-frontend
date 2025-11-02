@@ -71,15 +71,13 @@ const Checkout = () => {
                 email: user.email,
             });
 
-            console.log('✅ Suscripción exitosa:', result);
-
             // Mostrar éxito
             setSuccess(true);
 
             // Redirigir después de 2 segundos a configuración principal
             setTimeout(() => {
                 // Navegar directamente a user-home/configuración con el parámetro para recargar
-                window.location.href = '/user-home?section=configuracion&subscriptionUpdated=true';
+                navigate('/user-home?section=configuracion&subscriptionUpdated=true');
             }, 2000);
         } catch (err) {
             console.error('❌ Error en checkout:', err);

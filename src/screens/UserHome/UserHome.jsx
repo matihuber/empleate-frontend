@@ -83,6 +83,8 @@ export default function UserHome() {
 
   const handleMenuClick = (sectionId) => {
     setActiveSection(sectionId)
+    // Actualizar URL para reflejar la nueva sección (limpia otros parámetros)
+    navigate(`/user-home?section=${sectionId}`, { replace: true })
     // Cerrar sidebar en móviles después de hacer clic
     setSidebarOpen(false)
   }

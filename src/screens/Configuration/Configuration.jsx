@@ -106,6 +106,9 @@ const Configuration = () => {
     const view = searchParams.get('view')
     if (view) {
       setCurrentView(view)
+    } else {
+      // Si no hay parámetro view, volver a la vista principal
+      setCurrentView('main')
     }
   }, [searchParams])
 
@@ -142,16 +145,14 @@ const Configuration = () => {
   useEffect(() => {
     const subscriptionUpdated = searchParams.get('subscriptionUpdated')
     if (subscriptionUpdated === 'true') {
-      // Asegurarse de mostrar la vista principal (no la de subscription)
-      setCurrentView('main')
       // Recargar datos
       loadPreferences()
-      // Limpiar el parámetro de la URL después de un breve delay
+      // Limpiar los parámetros de la URL
       setTimeout(() => {
         navigate('/user-home?section=configuracion', { replace: true })
       }, 100)
     }
-  }, [searchParams, navigate, loadPreferences])
+  }, [searchParams, loadPreferences, navigate])
 
   // Mapear tier a nombre legible
   const getSubscriptionName = (tier) => {
@@ -172,9 +173,8 @@ const Configuration = () => {
 
   if (currentView === 'subscription') {
     return <SubscriptionPlans onBack={() => {
-      setCurrentView('main');
-      // Recargar datos cuando se vuelve de la vista de suscripción
-      loadPreferences();
+      // Navegar sin el parámetro view para permitir navegación a otras secciones
+      navigate('/user-home?section=configuracion', { replace: true });
     }} />
   }
 

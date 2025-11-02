@@ -174,8 +174,6 @@ class MercadoPagoService {
             if (window.MercadoPago) {
                 // Crear una nueva instancia con la public key
                 const mp = new window.MercadoPago(publicKey);
-                console.log('🔍 SDK ya cargado, creando nueva instancia:', mp);
-                console.log('🔍 Tipo:', typeof mp);
                 resolve(mp);
                 return;
             }
@@ -187,19 +185,8 @@ class MercadoPagoService {
 
             script.onload = () => {
                 if (window.MercadoPago) {
-                    console.log('🔍 window.MercadoPago:', window.MercadoPago);
-                    console.log('🔍 Tipo:', typeof window.MercadoPago);
-                    console.log('🔍 Propiedades:', Object.keys(window.MercadoPago));
-                    console.log('🔍 Prototype:', Object.getOwnPropertyNames(window.MercadoPago.prototype || {}));
-
                     // Inicializar MercadoPago con la public key
                     const mp = new window.MercadoPago(publicKey);
-
-                    console.log('🔍 Instancia mp:', mp);
-                    console.log('🔍 Tipo mp:', typeof mp);
-                    console.log('🔍 Propiedades mp:', Object.keys(mp));
-                    console.log('🔍 Métodos mp:', Object.getOwnPropertyNames(Object.getPrototypeOf(mp)));
-
                     resolve(mp);
                 } else {
                     reject(new Error('MercadoPago SDK no se cargó correctamente'));
@@ -228,8 +215,6 @@ class MercadoPagoService {
      */
     async createCardToken(mp, cardData) {
         try {
-            console.log('🔄 Creando token con datos:', cardData);
-
             // API correcta del SDK v2 de MercadoPago
             const token = await mp.createCardToken({
                 cardNumber: cardData.cardNumber,
@@ -241,7 +226,6 @@ class MercadoPagoService {
                 identificationNumber: cardData.identificationNumber,
             });
 
-            console.log('✅ Token creado exitosamente:', token);
             return token;
         } catch (error) {
             console.error('❌ Error creando token de tarjeta:', error);

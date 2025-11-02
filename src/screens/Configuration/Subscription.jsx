@@ -55,6 +55,19 @@ const Subscription = ({ onBack }) => {
         return <SubscriptionHistory onBack={() => setShowHistory(false)} />;
     }
 
+    // Obtener nombre legible del plan actual
+    const getCurrentPlanName = () => {
+        const planMap = {
+            'FREE': 'Gratuito',
+            'free': 'Gratuito',
+            'PRO': 'Pro',
+            'pro': 'Pro',
+            'PREMIUM': 'Premium',
+            'premium': 'Premium'
+        };
+        return planMap[currentPlan] || currentPlan;
+    };
+
     // Manejar click en plan
     const handlePlanClick = async (planName) => {
         if (planName === 'Gratuito') {
@@ -314,7 +327,7 @@ const Subscription = ({ onBack }) => {
                 onClose={() => setShowCancelModal(false)}
                 onConfirm={handleConfirmCancel}
                 title="Cancelar suscripción"
-                message="¿Estás seguro de que deseas cancelar tu suscripción? Perderás acceso a las funcionalidades premium."
+                message={`¿Estás seguro de que deseas cancelar tu suscripción al plan ${getCurrentPlanName()}? Perderás acceso a las funcionalidades del plan ${getCurrentPlanName()}.`}
                 confirmText="Sí, cancelar"
                 cancelText="No, mantener"
                 type="danger"

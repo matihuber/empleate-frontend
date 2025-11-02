@@ -157,7 +157,7 @@ const PrivacyPolicy = ({ isOpen, onClose }) => {
               <li><span className="font-semibold">Retirar consentimiento:</span> en cualquier momento, sin afectar la legalidad del procesamiento previo</li>
             </ul>
             <p className="text-gray-700 mt-2">
-              Para ejercer estos derechos, contáctanos a través de soporte@empleate.com
+              Para ejercer estos derechos, contáctanos a través de soporte@empleate.work
             </p>
           </div>
 
@@ -205,7 +205,7 @@ const PrivacyPolicy = ({ isOpen, onClose }) => {
               Si tienes preguntas, inquietudes o solicitudes relacionadas con esta Política de Privacidad o el manejo de tu información personal, puedes contactarnos:
             </p>
             <ul className="list-none text-gray-700 space-y-1 ml-4">
-              <li><span className="font-semibold">Email:</span> soporte@empleate.com</li>
+              <li><span className="font-semibold">Email:</span> soporte@empleate.work</li>
               <li><span className="font-semibold">Email de privacidad:</span> privacidad@empleate.com</li>
               <li><span className="font-semibold">Sección de soporte:</span> disponible en la plataforma</li>
             </ul>

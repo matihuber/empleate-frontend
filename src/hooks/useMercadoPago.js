@@ -67,8 +67,6 @@ export const useMercadoPago = () => {
                     email: subscriptionData.email,
                 });
 
-                console.log('✅ Suscripción creada exitosamente:', result);
-
                 return result;
             } catch (err) {
                 console.error('❌ Error creando suscripción:', err);
@@ -93,8 +91,6 @@ export const useMercadoPago = () => {
             setError(null);
 
             const result = await mercadopagoService.cancelSubscription(reason);
-
-            console.log('✅ Suscripción cancelada exitosamente');
 
             return result;
         } catch (err) {
