@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { HelpCircle, FileText, Shield, ChevronDown, X, Check } from 'lucide-react'
 import ReportProblem from './ReportProblem'
@@ -109,42 +109,60 @@ const Configuration = () => {
     }
   }, [searchParams])
 
+  // Función para cargar preferencias del usuario
+  const loadPreferences = useCallback(async () => {
+    try {
+      setIsLoadingData(true)
+      const data = await configService.getPreferences()
+
+      // Solo actualizar si los valores no son null
+      if (data.profile_type) {
+        setProfileType(data.profile_type)
+      }
+      if (data.province) {
+        setProvince(data.province)
+      }
+      if (data.subscription_tier) {
+        setSubscriptionTier(data.subscription_tier)
+      }
+    } catch (error) {
+      console.error('Error loading preferences:', error)
+      // No mostrar error al usuario, usar valores por defecto
+    } finally {
+      setIsLoadingData(false)
+    }
+  }, [])
+
   // Cargar preferencias del usuario al montar el componente
   useEffect(() => {
-    const loadPreferences = async () => {
-      try {
-        setIsLoadingData(true)
-        const data = await configService.getPreferences()
-
-        // Solo actualizar si los valores no son null
-        if (data.profile_type) {
-          setProfileType(data.profile_type)
-        }
-        if (data.province) {
-          setProvince(data.province)
-        }
-        if (data.subscription_tier) {
-          setSubscriptionTier(data.subscription_tier)
-        }
-      } catch (error) {
-        console.error('Error loading preferences:', error)
-        // No mostrar error al usuario, usar valores por defecto
-      } finally {
-        setIsLoadingData(false)
-      }
-    }
-
     loadPreferences()
-  }, [])
+  }, [loadPreferences])
+
+  // Recargar datos cuando se actualiza la suscripción (viene de checkout o cancelación)
+  useEffect(() => {
+    const subscriptionUpdated = searchParams.get('subscriptionUpdated')
+    if (subscriptionUpdated === 'true') {
+      // Asegurarse de mostrar la vista principal (no la de subscription)
+      setCurrentView('main')
+      // Recargar datos
+      loadPreferences()
+      // Limpiar el parámetro de la URL después de un breve delay
+      setTimeout(() => {
+        navigate('/user-home?section=configuracion', { replace: true })
+      }, 100)
+    }
+  }, [searchParams, navigate, loadPreferences])
 
   // Mapear tier a nombre legible
   const getSubscriptionName = (tier) => {
+    // Normalizar a minúsculas para coincidir con los valores del backend
+    const normalizedTier = tier?.toLowerCase();
     const tierMap = {
-      'FREE': 'Básico',
-      'PRO': 'Pro',
-      'PREMIUM': 'Premium'
+      'free': 'Básico',
+      'pro': 'Pro',
+      'premium': 'Premium'
     }
-    return tierMap[tier] || 'Básico'
+    return tierMap[normalizedTier] || 'Básico'
   }
 
   // Renderizar vista segun view
@@ -153,7 +171,11 @@ const Configuration = () => {
   }
 
   if (currentView === 'subscription') {
-    return <SubscriptionPlans onBack={() => setCurrentView('main')} />
+    return <SubscriptionPlans onBack={() => {
+      setCurrentView('main');
+      // Recargar datos cuando se vuelve de la vista de suscripción
+      loadPreferences();
+    }} />
   }
 
   return (

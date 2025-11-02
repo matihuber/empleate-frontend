@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import SubscriptionHistory from './SubscriptionHistory';
 import { useMercadoPago } from '../../hooks/useMercadoPago';
 import { useAuth } from '../../contexts/AuthContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const Subscription = ({ onBack }) => {
     const navigate = useNavigate();
@@ -13,6 +14,8 @@ const Subscription = ({ onBack }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [currentPlan, setCurrentPlan] = useState('FREE'); // TODO: Obtener del contexto/API
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const {
         getPricing,
@@ -55,27 +58,30 @@ const Subscription = ({ onBack }) => {
     // Manejar click en plan
     const handlePlanClick = async (planName) => {
         if (planName === 'Gratuito') {
-            // Cancelar suscripción actual
-            if (
-                window.confirm(
-                    '¿Estás seguro de que deseas cancelar tu suscripción? Perderás acceso a las funcionalidades premium.'
-                )
-            ) {
-                try {
-                    setLoading(true);
-                    await cancelSubscription('Cambio a plan gratuito');
-                    setCurrentPlan('FREE');
-                    alert('Suscripción cancelada exitosamente');
-                } catch (err) {
-                    alert('Error al cancelar suscripción: ' + err.message);
-                } finally {
-                    setLoading(false);
-                }
-            }
+            // Mostrar modal de confirmación para cancelar suscripción
+            setShowCancelModal(true);
         } else {
             // Navegar a checkout con el plan seleccionado
             const planKey = planName === 'Pro' ? 'PRO' : 'PREMIUM';
             navigate(`/checkout?plan=${planKey}`);
+        }
+    };
+
+    // Confirmar cancelación de suscripción
+    const handleConfirmCancel = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            await cancelSubscription('Cambio a plan gratuito');
+            setCurrentPlan('FREE');
+            setShowCancelModal(false);
+            setShowSuccessModal(true);
+            // Los datos se recargarán cuando se cierre el modal y se navegue a configuración
+        } catch (err) {
+            setError(err.message || 'Error al cancelar suscripción. Intenta nuevamente.');
+            setShowCancelModal(false);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -99,7 +105,7 @@ const Subscription = ({ onBack }) => {
             name: 'Pro',
             planKey: 'PRO',
             price: '$6.99',
-            priceARS: pricing?.PRO?.price_ars,
+            priceARS: pricing?.pro?.price_ars,
             period: '/mes',
             description: 'CVs profesionales optimizados con IA',
             features: [
@@ -116,7 +122,7 @@ const Subscription = ({ onBack }) => {
             name: 'Premium',
             planKey: 'PREMIUM',
             price: '$11.99',
-            priceARS: pricing?.PREMIUM?.price_ars,
+            priceARS: pricing?.premium?.price_ars,
             period: '/mes',
             description: 'Acceso completo a todas las funcionalidades',
             features: [
@@ -164,7 +170,38 @@ const Subscription = ({ onBack }) => {
             {/* Planes */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {plans.map((plan) => {
-                    const isCurrent = plan.planKey === currentPlan;
+                    // Normalizar a mayúsculas para comparación (backend devuelve minúsculas)
+                    const normalizedCurrentPlan = currentPlan?.toUpperCase();
+                    const isCurrent = plan.planKey === normalizedCurrentPlan;
+
+                    // Determinar texto y estilo del botón
+                    let buttonText, buttonClass, isDisabled = false, buttonAction;
+
+                    if (isCurrent) {
+                        // Es el plan actual
+                        if (plan.planKey === 'FREE') {
+                            buttonText = 'Tu plan actual';
+                            buttonClass = 'bg-gray-200 text-gray-500 cursor-default';
+                            isDisabled = true;
+                        } else {
+                            // PRO o PREMIUM
+                            buttonText = 'Cancelar suscripción';
+                            buttonClass = 'bg-red-600 hover:bg-red-700 text-white cursor-pointer active:scale-95';
+                            buttonAction = () => setShowCancelModal(true);
+                        }
+                    } else {
+                        // No es el plan actual
+                        if (plan.planKey === 'FREE') {
+                            buttonText = 'Plan gratuito';
+                            buttonClass = 'bg-gray-200 text-gray-500 cursor-default';
+                            isDisabled = true;
+                        } else {
+                            // PRO o PREMIUM
+                            buttonText = plan.buttonText;
+                            buttonClass = 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer active:scale-95';
+                            buttonAction = () => handlePlanClick(plan.name);
+                        }
+                    }
 
                     return (
                         <div
@@ -175,17 +212,16 @@ const Subscription = ({ onBack }) => {
                                     : 'border-gray-200 hover:border-gray-300'
                             }`}
                         >
-                            {isCurrent && (
-                                <div className="mb-3">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-xl font-semibold text-gray-800">
+                                    {plan.name}
+                                </h3>
+                                {isCurrent && (
                                     <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
                                         Plan actual
                                     </span>
-                                </div>
-                            )}
-
-                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                {plan.name}
-                            </h3>
+                                )}
+                            </div>
 
                             <div className="mb-2">
                                 <span className="text-3xl font-bold text-gray-900">
@@ -196,33 +232,26 @@ const Subscription = ({ onBack }) => {
                                 )}
                             </div>
 
-                            {plan.priceARS && (
-                                <div className="mb-4">
-                                    <span className="text-lg text-gray-600">
-                                        ≈ ${plan.priceARS.toFixed(2)} ARS
-                                    </span>
-                                    <span className="text-gray-500 text-sm">{plan.period}</span>
-                                </div>
-                            )}
+                            {/* Mostrar precio en ARS o un espaciador para alinear todos los planes */}
+                            <div className="mb-4 h-7">
+                                {plan.priceARS && (
+                                    <>
+                                        <span className="text-lg text-gray-600">
+                                            ≈ ${plan.priceARS.toFixed(2)} ARS
+                                        </span>
+                                        <span className="text-gray-500 text-sm">{plan.period}</span>
+                                    </>
+                                )}
+                            </div>
 
                             <p className="text-sm text-gray-600 mb-6">{plan.description}</p>
 
                             <button
-                                onClick={() => !isCurrent && handlePlanClick(plan.name)}
-                                className={`w-full py-3 px-4 rounded-lg font-medium transition-all mb-6 ${
-                                    isCurrent
-                                        ? 'bg-gray-200 text-gray-500 cursor-default'
-                                        : plan.planKey === 'FREE'
-                                        ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer active:scale-95'
-                                        : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer active:scale-95'
-                                }`}
-                                disabled={isCurrent}
+                                onClick={buttonAction}
+                                disabled={isDisabled}
+                                className={`w-full py-3 px-4 rounded-lg font-medium transition-all mb-6 ${buttonClass}`}
                             >
-                                {isCurrent
-                                    ? 'Tu plan actual'
-                                    : plan.planKey === 'FREE'
-                                    ? 'Cancelar suscripción'
-                                    : plan.buttonText}
+                                {buttonText}
                             </button>
 
                             <ul className="space-y-3">
@@ -254,7 +283,7 @@ const Subscription = ({ onBack }) => {
                     <p className="text-sm text-blue-800">
                         💡 Los precios en ARS se calculan usando la cotización del dólar oficial
                         del día 15 de cada mes. Tasa actual: 1 USD ≈ $
-                        {pricing.PRO?.usd_ars_rate?.toFixed(2)} ARS
+                        {pricing.pro?.usd_ars_rate?.toFixed(2) || pricing.premium?.usd_ars_rate?.toFixed(2) || 'N/A'} ARS
                     </p>
                 </div>
             )}
@@ -278,6 +307,62 @@ const Subscription = ({ onBack }) => {
                     </button>
                 </div>
             </div>
+
+            {/* Modal de confirmación para cancelar suscripción */}
+            <ConfirmationModal
+                isOpen={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={handleConfirmCancel}
+                title="Cancelar suscripción"
+                message="¿Estás seguro de que deseas cancelar tu suscripción? Perderás acceso a las funcionalidades premium."
+                confirmText="Sí, cancelar"
+                cancelText="No, mantener"
+                type="danger"
+            />
+
+            {/* Modal de éxito después de cancelar */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 backdrop-brightness-30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-xl relative">
+                        <button
+                            onClick={() => {
+                                setShowSuccessModal(false);
+                                // Usar onBack que ya recarga los datos y vuelve a main
+                                if (onBack) {
+                                    onBack();
+                                }
+                            }}
+                            className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
+                        >
+                            <X className="w-5 h-5 text-gray-500" />
+                        </button>
+
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Check className="w-8 h-8 text-green-600" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                Suscripción cancelada
+                            </h2>
+                            <p className="text-gray-600 mb-6">
+                                Tu suscripción ha sido cancelada exitosamente. Has vuelto al plan gratuito.
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setShowSuccessModal(false);
+                                    // Usar onBack que ya recarga los datos y vuelve a main
+                                    if (onBack) {
+                                        onBack();
+                                    }
+                                }}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            >
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

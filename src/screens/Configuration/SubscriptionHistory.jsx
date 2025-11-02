@@ -1,24 +1,12 @@
 import { ChevronLeft } from 'lucide-react'
 
 const SubscriptionHistory = ({ onBack }) => {
-  // Mock data
+  // Mock data - ordenado del más reciente al más antiguo
   const subscriptionHistory = [
     {
-      id: 1,
-      plan: 'Premium',
-      date: '05/06/2025',
-      price: '$11.99'
-    },
-    {
-      id: 2,
-      plan: 'Premium',
-      date: '07/07/2025',
-      price: '$11.99'
-    },
-    {
-      id: 3,
+      id: 5,
       plan: 'Pro',
-      date: '03/08/2025',
+      date: '10/10/2025',
       price: '$6.99'
     },
     {
@@ -28,10 +16,22 @@ const SubscriptionHistory = ({ onBack }) => {
       price: '$6.99'
     },
     {
-      id: 5,
+      id: 3,
       plan: 'Pro',
-      date: '10/10/2025',
+      date: '03/08/2025',
       price: '$6.99'
+    },
+    {
+      id: 2,
+      plan: 'Premium',
+      date: '07/07/2025',
+      price: '$11.99'
+    },
+    {
+      id: 1,
+      plan: 'Premium',
+      date: '05/06/2025',
+      price: '$11.99'
     }
   ]
 

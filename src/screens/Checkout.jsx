@@ -76,10 +76,11 @@ const Checkout = () => {
             // Mostrar éxito
             setSuccess(true);
 
-            // Redirigir después de 3 segundos
+            // Redirigir después de 2 segundos a configuración principal
             setTimeout(() => {
-                navigate('/configuration');
-            }, 3000);
+                // Navegar directamente a user-home/configuración con el parámetro para recargar
+                window.location.href = '/user-home?section=configuracion&subscriptionUpdated=true';
+            }, 2000);
         } catch (err) {
             console.error('❌ Error en checkout:', err);
             setError(err.message || 'Error al procesar el pago. Intenta nuevamente.');
@@ -160,7 +161,7 @@ const Checkout = () => {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <button
-                        onClick={() => navigate('/configuration?view=subscription')}
+                        onClick={() => navigate('/user-home?section=configuracion&view=subscription')}
                         className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
                     >
                         <svg
