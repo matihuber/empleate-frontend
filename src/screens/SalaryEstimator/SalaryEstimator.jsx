@@ -266,7 +266,14 @@ const SalaryEstimator = () => {
       setResults(response);
     } catch (error) {
       console.error('Error estimando salario:', error);
-      setError('Error al estimar el salario. Por favor intenta nuevamente.');
+
+      // Si es un error 403, mostrar modal de restricción
+      if (error.status === 403 || error.message?.includes('403')) {
+        setRestrictedFeature('salary_estimation');
+        setIsRestrictionModalOpen(true);
+      } else {
+        setError('Error al estimar el salario. Por favor intenta nuevamente.');
+      }
     } finally {
       setLoading(false);
     }

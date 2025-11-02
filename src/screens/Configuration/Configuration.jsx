@@ -5,6 +5,7 @@ import ReportProblem from './ReportProblem'
 import SubscriptionPlans from './Subscription'
 import configService from '../../services/configService'
 import { useAuth } from '../../contexts/AuthContext'
+import { useSubscription } from '../../contexts/SubscriptionContext'
 import TermsAndConditions from './TermsAndConditions'
 import PrivacyPolicy from './PrivacyPolicy'
 import FAQs from './FAQs'
@@ -12,7 +13,8 @@ import FAQs from './FAQs'
 const Configuration = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const { updateSubscriptionInfo } = useSubscription()
   const [profileType, setProfileType] = useState('busqueda-activa')
   const [province, setProvince] = useState('capital-federal')
   const [subscriptionTier, setSubscriptionTier] = useState('FREE')
@@ -144,15 +146,17 @@ const Configuration = () => {
   // Recargar datos cuando se actualiza la suscripción (viene de checkout o cancelación)
   useEffect(() => {
     const subscriptionUpdated = searchParams.get('subscriptionUpdated')
-    if (subscriptionUpdated === 'true') {
-      // Recargar datos
+    if (subscriptionUpdated === 'true' && user?.sub) {
+      // Recargar datos de preferencias
       loadPreferences()
+      // Actualizar información de suscripción desde el backend
+      updateSubscriptionInfo(user.sub)
       // Limpiar los parámetros de la URL
       setTimeout(() => {
         navigate('/user-home?section=configuracion', { replace: true })
       }, 100)
     }
-  }, [searchParams, loadPreferences, navigate])
+  }, [searchParams, loadPreferences, navigate, updateSubscriptionInfo, user?.sub])
 
   // Mapear tier a nombre legible
   const getSubscriptionName = (tier) => {
