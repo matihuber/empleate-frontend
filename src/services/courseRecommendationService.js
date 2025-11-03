@@ -23,16 +23,22 @@ class CourseRecommendationService {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        
-        // Manejar error de permisos (plan básico)
+        // Manejar error 403 específicamente (puede devolver HTML en lugar de JSON)
         if (response.status === 403) {
-          const permissionError = new Error(errorData.detail || 'Acceso denegado')
+          const permissionError = new Error('Acceso denegado. Esta funcionalidad requiere un plan Premium.')
           permissionError.code = 'SUBSCRIPTION_REQUIRED'
           permissionError.status = 403
           throw permissionError
         }
-        
+
+        // Para otros errores, intentar parsear JSON si el content-type es apropiado
+        const contentType = response.headers.get('content-type')
+        let errorData = {}
+
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await response.json().catch(() => ({}))
+        }
+
         throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`)
       }
 

@@ -59,10 +59,25 @@ class AuthService {
         console.log('AuthService: Response status:', response.status);
         console.log('AuthService: Response statusText:', response.statusText);
         console.log('AuthService: Response ok:', response.ok);
-        
-        const errorData = await response.json().catch(() => ({}));
+
+        // Manejar 403 específicamente (puede devolver HTML en lugar de JSON)
+        if (response.status === 403) {
+          const error = new Error('Acceso denegado. Esta funcionalidad requiere un plan Premium.');
+          error.status = 403;
+          error.code = 'SUBSCRIPTION_REQUIRED';
+          throw error;
+        }
+
+        // Para otros errores, intentar parsear JSON si el content-type es apropiado
+        const contentType = response.headers.get('content-type');
+        let errorData = {};
+
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await response.json().catch(() => ({}));
+        }
+
         console.error('Backend error response:', errorData);
-        
+
         // Manejar diferentes tipos de errores
         if (response.status === 422) {
           // Error de validación

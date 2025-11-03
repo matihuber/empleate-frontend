@@ -267,8 +267,8 @@ const SalaryEstimator = () => {
     } catch (error) {
       console.error('Error estimando salario:', error);
 
-      // Si es un error 403, mostrar modal de restricción
-      if (error.status === 403 || error.message?.includes('403')) {
+      // Si es un error de suscripción requerida, mostrar modal de restricción
+      if (error.code === 'SUBSCRIPTION_REQUIRED' || error.status === 403) {
         setRestrictedFeature('salary_estimation');
         setIsRestrictionModalOpen(true);
       } else {
