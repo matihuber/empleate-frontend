@@ -1,9 +1,9 @@
 import authService from './authService'
+import { API_URL } from '../config/api'
 
 class PDFExportService {
   constructor() {
-    // Forzar la URL correcta ya que la variable de entorno está mal configurada
-    this.baseURL = 'http://localhost:8000/api/v1'
+    this.baseURL = API_URL
   }
 
   /**

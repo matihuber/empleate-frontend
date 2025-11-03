@@ -1,19 +1,18 @@
 // Configuración de la API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const API_VERSION = '/api/v1';
+import { API_URL } from '../config/api';
 
 // URLs de los endpoints
 const ENDPOINTS = {
-  LOGIN: `${API_BASE_URL}${API_VERSION}/auth/login`,
-  REGISTER: `${API_BASE_URL}${API_VERSION}/auth/register`,
-  LOGOUT: `${API_BASE_URL}${API_VERSION}/auth/logout`,
-  REFRESH_TOKEN: `${API_BASE_URL}${API_VERSION}/auth/refresh`,
-  GOOGLE_LOGIN: `${API_BASE_URL}${API_VERSION}/auth/google`,
-  LINKEDIN_LOGIN: `${API_BASE_URL}${API_VERSION}/auth/linkedin`,
-  MICROSOFT_LOGIN: `${API_BASE_URL}${API_VERSION}/auth/microsoft`,
-  USER_INFO: `${API_BASE_URL}${API_VERSION}/auth/user-info`,
-  PASSWORD_RESET: `${API_BASE_URL}${API_VERSION}/auth/password-reset`,
-  VERIFY_EMAIL: `${API_BASE_URL}${API_VERSION}/auth/verify-email`
+  LOGIN: `${API_URL}/auth/login`,
+  REGISTER: `${API_URL}/auth/register`,
+  LOGOUT: `${API_URL}/auth/logout`,
+  REFRESH_TOKEN: `${API_URL}/auth/refresh`,
+  GOOGLE_LOGIN: `${API_URL}/auth/google`,
+  LINKEDIN_LOGIN: `${API_URL}/auth/linkedin`,
+  MICROSOFT_LOGIN: `${API_URL}/auth/microsoft`,
+  USER_INFO: `${API_URL}/auth/user-info`,
+  PASSWORD_RESET: `${API_URL}/auth/password-reset`,
+  VERIFY_EMAIL: `${API_URL}/auth/verify-email`
 };
 
 // Clase principal del servicio de autenticación
@@ -40,9 +39,14 @@ class AuthService {
   // Función helper para hacer peticiones HTTP
   async makeRequest(url, options = {}) {
     try {
-      // Construir URL completa si es relativa
-      const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${API_VERSION}${url}`;
-      
+      // Los ENDPOINTS ya incluyen API_URL completo, así que usar directamente
+      // Si es una URL completa (empieza con http), usarla tal cual
+      // Si es un path relativo, agregarlo a API_URL
+      let fullUrl = url;
+      if (!url.startsWith('http')) {
+        // Es un path relativo, construir URL completa
+        fullUrl = url.startsWith('/') ? `${API_URL}${url}` : `${API_URL}/${url}`;
+      }
       
       const response = await fetch(fullUrl, {
         ...options,
@@ -130,7 +134,7 @@ class AuthService {
   async loginGoogle() {
     try {
       // Obtener el código de autorización de Google
-      const googleAuthUrl = `${API_BASE_URL}${API_VERSION}/auth/google/authorize`;
+      const googleAuthUrl = `${API_URL}/auth/google/authorize`;
       
       // Redirigir al usuario a Google OAuth
       window.location.href = googleAuthUrl;
@@ -146,7 +150,7 @@ class AuthService {
   // Login con LinkedIn OAuth
   async loginLinkedIn() {
     try {
-      const linkedinAuthUrl = `${API_BASE_URL}${API_VERSION}/auth/linkedin/authorize`;
+      const linkedinAuthUrl = `${API_URL}/auth/linkedin/authorize`;
       
       // Redirigir al usuario a LinkedIn OAuth
       window.location.href = linkedinAuthUrl;
@@ -160,7 +164,7 @@ class AuthService {
   // Login con Microsoft OAuth
   async loginMicrosoft() {
     try {
-      const microsoftAuthUrl = `${API_BASE_URL}${API_VERSION}/auth/microsoft/authorize`;
+      const microsoftAuthUrl = `${API_URL}/auth/microsoft/authorize`;
       
       // Redirigir al usuario a Microsoft OAuth
       window.location.href = microsoftAuthUrl;

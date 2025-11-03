@@ -1,21 +1,18 @@
-// Configuración de la API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const API_VERSION = '/api/v1';
-
 // Importar authService para usar authenticatedRequest
 import authService from './authService';
+import { API_URL } from '../config/api';
 
 // URLs de los endpoints
 const ENDPOINTS = {
-  ESTIMATE: `${API_BASE_URL}${API_VERSION}/salary/estimate`,
-  HEALTH: `${API_BASE_URL}${API_VERSION}/salary/health`,
-  MODEL_INFO: `${API_BASE_URL}${API_VERSION}/salary/model/info`,
-  TRAIN_INITIAL: `${API_BASE_URL}${API_VERSION}/salary/train-initial`
+  ESTIMATE: `${API_URL}/salary/estimate`,
+  HEALTH: `${API_URL}/salary/health`,
+  MODEL_INFO: `${API_URL}/salary/model/info`,
+  TRAIN_INITIAL: `${API_URL}/salary/train-initial`
 };
 
 class SalaryEstimationService {
   constructor() {
-    this.baseURL = `${API_BASE_URL}${API_VERSION}/salary`;
+    this.baseURL = `${API_URL}/salary`;
   }
 
   async estimateSalary(formData) {

@@ -3,10 +3,11 @@
  */
 
 import apiInterceptor from './apiInterceptor'
+import { API_URL } from '../config/api'
 
 class CourseRecommendationService {
   constructor() {
-    this.baseURL = 'http://localhost:8000/api/v1/course-recommendations'
+    this.baseURL = `${API_URL}/course-recommendations`
   }
 
   /**

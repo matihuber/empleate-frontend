@@ -1,10 +1,9 @@
 import apiInterceptor from './apiInterceptor'
-
-const API_BASE_URL = 'http://localhost:8000/api/v1'
+import { API_URL } from '../config/api'
 
 class NotificationService {
   constructor() {
-    this.baseURL = API_BASE_URL
+    this.baseURL = API_URL
   }
 
   /**

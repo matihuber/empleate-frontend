@@ -1,7 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const API_VERSION = '/api/v1';
+import { API_URL } from '../config/api';
 
 /**
  * Servicio para interactuar con la API de suscripciones de MercadoPago
@@ -12,7 +10,7 @@ class MercadoPagoService {
      */
     async getPublicKey() {
         try {
-            const response = await axios.get(`${API_BASE_URL}${API_VERSION}/mercadopago/public-key`);
+            const response = await axios.get(`${API_URL}/mercadopago/public-key`);
             return response.data.public_key;
         } catch (error) {
             console.error('Error obteniendo public key:', error);
@@ -26,7 +24,7 @@ class MercadoPagoService {
     async getPricing() {
         try {
             const token = localStorage.getItem('empleate_access_token');
-            const response = await axios.get(`${API_BASE_URL}${API_VERSION}/mercadopago/pricing`, {
+            const response = await axios.get(`${API_URL}/mercadopago/pricing`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -49,7 +47,7 @@ class MercadoPagoService {
         try {
             const token = localStorage.getItem('empleate_access_token');
             const response = await axios.post(
-                `${API_BASE_URL}${API_VERSION}/mercadopago/create-subscription`,
+                `${API_URL}/mercadopago/create-subscription`,
                 subscriptionData,
                 {
                     headers: {
@@ -78,7 +76,7 @@ class MercadoPagoService {
         try {
             const token = localStorage.getItem('empleate_access_token');
             const response = await axios.post(
-                `${API_BASE_URL}${API_VERSION}/mercadopago/cancel-subscription`,
+                `${API_URL}/mercadopago/cancel-subscription`,
                 { reason },
                 {
                     headers: {
@@ -104,7 +102,7 @@ class MercadoPagoService {
     async getCurrentSubscription() {
         try {
             const token = localStorage.getItem('empleate_access_token');
-            const response = await axios.get(`${API_BASE_URL}${API_VERSION}/mercadopago/subscription`, {
+            const response = await axios.get(`${API_URL}/mercadopago/subscription`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -128,7 +126,7 @@ class MercadoPagoService {
         try {
             const token = localStorage.getItem('empleate_access_token');
             const response = await axios.get(
-                `${API_BASE_URL}${API_VERSION}/mercadopago/subscription-history`,
+                `${API_URL}/mercadopago/subscription-history`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -150,7 +148,7 @@ class MercadoPagoService {
         try {
             const token = localStorage.getItem('empleate_access_token');
             const response = await axios.get(
-                `${API_BASE_URL}${API_VERSION}/mercadopago/subscription-status/${preapprovalId}`,
+                `${API_URL}/mercadopago/subscription-status/${preapprovalId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

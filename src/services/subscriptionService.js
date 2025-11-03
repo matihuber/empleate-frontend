@@ -3,13 +3,11 @@
  */
 
 import authService from './authService';
+import { API_URL } from '../config/api';
 
 class SubscriptionService {
   constructor() {
-    // Usar la misma configuración que authService
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-    const API_VERSION = '/api/v1';
-    this.baseURL = `${API_BASE_URL}${API_VERSION}`;
+    this.baseURL = API_URL;
   }
 
   /**

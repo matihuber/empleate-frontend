@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import authService from "../../../services/authService"
 import apiInterceptor from "../../../services/apiInterceptor"
 import notificationService from "../../../services/notificationService"
+import { API_URL } from "../../../config/api"
 
 
 export default function Inicio({ user }) {
@@ -22,8 +23,7 @@ export default function Inicio({ user }) {
         }
 
         // Load home data
-
-        const response = await apiInterceptor.fetchWithInterceptor('http://localhost:8000/api/v1/home', {
+        const response = await apiInterceptor.fetchWithInterceptor(`${API_URL}/home`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
