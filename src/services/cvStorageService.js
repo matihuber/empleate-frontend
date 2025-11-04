@@ -2,16 +2,12 @@ import authService from './authService'
 import { API_URL } from '../config/api'
 
 class CVStorageService {
-  constructor() {
-    this.baseURL = API_URL
-  }
-
   /**
    * Guardar CV en el backend
    */
   async saveCV(cvData, cvName, templateId) {
     try {
-      const url = `${this.baseURL}/cv/save`
+      const url = `${API_URL}/cv/save`
       const token = authService.accessToken
       
       // Saving CV
@@ -56,7 +52,7 @@ class CVStorageService {
    */
   async getSavedCVs() {
     try {
-      const url = `${this.baseURL}/cv/list`
+      const url = `${API_URL}/cv/list`
       const token = authService.accessToken
       
       const response = await fetch(url, {
@@ -85,7 +81,7 @@ class CVStorageService {
    */
   async deleteCV(cvId) {
     try {
-      const url = `${this.baseURL}/cv/${cvId}`
+      const url = `${API_URL}/cv/${cvId}`
       const token = authService.accessToken
       
       const response = await fetch(url, {

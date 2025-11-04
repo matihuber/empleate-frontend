@@ -28,6 +28,8 @@ export default function MisDatosSection({ user }) {
     executeWithSubscriptionCheck,
     isRestrictionModalOpen,
     restrictedFeature,
+    setRestrictedFeature,
+    setIsRestrictionModalOpen,
     closeRestrictionModal
   } = useSubscriptionRestrictions()
 

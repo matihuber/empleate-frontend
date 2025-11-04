@@ -215,11 +215,21 @@ class UserProfileService {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
+      // Verificar content-type antes de parsear JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        return null
+      }
+
       const result = await response.json()
       console.log('UserProfileService: Foto de perfil cargada exitosamente')
       return result
     } catch (error) {
       console.error('Error getting user avatar:', error)
+      // Si es un error de parseo JSON, retornar null en lugar de lanzar error
+      if (error instanceof SyntaxError && error.message.includes('JSON')) {
+        return null
+      }
       throw error
     }
   }
@@ -244,12 +254,24 @@ class UserProfileService {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
+      // Verificar content-type antes de parsear JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('UserProfileService: CV response is not JSON, returning null')
+        return null
+      }
+
       const result = await response.json()
       console.log('UserProfileService: CV cargado exitosamente')
       return result
     } catch (error) {
       // Si es 404, devolver null silenciosamente sin lanzar error
       if (error.message.includes('404')) {
+        return null
+      }
+      // Si es un error de parseo JSON, retornar null en lugar de lanzar error
+      if (error instanceof SyntaxError && error.message.includes('JSON')) {
+        console.warn('UserProfileService: Failed to parse CV response as JSON, returning null')
         return null
       }
       console.error('Error getting user CV:', error)
@@ -277,12 +299,24 @@ class UserProfileService {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
+      // Verificar content-type antes de parsear JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('UserProfileService: LinkedIn response is not JSON, returning null')
+        return null
+      }
+
       const result = await response.json()
       console.log('UserProfileService: Perfil de LinkedIn cargado exitosamente')
       return result
     } catch (error) {
       // Si es 404, devolver null silenciosamente sin lanzar error
       if (error.message.includes('404')) {
+        return null
+      }
+      // Si es un error de parseo JSON, retornar null en lugar de lanzar error
+      if (error instanceof SyntaxError && error.message.includes('JSON')) {
+        console.warn('UserProfileService: Failed to parse LinkedIn response as JSON, returning null')
         return null
       }
       console.error('Error getting user LinkedIn profile:', error)
