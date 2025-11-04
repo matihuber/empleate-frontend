@@ -42,6 +42,12 @@ class CourseRecommendationService {
         throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`)
       }
 
+      // Verificar content-type antes de parsear JSON (incluso si response.ok es true)
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('La respuesta del servidor no es JSON válido')
+      }
+
       return await response.json()
     } catch (error) {
       console.error('Error generando recomendaciones de cursos:', error)
@@ -62,8 +68,20 @@ class CourseRecommendationService {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
+        const contentType = response.headers.get('content-type')
+        let errorData = {}
+
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await response.json().catch(() => ({}))
+        }
+
         throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`)
+      }
+
+      // Verificar content-type antes de parsear JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('La respuesta del servidor no es JSON válido')
       }
 
       return await response.json()
@@ -89,8 +107,21 @@ class CourseRecommendationService {
         if (response.status === 404) {
           return null // No hay análisis disponible
         }
-        const errorData = await response.json()
+
+        const contentType = response.headers.get('content-type')
+        let errorData = {}
+
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await response.json().catch(() => ({}))
+        }
+
         throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`)
+      }
+
+      // Verificar content-type antes de parsear JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('La respuesta del servidor no es JSON válido')
       }
 
       return await response.json()

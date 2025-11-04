@@ -108,6 +108,12 @@ class AuthService {
         }
       }
 
+      // Verificar content-type antes de parsear JSON (incluso si response.ok es true)
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('La respuesta del servidor no es JSON válido');
+      }
+
       const responseData = await response.json();
       return responseData;
     } catch (error) {

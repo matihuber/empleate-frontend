@@ -129,12 +129,17 @@ export default function CourseRecommender() {
       setHasData(true)
     } catch (error) {
       console.error('Error generando recomendaciones:', error)
-      
+
       // Manejar error de suscripción específicamente
-      if (error.code === 'SUBSCRIPTION_REQUIRED') {
-        setError('SUBSCRIPTION_REQUIRED')
+      if (error.code === 'SUBSCRIPTION_REQUIRED' || error.status === 403) {
+        setRestrictedFeature('course_recommendations');
+        setIsRestrictionModalOpen(true);
       } else if (error.message && error.message.includes('No se encontraron datos del usuario')) {
         setError('NO_USER_DATA')
+      } else if (error.message && error.message.includes('La respuesta del servidor no es JSON válido')) {
+        // Probablemente sea un error de restricción que vino como HTML
+        setRestrictedFeature('course_recommendations');
+        setIsRestrictionModalOpen(true);
       } else {
         setError(error.message)
       }

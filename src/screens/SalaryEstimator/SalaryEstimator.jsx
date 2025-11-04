@@ -271,6 +271,10 @@ const SalaryEstimator = () => {
       if (error.code === 'SUBSCRIPTION_REQUIRED' || error.status === 403) {
         setRestrictedFeature('salary_estimation');
         setIsRestrictionModalOpen(true);
+      } else if (error.message && error.message.includes('La respuesta del servidor no es JSON válido')) {
+        // Probablemente sea un error de restricción que vino como HTML
+        setRestrictedFeature('salary_estimation');
+        setIsRestrictionModalOpen(true);
       } else {
         setError('Error al estimar el salario. Por favor intenta nuevamente.');
       }
